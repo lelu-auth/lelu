@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .dockerignore — keep the build context lean
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Version control
+.git
+.gitignore
+
+# CI config
+.github/
+
+# Build artefacts
+bin/
+engine/gen/
+coverage.out
+
+# SDK source (not needed by engine Docker build)
+sdk/
+
+# Docs
+*.md
+docs/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local env files
+.env
+.env.*

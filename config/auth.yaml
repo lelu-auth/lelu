@@ -1,0 +1,64 @@
+version: "1.0"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# auth.yaml — Auth Permission Engine sample policy
+#
+# Mount this file at /etc/prism/auth.yaml inside the engine container, or
+# point POLICY_PATH to its location.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Standard RBAC roles (humans) ─────────────────────────────────────────────
+roles:
+  finance_manager:
+    allow:
+      - view_invoices
+      - approve_refunds
+    deny:
+      - delete_invoices
+
+  customer_support:
+    allow:
+      - view_invoices
+      - issue_credit
+    deny:
+      - approve_refunds
+      - delete_invoices
+
+  read_only_auditor:
+    allow:
+      - view_invoices
+    deny: []
+
+# ── Agent scopes (AI agents) ──────────────────────────────────────────────────
+agent_scopes:
+
+  invoice_bot:
+    inherits: finance_manager
+
+    constraints:
+      # Maximum refund an agent may approve without extra checks.
+      - max_refund_amount: 50.00
+
+      # Confidence gate thresholds (Confidence-Aware Auth ★)
+      #   ≥ 90 %  → full autonomous permission
+      #   70–89 % → queue action for human review
+      #   50–69 % → downgrade to read-only scope
+      #   < 50 %  → hard deny + security alert
+      - require_human_approval_if_confidence_below: 0.90
+      - downgrade_to_read_only_if_confidence_below: 0.70
+      - hard_deny_if_confidence_below: 0.50
+
+    deny:
+      - delete_invoices
+
+  support_bot:
+    inherits: customer_support
+
+    constraints:
+      - require_human_approval_if_confidence_below: 0.85
+      - downgrade_to_read_only_if_confidence_below: 0.65
+      - hard_deny_if_confidence_below: 0.45
+
+    deny:
+      - delete_invoices
+      - approve_refunds

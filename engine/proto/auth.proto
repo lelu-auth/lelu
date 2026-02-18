@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/prism/engine/gen/auth/v1;authv1";
+
+// ─── Service ─────────────────────────────────────────────────────────────────
+
+service AuthPermissionEngine {
+  // Standard human authorization check
+  rpc Authorize(AuthRequest) returns (AuthDecision);
+
+  // Agent authorization — includes confidence-aware gate ★
+  rpc AgentAuthorize(AgentAuthRequest) returns (AgentAuthDecision);
+
+  // Issue a JIT-scoped token for an agent
+  rpc MintToken(MintTokenRequest) returns (MintTokenResponse);
+
+  // Immediately revoke a JIT token
+  rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
+}
+
+// ─── Human Auth ──────────────────────────────────────────────────────────────
+
+message AuthRequest {
+  string user_id   = 1;
+  string action    = 2;
+  map<string, string> resource = 3;
+}
+
+message AuthDecision {
+  bool   allowed  = 1;
+  string reason   = 2;
+  string trace_id = 3;
+}
+
+// ─── Agent Auth ───────────────────────────────────────────────────────────────
+
+message AgentAuthRequest {
+  string actor  = 1;   // e.g. "agent_invoice_bot"
+  string action = 2;
+  map<string, string> resource = 3;
+  AgentContext context = 4;
+}
+
+message AgentContext {
+  double confidence  = 1;   // 0.0 – 1.0, LLM logprob or explicit score
+  string acting_for  = 2;   // delegating user ID
+  string scope       = 3;   // requested scope name
+}
+
+message AgentAuthDecision {
+  bool   allowed               = 1;
+  string reason                = 2;
+  string trace_id              = 3;
+  string downgraded_scope      = 4;   // non-empty if scope was reduced
+  bool   requires_human_review = 5;
+  double confidence_used       = 6;
+}
+
+// ─── Token Minting ───────────────────────────────────────────────────────────
+
+message MintTokenRequest {
+  string scope       = 1;
+  string acting_for  = 2;
+  int64  ttl_seconds = 3;   // 0 → use default (60 s)
+}
+
+message MintTokenResponse {
+  string token      = 1;
+  string token_id   = 2;
+  int64  expires_at = 3;   // Unix timestamp
+}
+
+// ─── Token Revocation ────────────────────────────────────────────────────────
+
+message RevokeTokenRequest {
+  string token_id = 1;
+}
+
+message RevokeTokenResponse {
+  bool success = 1;
+}

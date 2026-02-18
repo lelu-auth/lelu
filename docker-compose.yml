@@ -1,0 +1,85 @@
+name: prism
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Services
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Auth Permission Engine ──────────────────────────────────────────────────
+  engine:
+    build:
+      context: .
+      dockerfile: engine/Dockerfile
+    image: prism/engine:local
+    container_name: prism-engine
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      LISTEN_ADDR:       ":8080"
+      POLICY_PATH:       "/etc/prism/auth.yaml"
+      REDIS_ADDR:        "redis:6379"
+      JWT_SIGNING_KEY:   "${JWT_SIGNING_KEY:-change-me-in-dev}"
+      CONTROL_PLANE_URL: "${CONTROL_PLANE_URL:-}"
+      CP_HMAC_SECRET:    "${CP_HMAC_SECRET:-}"
+    volumes:
+      - ./config:/etc/prism:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - prism
+
+  # ── Redis — JIT token store & human-review queue ────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: prism-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - prism
+
+  # ── Redis Insight (optional dev UI) ─────────────────────────────────────────
+  redis-ui:
+    image: redislabs/redisinsight:latest
+    container_name: prism-redis-ui
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+    profiles:
+      - debug                   # only started with: docker compose --profile debug up
+    networks:
+      - prism
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Volumes & Networks
+# ─────────────────────────────────────────────────────────────────────────────
+
+volumes:
+  redis-data:
+
+networks:
+  prism:
+    driver: bridge
