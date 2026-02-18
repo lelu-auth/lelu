@@ -12,8 +12,10 @@ RUN apk add --no-cache git ca-certificates tzdata
 
 WORKDIR /build
 
-# Cache dependency downloads separately from source changes
-COPY engine/go.mod engine/go.sum ./
+# Cache dependency downloads separately from source changes.
+# Copying only go.mod lets Docker cache this layer until dependencies change.
+# go mod download also writes go.sum so no pre-committed go.sum is required.
+COPY engine/go.mod ./
 RUN go mod download
 
 # Copy source
@@ -25,15 +27,17 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     -o /engine ./cmd/engine
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
-FROM gcr.io/distroless/static-debian12 AS runtime
+# Using alpine (already pulled) instead of distroless to avoid gcr.io network
+# dependency. Alpine adds ~8 MB but is available from Docker Hub.
+FROM alpine:3.19 AS runtime
 
-# Non-root user for security
+RUN apk add --no-cache ca-certificates tzdata && \
+    adduser -D -u 10001 nonroot
+
 USER nonroot:nonroot
 
-# Copy binary and TLS certs from builder
+# Copy binary from builder
 COPY --from=builder /engine /engine
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 # Default policy mount point
 VOLUME ["/etc/prism"]

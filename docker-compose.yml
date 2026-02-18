@@ -15,7 +15,7 @@ services:
     container_name: prism-engine
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8082:8080"
     environment:
       LISTEN_ADDR:       ":8080"
       POLICY_PATH:       "/etc/prism/auth.yaml"
