@@ -25,6 +25,7 @@ __pycache__/
 # Local env
 .env
 .env.*
+!.env.example
 
 # OS
 .DS_Store
