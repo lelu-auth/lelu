@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SecureTool } from "../src/langchain/secure-tool.js";
-import type { PrismClient } from "../src/client.js";
-import type { AgentAuthDecision } from "../src/types.js";
+import { SecureTool } from "./secure-tool.js";
+import type { PrismClient } from "../client.js";
+import type { AgentAuthDecision } from "../types.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
