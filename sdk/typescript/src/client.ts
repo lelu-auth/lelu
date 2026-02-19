@@ -37,7 +37,7 @@ import {
 export class PrismClient {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
-  private readonly apiKey?: string;
+  private readonly apiKey: string | undefined;
 
   constructor(cfg: ClientConfig = {}) {
     this.baseUrl = (cfg.baseUrl ?? "http://localhost:8080").replace(/\/$/, "");

@@ -42,7 +42,7 @@ export interface AgentAuthDecision {
   allowed: boolean;
   reason: string;
   traceId: string;
-  downgradedScope?: string;
+  downgradedScope: string | undefined;
   requiresHumanReview: boolean;
   confidenceUsed: number;
 }
