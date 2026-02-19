@@ -43,9 +43,9 @@ type Decision struct {
 
 // Policy is the top-level schema for auth.yaml.
 type Policy struct {
-	Version     string                 `yaml:"version"`
-	Roles       map[string]Role        `yaml:"roles"`
-	AgentScopes map[string]AgentScope  `yaml:"agent_scopes"`
+	Version     string                `yaml:"version"`
+	Roles       map[string]Role       `yaml:"roles"`
+	AgentScopes map[string]AgentScope `yaml:"agent_scopes"`
 }
 
 // Role maps a role name to its allowed/denied actions.
@@ -63,10 +63,10 @@ type AgentScope struct {
 
 // Constraint is a single named constraint value pair.
 type Constraint struct {
-	MaxRefundAmount                 *float64 `yaml:"max_refund_amount,omitempty"`
-	RequireHumanApprovalIfConf      *float64 `yaml:"require_human_approval_if_confidence_below,omitempty"`
-	DowngradeToReadOnlyIfConf       *float64 `yaml:"downgrade_to_read_only_if_confidence_below,omitempty"`
-	HardDenyIfConf                  *float64 `yaml:"hard_deny_if_confidence_below,omitempty"`
+	MaxRefundAmount            *float64 `yaml:"max_refund_amount,omitempty"`
+	RequireHumanApprovalIfConf *float64 `yaml:"require_human_approval_if_confidence_below,omitempty"`
+	DowngradeToReadOnlyIfConf  *float64 `yaml:"downgrade_to_read_only_if_confidence_below,omitempty"`
+	HardDenyIfConf             *float64 `yaml:"hard_deny_if_confidence_below,omitempty"`
 }
 
 // ─── Evaluator ───────────────────────────────────────────────────────────────

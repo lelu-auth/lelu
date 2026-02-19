@@ -34,7 +34,7 @@ func TestDefaultTTL(t *testing.T) {
 	res, err := svc.MintAgentToken(ctx, "bot", "user", 0) // 0 → use default
 	require.NoError(t, err)
 	// Default is 60 s; expiry should be ~60 s from now
-	delta := res.ExpiresAt.Sub(time.Now())
+	delta := time.Until(res.ExpiresAt)
 	assert.True(t, delta > 55*time.Second && delta <= 60*time.Second)
 }
 

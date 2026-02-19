@@ -25,7 +25,7 @@ type Event struct {
 	Action          string            `json:"action"`
 	Resource        map[string]string `json:"resource,omitempty"`
 	ConfidenceScore float64           `json:"confidence_score,omitempty"`
-	Decision        string            `json:"decision"`           // "allowed" | "denied" | "human_review"
+	Decision        string            `json:"decision"` // "allowed" | "denied" | "human_review"
 	Reason          string            `json:"reason,omitempty"`
 	DowngradedScope string            `json:"downgraded_scope,omitempty"`
 	LatencyMS       float64           `json:"latency_ms"`
@@ -35,20 +35,20 @@ type Event struct {
 
 // Writer is a non-blocking audit log writer.
 type Writer struct {
-	queue     chan Event
-	sink      io.Writer
-	batchSize int
+	queue      chan Event
+	sink       io.Writer
+	batchSize  int
 	flushEvery time.Duration
-	wg        sync.WaitGroup
-	once      sync.Once
+	wg         sync.WaitGroup
+	once       sync.Once
 }
 
 // Config holds constructor options for Writer.
 type Config struct {
-	QueueDepth  int           // channel buffer depth (default 4096)
-	BatchSize   int           // max events per flush (default 100)
-	FlushEvery  time.Duration // flush interval (default 500 ms)
-	Sink        io.Writer     // destination (default os.Stdout)
+	QueueDepth int           // channel buffer depth (default 4096)
+	BatchSize  int           // max events per flush (default 100)
+	FlushEvery time.Duration // flush interval (default 500 ms)
+	Sink       io.Writer     // destination (default os.Stdout)
 }
 
 // New creates and starts a Writer. Call Close() on shutdown to drain the queue.
@@ -148,7 +148,7 @@ func (w *Writer) start() {
 func NewTraceID() string { return uuid.NewString() }
 
 // LogFromContext is a convenience wrapper that populates common fields.
-func (w *Writer) LogDecision(ctx context.Context, actor, action string, resource map[string]string, allowed bool, reason string, conf float64, latencyMS float64) {
+func (w *Writer) LogDecision(_ context.Context, actor, action string, resource map[string]string, allowed bool, reason string, conf float64, latencyMS float64) {
 	decision := "denied"
 	if allowed {
 		decision = "allowed"

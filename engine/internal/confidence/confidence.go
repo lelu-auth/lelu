@@ -17,19 +17,19 @@ import (
 // ─── Thresholds ───────────────────────────────────────────────────────────────
 
 const (
-	ThresholdFull       = 0.90
-	ThresholdHuman      = 0.70
-	ThresholdHardDeny   = 0.50
+	ThresholdFull     = 0.90
+	ThresholdHuman    = 0.70
+	ThresholdHardDeny = 0.50
 )
 
 // Level describes the outcome of a confidence evaluation.
 type Level int
 
 const (
-	LevelFullPermission   Level = iota // ≥ 90 %
-	LevelRequiresHuman                 // 70–89 %
-	LevelReadOnly                      // 50–69 %
-	LevelHardDeny                      // < 50 %
+	LevelFullPermission Level = iota // ≥ 90 %
+	LevelRequiresHuman               // 70–89 %
+	LevelReadOnly                    // 50–69 %
+	LevelHardDeny                    // < 50 %
 )
 
 func (l Level) String() string {

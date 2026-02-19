@@ -15,10 +15,10 @@ A policy engine that issues **JIT tokens**, enforces **agent-scoped constraints*
 docker compose up -d
 
 # 2. Check health
-curl http://localhost:8080/healthz
+curl http://localhost:8082/healthz
 
 # 3. Authorize an agent action
-curl -s -X POST http://localhost:8080/v1/agent/authorize \
+curl -s -X POST http://localhost:8082/v1/agent/authorize \
   -H "Content-Type: application/json" \
   -d '{
     "actor":      "invoice_bot",
