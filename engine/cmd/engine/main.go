@@ -19,12 +19,12 @@ import (
 
 func main() {
 	// ── Config from environment ──────────────────────────────────────────────
-	addr          := envOr("LISTEN_ADDR",       ":8080")
-	policyPath    := envOr("POLICY_PATH",        "/etc/prism/auth.yaml")
-	redisAddr     := envOr("REDIS_ADDR",          "")
-	signingKey    := envOr("JWT_SIGNING_KEY",     "change-me-in-production")
-	cpURL         := envOr("CONTROL_PLANE_URL",   "")
-	cpHMACSecret  := envOr("CP_HMAC_SECRET",      "")
+	addr := envOr("LISTEN_ADDR", ":8080")
+	policyPath := envOr("POLICY_PATH", "/etc/prism/auth.yaml")
+	redisAddr := envOr("REDIS_ADDR", "")
+	signingKey := envOr("JWT_SIGNING_KEY", "change-me-in-production")
+	cpURL := envOr("CONTROL_PLANE_URL", "")
+	cpHMACSecret := envOr("CP_HMAC_SECRET", "")
 
 	// ── Bootstrap components ─────────────────────────────────────────────────
 	eval := evaluator.New()
@@ -41,11 +41,11 @@ func main() {
 		SigningKey: signingKey,
 		RedisAddr:  redisAddr,
 	})
-	confGate    := confidence.New()
+	confGate := confidence.New()
 	auditWriter := audit.New()
 
 	// ── HTTP server ───────────────────────────────────────────────────────────
-	h   := server.New(eval, tokenSvc, confGate, auditWriter)
+	h := server.New(eval, tokenSvc, confGate, auditWriter)
 	srv := server.NewHTTPServer(addr, h)
 
 	// ── Policy sync worker (optional) ─────────────────────────────────────────

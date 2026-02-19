@@ -18,10 +18,10 @@ const defaultTTL = 60 * time.Second
 
 // AgentClaims extends standard JWT claims with agent-specific fields.
 type AgentClaims struct {
-	Scope       string            `json:"scope"`
-	ActingFor   string            `json:"acting_for"`
-	Permissions []string          `json:"permissions,omitempty"`
-	Constraints map[string]any    `json:"constraints,omitempty"`
+	Scope       string         `json:"scope"`
+	ActingFor   string         `json:"acting_for"`
+	Permissions []string       `json:"permissions,omitempty"`
+	Constraints map[string]any `json:"constraints,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -36,7 +36,7 @@ type Service struct {
 
 // Config holds Service constructor options.
 type Config struct {
-	SigningKey  string
+	SigningKey string
 	RedisAddr  string
 	DefaultTTL time.Duration
 }
@@ -85,9 +85,9 @@ func (s *Service) MintAgentToken(ctx context.Context, scope, actingFor string, t
 		Scope:     scope,
 		ActingFor: actingFor,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:  "agent/" + scope,
-			ID:       tokenID,
-			IssuedAt: jwt.NewNumericDate(now),
+			Subject:   "agent/" + scope,
+			ID:        tokenID,
+			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(exp),
 		},
 	}
