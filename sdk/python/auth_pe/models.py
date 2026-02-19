@@ -99,4 +99,4 @@ class AuthEngineError(Exception):
         self.details = details
 
     def __repr__(self) -> str:
-        return f"AuthEngineError(message={self!s!r}, status={self.status})"
+        return f"AuthEngineError(message={str(self)!r}, status={self.status})"
