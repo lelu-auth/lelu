@@ -12,9 +12,11 @@ import (
 	"github.com/prism/engine/internal/audit"
 	"github.com/prism/engine/internal/confidence"
 	"github.com/prism/engine/internal/evaluator"
+	"github.com/prism/engine/internal/queue"
 	"github.com/prism/engine/internal/server"
 	syncer "github.com/prism/engine/internal/sync"
 	"github.com/prism/engine/internal/tokens"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -44,8 +46,24 @@ func main() {
 	confGate := confidence.New()
 	auditWriter := audit.New()
 
+	// ── Human review queue (Phase 2) ──────────────────────────────────────────
+	var reviewQueue *queue.Queue
+	if redisAddr != "" {
+		rdb := redis.NewClient(&redis.Options{Addr: redisAddr})
+		var qErr error
+		reviewQueue, qErr = queue.New(rdb)
+		if qErr != nil {
+			log.Printf("warning: could not init review queue: %v", qErr)
+			reviewQueue = queue.NewInMemory()
+		} else {
+			log.Printf("human review queue ready (Redis %s)", redisAddr)
+		}
+	} else {
+		reviewQueue = queue.NewInMemory()
+	}
+
 	// ── HTTP server ───────────────────────────────────────────────────────────
-	h := server.New(eval, tokenSvc, confGate, auditWriter)
+	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue)
 	srv := server.NewHTTPServer(addr, h)
 
 	// ── Policy sync worker (optional) ─────────────────────────────────────────

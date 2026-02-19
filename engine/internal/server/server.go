@@ -13,6 +13,7 @@ import (
 	"github.com/prism/engine/internal/audit"
 	"github.com/prism/engine/internal/confidence"
 	"github.com/prism/engine/internal/evaluator"
+	"github.com/prism/engine/internal/queue"
 	"github.com/prism/engine/internal/tokens"
 )
 
@@ -24,6 +25,7 @@ type Handler struct {
 	tokenSvc *tokens.Service
 	confGate *confidence.Gate
 	audit    *audit.Writer
+	queue    *queue.Queue
 }
 
 // New constructs a Handler from its dependencies.
@@ -32,12 +34,14 @@ func New(
 	tokenSvc *tokens.Service,
 	confGate *confidence.Gate,
 	auditWriter *audit.Writer,
+	q *queue.Queue,
 ) *Handler {
 	return &Handler{
 		eval:     eval,
 		tokenSvc: tokenSvc,
 		confGate: confGate,
 		audit:    auditWriter,
+		queue:    q,
 	}
 }
 
@@ -47,6 +51,11 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/agent/authorize", h.handleAgentAuthorize)
 	mux.HandleFunc("POST /v1/tokens/mint", h.handleMintToken)
 	mux.HandleFunc("DELETE /v1/tokens/{tokenID}", h.handleRevokeToken)
+	// Phase 2 — Human approval queue
+	mux.HandleFunc("GET /v1/queue/pending", h.handleQueueList)
+	mux.HandleFunc("GET /v1/queue/{id}", h.handleQueueGet)
+	mux.HandleFunc("POST /v1/queue/{id}/approve", h.handleQueueApprove)
+	mux.HandleFunc("POST /v1/queue/{id}/deny", h.handleQueueDeny)
 	mux.HandleFunc("GET /healthz", h.handleHealth)
 }
 
@@ -156,12 +165,18 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	traceID := audit.NewTraceID()
 	h.audit.LogDecision(r.Context(), req.Actor, req.Action, req.Resource, evalDec.Allowed, evalDec.Reason, req.Confidence, ms(start))
 
+	// Phase 2 — enqueue for human review when flagged.
+	requiresReview := evalDec.RequiresHumanReview || confDec.RequiresHumanReview
+	if requiresReview && h.queue != nil {
+		_, _ = h.queue.Enqueue(r.Context(), req.Actor, req.Action, req.Resource, req.Confidence, evalDec.Reason, req.ActingFor)
+	}
+
 	writeJSON(w, http.StatusOK, agentAuthorizeResponse{
 		Allowed:             evalDec.Allowed,
 		Reason:              evalDec.Reason,
 		TraceID:             traceID,
 		DowngradedScope:     evalDec.DowngradedScope,
-		RequiresHumanReview: evalDec.RequiresHumanReview || confDec.RequiresHumanReview,
+		RequiresHumanReview: requiresReview,
 		ConfidenceUsed:      req.Confidence,
 	})
 }
@@ -211,6 +226,72 @@ func (h *Handler) handleRevokeToken(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := h.tokenSvc.RevokeToken(r.Context(), tokenID); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"success": true})
+}
+
+// ─── Human Approval Queue ─────────────────────────────────────────────────────
+
+func (h *Handler) handleQueueList(w http.ResponseWriter, r *http.Request) {
+	if h.queue == nil {
+		writeError(w, http.StatusServiceUnavailable, "queue not configured")
+		return
+	}
+	items, err := h.queue.ListPending(r.Context(), 50)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items, "count": len(items)})
+}
+
+func (h *Handler) handleQueueGet(w http.ResponseWriter, r *http.Request) {
+	if h.queue == nil {
+		writeError(w, http.StatusServiceUnavailable, "queue not configured")
+		return
+	}
+	id := r.PathValue("id")
+	item, err := h.queue.Get(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, item)
+}
+
+type resolveRequest struct {
+	ResolvedBy string `json:"resolved_by"`
+	Note       string `json:"note"`
+}
+
+func (h *Handler) handleQueueApprove(w http.ResponseWriter, r *http.Request) {
+	h.handleQueueResolve(w, r, true)
+}
+
+func (h *Handler) handleQueueDeny(w http.ResponseWriter, r *http.Request) {
+	h.handleQueueResolve(w, r, false)
+}
+
+func (h *Handler) handleQueueResolve(w http.ResponseWriter, r *http.Request, approve bool) {
+	if h.queue == nil {
+		writeError(w, http.StatusServiceUnavailable, "queue not configured")
+		return
+	}
+	id := r.PathValue("id")
+	var req resolveRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	var err error
+	if approve {
+		err = h.queue.Approve(r.Context(), id, req.ResolvedBy, req.Note)
+	} else {
+		err = h.queue.Deny(r.Context(), id, req.ResolvedBy, req.Note)
+	}
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"success": true})

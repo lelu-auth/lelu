@@ -43,6 +43,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 		tokens.New(tokens.Config{SigningKey: "test-key"}),
 		confidence.New(),
 		audit.New(audit.Config{Sink: &bytes.Buffer{}}),
+		nil, // queue — not needed in unit tests
 	)
 
 	mux := http.NewServeMux()
