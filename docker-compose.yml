@@ -59,6 +59,53 @@ services:
     networks:
       - prism
 
+  # ── PostgreSQL — control plane store ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: prism-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB:       prism
+      POSTGRES_USER:     prism
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-prism-dev-secret}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "prism"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - prism
+
+  # ── Prism Control Plane ──────────────────────────────────────────────────────
+  platform:
+    build:
+      context: platform
+      dockerfile: Dockerfile
+    image: prism/platform:local
+    container_name: prism-platform
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    environment:
+      LISTEN_ADDR:      ":9090"
+      DATABASE_URL:     "postgres://prism:${POSTGRES_PASSWORD:-prism-dev-secret}@postgres:5432/prism?sslmode=disable"
+      PLATFORM_API_KEY: "${PLATFORM_API_KEY:-platform-dev-key}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - prism
+
   # ── Redis Insight (optional dev UI) ─────────────────────────────────────────
   redis-ui:
     image: redislabs/redisinsight:latest
@@ -79,6 +126,7 @@ services:
 
 volumes:
   redis-data:
+  postgres-data:
 
 networks:
   prism:
