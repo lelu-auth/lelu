@@ -7,5 +7,8 @@ export function Badge({ decision }: { decision: Decision }) {
       : decision === "denied"
       ? "badge-denied"
       : "badge-review";
-  return <span className={`badge ${cls}`}>{decision}</span>;
+  
+  const label = decision === "human_review" ? "Review" : decision.charAt(0).toUpperCase() + decision.slice(1);
+  
+  return <span className={`badge ${cls}`}>{label}</span>;
 }
