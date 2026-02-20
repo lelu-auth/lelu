@@ -75,6 +75,7 @@ type Constraint struct {
 type Evaluator struct {
 	mu     sync.RWMutex
 	policy *Policy
+	rego   *regoPolicy
 }
 
 // New returns a default Evaluator with an empty policy.
@@ -110,7 +111,12 @@ func (e *Evaluator) LoadPolicyBytes(data []byte) error {
 func (e *Evaluator) Evaluate(_ context.Context, req AuthRequest) (*Decision, error) {
 	e.mu.RLock()
 	p := e.policy
+	rp := e.rego
 	e.mu.RUnlock()
+
+	if rp != nil {
+		return rp.EvaluateHuman(req)
+	}
 
 	// Walk all roles to find one assigned to the user (future: user→role mapping).
 	// For now we do a direct action-level check across all roles.
@@ -133,7 +139,12 @@ func (e *Evaluator) Evaluate(_ context.Context, req AuthRequest) (*Decision, err
 func (e *Evaluator) EvaluateAgent(_ context.Context, req AgentAuthRequest) (*Decision, error) {
 	e.mu.RLock()
 	p := e.policy
+	rp := e.rego
 	e.mu.RUnlock()
+
+	if rp != nil {
+		return rp.EvaluateAgent(req)
+	}
 
 	scope, ok := p.AgentScopes[req.Actor]
 	if !ok {
@@ -189,4 +200,23 @@ func (e *Evaluator) EvaluateAgent(_ context.Context, req AgentAuthRequest) (*Dec
 		dec.Reason = "action authorized"
 	}
 	return dec, nil
+}
+
+// LoadRegoPolicy enables OPA/Rego evaluation mode.
+// Query must point to a rule that returns either a boolean or an object:
+// {
+//   "allowed": bool,
+//   "reason": string,
+//   "downgraded_scope": string,
+//   "requires_human_review": bool
+// }
+func (e *Evaluator) LoadRegoPolicy(path, query string) error {
+	rp, err := loadRegoPolicy(path, query)
+	if err != nil {
+		return err
+	}
+	e.mu.Lock()
+	e.rego = rp
+	e.mu.Unlock()
+	return nil
 }

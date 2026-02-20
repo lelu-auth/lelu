@@ -21,15 +21,17 @@ type Handler struct {
 	policies *policy.Store
 	audit    *auditstore.Store
 	apiKey   string // SHA-256 of the real key stored in memory
+	oidcAuth *OIDCAuth
 }
 
 // New returns a Handler.
-func New(policies *policy.Store, audit *auditstore.Store, apiKey string) *Handler {
+func New(policies *policy.Store, audit *auditstore.Store, apiKey string, oidcAuth *OIDCAuth) *Handler {
 	hash := sha256.Sum256([]byte(apiKey))
 	return &Handler{
 		policies: policies,
 		audit:    audit,
 		apiKey:   hex.EncodeToString(hash[:]),
+		oidcAuth: oidcAuth,
 	}
 }
 
@@ -183,7 +185,13 @@ func (h *Handler) auth(next http.HandlerFunc) http.HandlerFunc {
 		got := sha256.Sum256([]byte(raw))
 		gotHex := hex.EncodeToString(got[:])
 		if subtle.ConstantTimeCompare([]byte(gotHex), []byte(h.apiKey)) != 1 {
-			writeError(w, http.StatusUnauthorized, "invalid API key")
+			if h.oidcAuth != nil {
+				if err := h.oidcAuth.Verify(r.Context(), raw); err == nil {
+					next(w, r)
+					return
+				}
+			}
+			writeError(w, http.StatusUnauthorized, "invalid API key or OIDC token")
 			return
 		}
 		next(w, r)

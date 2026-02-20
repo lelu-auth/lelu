@@ -1,0 +1,38 @@
+{{- if .Values.ui.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prism-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prism-ui
+  template:
+    metadata:
+      labels:
+        app: prism-ui
+    spec:
+      containers:
+        - name: ui
+          image: {{ .Values.ui.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.ui.port }}
+          env:
+            - name: PLATFORM_URL
+              value: {{ .Values.ui.env.PLATFORM_URL | quote }}
+            - name: PLATFORM_API_KEY
+              value: {{ .Values.ui.env.PLATFORM_API_KEY | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prism-ui
+spec:
+  selector:
+    app: prism-ui
+  ports:
+    - port: {{ .Values.ui.servicePort }}
+      targetPort: {{ .Values.ui.port }}
+{{- end }}

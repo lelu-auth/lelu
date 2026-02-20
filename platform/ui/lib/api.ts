@@ -64,7 +64,9 @@ export async function listAuditEvents(params?: {
   });
   if (!res.ok) throw new Error(`Audit fetch failed: ${res.status}`);
   const body = await res.json();
-  return body.events ?? body;
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(body?.events)) return body.events;
+  return [];
 }
 
 export async function getTrace(traceId: string): Promise<TraceResponse> {
@@ -85,5 +87,7 @@ export async function listPolicies(): Promise<Policy[]> {
   });
   if (!res.ok) throw new Error(`Policy fetch failed: ${res.status}`);
   const body = await res.json();
-  return body.policies ?? body;
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(body?.policies)) return body.policies;
+  return [];
 }

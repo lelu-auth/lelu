@@ -25,6 +25,8 @@ func main() {
 	addr := envOr("LISTEN_ADDR", ":9090")
 	dsn := envOr("DATABASE_URL", "postgres://prism:prism@localhost:5432/prism?sslmode=disable")
 	apiKey := envOr("PLATFORM_API_KEY", "change-me-in-production")
+	oidcIssuer := envOr("OIDC_ISSUER_URL", "")
+	oidcAudience := envOr("OIDC_AUDIENCE", "")
 
 	// ── Database ──────────────────────────────────────────────────────────────
 	database, err := db.Open(dsn)
@@ -44,7 +46,16 @@ func main() {
 
 	// ── HTTP server ───────────────────────────────────────────────────────────
 	mux := http.NewServeMux()
-	h := handlers.New(policyStore, auditStore, apiKey)
+	var oidcAuth *handlers.OIDCAuth
+	if oidcIssuer != "" && oidcAudience != "" {
+		auth, authErr := handlers.NewOIDCAuth(context.Background(), oidcIssuer, oidcAudience)
+		if authErr != nil {
+			log.Fatalf("platform: oidc init: %v", authErr)
+		}
+		oidcAuth = auth
+		log.Printf("platform: oidc enabled (issuer=%s)", oidcIssuer)
+	}
+	h := handlers.New(policyStore, auditStore, apiKey, oidcAuth)
 	h.RegisterRoutes(mux)
 
 	srv := &http.Server{

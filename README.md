@@ -106,6 +106,23 @@ make docker-down
 | `JWT_SIGNING_KEY` | `change-me-in-production` | HMAC key for JIT tokens |
 | `CONTROL_PLANE_URL` | _(empty)_ | Cloud control plane URL (optional) |
 | `CP_HMAC_SECRET` | _(empty)_ | HMAC secret for policy signature verification |
+| `REGO_POLICY_PATH` | _(empty)_ | Optional Rego policy path (enables OPA compatibility mode) |
+| `REGO_POLICY_QUERY` | `data.prism.authz` | Rego query to evaluate |
+| `OIDC_ISSUER_URL` | _(empty)_ | Optional OIDC issuer for enterprise SSO on platform APIs |
+| `OIDC_AUDIENCE` | _(empty)_ | OIDC client/audience value used in token verification |
+
+### Kubernetes (Helm)
+
+```bash
+helm install prism ./helm/prism
+```
+
+### OPA / Rego compatibility
+
+```bash
+export REGO_POLICY_PATH=./config/auth.rego
+export REGO_POLICY_QUERY=data.prism.authz
+```
 
 ---
 
@@ -184,29 +201,13 @@ auth-permission-engine/
 | **Phase 1** | 1–6 | Go engine + SDK core clients ← *you are here* |
 | **Phase 2** | 7–12 | Confidence Gate, LangChain/LangGraph wrappers |
 | **Phase 3** | 13–20 | Cloud control plane, Trace Explorer UI, first customer |
-| **Phase 4** | 21–28 | OSS release, Helm chart, enterprise SSO |
+| **Phase 4** | 21–28 | OSS release, Helm chart, AutoGPT plugin, Rego compatibility, enterprise SSO |
 
 ---
 
-*Auth Permission Engine · Go · TypeScript · Python · February 2026*
-
-Prism is a software project currently in its initial stages. We're building something exciting and will be sharing more details as development progresses.
-
 ## Status
 
-🚧 **Under Active Development** - This project is just getting started. Features and documentation will be added as we build.
-
-## Roadmap
-
-- [ ] Core architecture design
-- [ ] Initial implementation
-- [ ] Documentation
-- [ ] Testing framework
-- [ ] First release
-
-## Getting Involved
-
-Interested in contributing or following along? Stay tuned for updates!
+🚀 **Phase 4 in progress** — Helm chart, Rego adapter, OIDC auth path, and AutoGPT scaffold are now available.
 
 ## License
 
@@ -214,4 +215,4 @@ MIT License
 
 ---
 
-*More information coming soon...*
+*Auth Permission Engine · Go · TypeScript · Python · February 2026*

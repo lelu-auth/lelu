@@ -27,6 +27,8 @@ func main() {
 	signingKey := envOr("JWT_SIGNING_KEY", "change-me-in-production")
 	cpURL := envOr("CONTROL_PLANE_URL", "")
 	cpHMACSecret := envOr("CP_HMAC_SECRET", "")
+	regoPolicyPath := envOr("REGO_POLICY_PATH", "")
+	regoPolicyQuery := envOr("REGO_POLICY_QUERY", "data.prism.authz")
 
 	// ── Bootstrap components ─────────────────────────────────────────────────
 	eval := evaluator.New()
@@ -37,6 +39,13 @@ func main() {
 		log.Printf("policy loaded from %s", policyPath)
 	} else {
 		log.Printf("no policy file at %s — starting with empty policy", policyPath)
+	}
+
+	if regoPolicyPath != "" {
+		if err := eval.LoadRegoPolicy(regoPolicyPath, regoPolicyQuery); err != nil {
+			log.Fatalf("failed to load rego policy from %s: %v", regoPolicyPath, err)
+		}
+		log.Printf("rego policy loaded from %s (query: %s)", regoPolicyPath, regoPolicyQuery)
 	}
 
 	tokenSvc := tokens.New(tokens.Config{

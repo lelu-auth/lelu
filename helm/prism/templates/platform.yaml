@@ -1,0 +1,44 @@
+{{- if .Values.platform.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prism-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prism-platform
+  template:
+    metadata:
+      labels:
+        app: prism-platform
+    spec:
+      containers:
+        - name: platform
+          image: {{ .Values.platform.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.platform.port }}
+          env:
+            - name: LISTEN_ADDR
+              value: ":{{ .Values.platform.port }}"
+            - name: DATABASE_URL
+              value: {{ .Values.platform.env.DATABASE_URL | quote }}
+            - name: PLATFORM_API_KEY
+              value: {{ .Values.platform.env.PLATFORM_API_KEY | quote }}
+            - name: OIDC_ISSUER_URL
+              value: {{ .Values.platform.env.OIDC_ISSUER_URL | quote }}
+            - name: OIDC_AUDIENCE
+              value: {{ .Values.platform.env.OIDC_AUDIENCE | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prism-platform
+spec:
+  selector:
+    app: prism-platform
+  ports:
+    - port: {{ .Values.platform.servicePort }}
+      targetPort: {{ .Values.platform.port }}
+{{- end }}

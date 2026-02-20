@@ -16,7 +16,7 @@ export default async function TracePage({
       ? trace.events.reduce((s, e) => s + e.confidence_score, 0) / trace.events.length
       : 0;
 
-  const decisions = [...new Set(trace.events.map((e) => e.decision))];
+  const decisions = Array.from(new Set(trace.events.map((e) => e.decision)));
 
   return (
     <>
@@ -46,7 +46,7 @@ export default async function TracePage({
         <div className="card" style={{ marginBottom: "2rem" }}>
           <div className="card-label">Actors involved</div>
           <div className="card-value">
-            {[...new Set(trace.events.map((e) => e.actor))].join(", ")}
+            {Array.from(new Set(trace.events.map((e) => e.actor))).join(", ")}
           </div>
         </div>
       )}
