@@ -16,15 +16,42 @@ func loadRegoPolicy(path, query string) (*regoPolicy, error) {
 	if query == "" {
 		query = "data.prism.authz"
 	}
-	policy, err := os.ReadFile(path)
+
+	info, err := os.Stat(path)
 	if err != nil {
-		return nil, fmt.Errorf("evaluator: read rego policy: %w", err)
+		return nil, fmt.Errorf("evaluator: stat rego path: %w", err)
 	}
 
-	r, err := rego.New(
-		rego.Query(query),
-		rego.Module(path, string(policy)),
-	).PrepareForEval(context.Background())
+	var options []func(*rego.Rego)
+
+	if info.IsDir() {
+		// Load all .rego files in the directory (Plugin support)
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return nil, fmt.Errorf("evaluator: read rego dir: %w", err)
+		}
+		for _, entry := range entries {
+			if !entry.IsDir() && len(entry.Name()) > 5 && entry.Name()[len(entry.Name())-5:] == ".rego" {
+				filePath := path + "/" + entry.Name()
+				policy, err := os.ReadFile(filePath)
+				if err != nil {
+					return nil, fmt.Errorf("evaluator: read rego policy %s: %w", filePath, err)
+				}
+				options = append(options, rego.Module(filePath, string(policy)))
+			}
+		}
+	} else {
+		// Load single file
+		policy, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("evaluator: read rego policy: %w", err)
+		}
+		options = append(options, rego.Module(path, string(policy)))
+	}
+
+	options = append(options, rego.Query(query))
+
+	r, err := rego.New(options...).PrepareForEval(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("evaluator: compile rego policy: %w", err)
 	}

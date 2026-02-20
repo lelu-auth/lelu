@@ -19,6 +19,7 @@ Quick start::
 
 from .client import PrismClient
 from .autogpt_plugin import PrismAutoGPTPlugin
+from .middleware import AgentMiddleware
 from .models import (
     AgentAuthDecision,
     AgentAuthRequest,
@@ -34,6 +35,7 @@ from .models import (
 __all__ = [
     "PrismClient",
     "PrismAutoGPTPlugin",
+    "AgentMiddleware",
     # Requests
     "AuthRequest",
     "AgentAuthRequest",

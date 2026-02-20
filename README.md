@@ -132,8 +132,15 @@ Security hardening included in the chart:
 
 ### OPA / Rego compatibility
 
+You can load a single Rego file or a directory of Rego plugins (for custom evaluators):
+
 ```bash
+# Load a single file
 export REGO_POLICY_PATH=./config/auth.rego
+export REGO_POLICY_QUERY=data.prism.authz
+
+# Or load a directory of plugins
+export REGO_POLICY_PATH=./config/plugins/
 export REGO_POLICY_QUERY=data.prism.authz
 ```
 
@@ -204,6 +211,21 @@ auth-permission-engine/
 ├── Makefile
 └── .github/workflows/ci.yml
 ```
+
+---
+
+## 🔌 Integrations Registry
+
+We are actively building integrations for the most popular AI agent frameworks. Want to help? Check out our [Contributing Guide](CONTRIBUTING.md)!
+
+| Framework | Language | Status |
+|---|---|---|
+| **LangChain** | TypeScript | ✅ Supported (`auth-permission-engine/langchain`) |
+| **AutoGPT** | Python | ✅ Supported (`auth_pe.autogpt_plugin`) |
+| **LlamaIndex** | Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |
+| **CrewAI** | Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |
+| **Vercel AI SDK** | TypeScript | 🛠️ [Help Wanted](CONTRIBUTING.md) |
+| **Semantic Kernel** | C# / Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |
 
 ---
 
