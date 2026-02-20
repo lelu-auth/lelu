@@ -106,6 +106,25 @@ services:
     networks:
       - prism
 
+  # ── Trace Explorer UI ──────────────────────────────────────────────────────
+  ui:
+    build:
+      context: platform/ui
+      dockerfile: Dockerfile
+    image: prism/ui:local
+    container_name: prism-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PLATFORM_URL:     "http://platform:9090"
+      PLATFORM_API_KEY: "${PLATFORM_API_KEY:-platform-dev-key}"
+    depends_on:
+      platform:
+        condition: service_healthy
+    networks:
+      - prism
+
   # ── Redis Insight (optional dev UI) ─────────────────────────────────────────
   redis-ui:
     image: redislabs/redisinsight:latest
