@@ -222,6 +222,19 @@ auth-permission-engine/
 
 🚀 **Phase 4 in progress** — Helm chart, Rego adapter, OIDC auth path, and AutoGPT scaffold are now available.
 
+## OSS Launch Ops
+
+- CI now validates Helm via `helm lint` and `helm template` for both default and production values.
+- Tagged releases (`v*`) publish engine binaries for Linux, macOS (arm64), and Windows.
+- GitHub Releases include generated release notes + curated highlights.
+
+Create a public OSS release:
+
+```bash
+git tag v0.4.0
+git push origin v0.4.0
+```
+
 ## License
 
 MIT License

@@ -230,6 +230,28 @@ jobs:
         working-directory: platform/ui
         run: npx tsc --noEmit
 
+  # ── Helm chart validation ──────────────────────────────────────────────────
+  helm-chart:
+    name: "Helm — lint & template"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Helm lint
+        run: helm lint ./helm/prism
+
+      - name: Helm template (default values)
+        run: helm template prism ./helm/prism > /tmp/prism-default.yaml
+
+      - name: Helm template (production values)
+        run: helm template prism ./helm/prism -f ./helm/prism/values-production.yaml > /tmp/prism-prod.yaml
+
   # ── Security scan ────────────────────────────────────────────────────────────
   security:
     name: "Security — Trivy scan"
