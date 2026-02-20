@@ -1,7 +1,7 @@
-# ── Deps + Build (reuses the cached golang:1.22-alpine layer — no new pull) ───
+# ── Build + Runtime (uses only golang:1.22-alpine — already cached locally) ──
 FROM golang:1.22-alpine AS builder
 
-# Install Node.js + npm from Alpine's package repo (same CDN already working)
+# Install Node.js + npm from Alpine's CDN (same CDN already working)
 RUN apk add --no-cache nodejs npm
 
 WORKDIR /app
@@ -12,10 +12,11 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# ── Runtime (reuses cached alpine:3.19) ──────────────────────────────────────
-FROM alpine:3.19 AS runtime
+# ── Runtime ───────────────────────────────────────────────────────────────────
+FROM golang:1.22-alpine AS runtime
 
 RUN apk add --no-cache nodejs
+
 RUN addgroup -g 1001 nodejs && adduser -S -u 1001 -G nodejs nextjs
 
 WORKDIR /app
