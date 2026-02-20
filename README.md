@@ -110,12 +110,25 @@ make docker-down
 | `REGO_POLICY_QUERY` | `data.prism.authz` | Rego query to evaluate |
 | `OIDC_ISSUER_URL` | _(empty)_ | Optional OIDC issuer for enterprise SSO on platform APIs |
 | `OIDC_AUDIENCE` | _(empty)_ | OIDC client/audience value used in token verification |
+| `SSO_TRUSTED_HEADER` | _(empty)_ | Optional trusted identity header from upstream SSO proxy |
+| `SSO_TRUSTED_EMAIL_DOMAIN` | _(empty)_ | Optional domain restriction for trusted header mode |
 
 ### Kubernetes (Helm)
 
 ```bash
 helm install prism ./helm/prism
 ```
+
+Production profile:
+
+```bash
+helm upgrade --install prism ./helm/prism -f ./helm/prism/values-production.yaml
+```
+
+Security hardening included in the chart:
+- Kubernetes `Secret` for engine/platform/ui/postgres credentials
+- Liveness/readiness probes for engine/platform/ui
+- Optional ingress TLS (`ingress.tls.enabled=true`)
 
 ### OPA / Rego compatibility
 

@@ -4,6 +4,10 @@
 //   LISTEN_ADDR        HTTP listen address (default: :9090)
 //   DATABASE_URL       Postgres DSN (required)
 //   PLATFORM_API_KEY   API key for engine → platform authentication
+//   OIDC_ISSUER_URL    OIDC issuer URL for enterprise SSO (optional)
+//   OIDC_AUDIENCE      OIDC audience/client ID (optional)
+//   SSO_TRUSTED_HEADER Trusted upstream identity header (optional)
+//   SSO_TRUSTED_EMAIL_DOMAIN Optional email-domain restriction for trusted header mode
 package main
 
 import (
@@ -27,6 +31,8 @@ func main() {
 	apiKey := envOr("PLATFORM_API_KEY", "change-me-in-production")
 	oidcIssuer := envOr("OIDC_ISSUER_URL", "")
 	oidcAudience := envOr("OIDC_AUDIENCE", "")
+	trustedSSOHeader := envOr("SSO_TRUSTED_HEADER", "")
+	trustedSSODomain := envOr("SSO_TRUSTED_EMAIL_DOMAIN", "")
 
 	// ── Database ──────────────────────────────────────────────────────────────
 	database, err := db.Open(dsn)
@@ -55,7 +61,14 @@ func main() {
 		oidcAuth = auth
 		log.Printf("platform: oidc enabled (issuer=%s)", oidcIssuer)
 	}
-	h := handlers.New(policyStore, auditStore, apiKey, oidcAuth)
+	if trustedSSOHeader != "" {
+		if trustedSSODomain != "" {
+			log.Printf("platform: trusted SSO header enabled (%s, domain=%s)", trustedSSOHeader, trustedSSODomain)
+		} else {
+			log.Printf("platform: trusted SSO header enabled (%s)", trustedSSOHeader)
+		}
+	}
+	h := handlers.New(policyStore, auditStore, apiKey, oidcAuth, trustedSSOHeader, trustedSSODomain)
 	h.RegisterRoutes(mux)
 
 	srv := &http.Server{

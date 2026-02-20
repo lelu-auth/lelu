@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: prism-platform
 spec:
-  replicas: 1
+  replicas: {{ .Values.platform.replicaCount }}
   selector:
     matchLabels:
       app: prism-platform
@@ -23,13 +23,37 @@ spec:
             - name: LISTEN_ADDR
               value: ":{{ .Values.platform.port }}"
             - name: DATABASE_URL
-              value: {{ .Values.platform.env.DATABASE_URL | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: prism-secrets
+                  key: platformDatabaseUrl
             - name: PLATFORM_API_KEY
-              value: {{ .Values.platform.env.PLATFORM_API_KEY | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: prism-secrets
+                  key: platformApiKey
             - name: OIDC_ISSUER_URL
               value: {{ .Values.platform.env.OIDC_ISSUER_URL | quote }}
             - name: OIDC_AUDIENCE
               value: {{ .Values.platform.env.OIDC_AUDIENCE | quote }}
+            - name: SSO_TRUSTED_HEADER
+              value: {{ .Values.platform.env.SSO_TRUSTED_HEADER | quote }}
+            - name: SSO_TRUSTED_EMAIL_DOMAIN
+              value: {{ .Values.platform.env.SSO_TRUSTED_EMAIL_DOMAIN | quote }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.platform.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.platform.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+{{ toYaml .Values.platform.resources | indent 12 }}
 ---
 apiVersion: v1
 kind: Service

@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: prism-ui
 spec:
-  replicas: 1
+  replicas: {{ .Values.ui.replicaCount }}
   selector:
     matchLabels:
       app: prism-ui
@@ -23,7 +23,24 @@ spec:
             - name: PLATFORM_URL
               value: {{ .Values.ui.env.PLATFORM_URL | quote }}
             - name: PLATFORM_API_KEY
-              value: {{ .Values.ui.env.PLATFORM_API_KEY | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: prism-secrets
+                  key: uiPlatformApiKey
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.ui.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.ui.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+{{ toYaml .Values.ui.resources | indent 12 }}
 ---
 apiVersion: v1
 kind: Service

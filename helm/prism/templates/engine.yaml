@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: prism-engine
 spec:
-  replicas: 1
+  replicas: {{ .Values.engine.replicaCount }}
   selector:
     matchLabels:
       app: prism-engine
@@ -27,15 +27,35 @@ spec:
             - name: REDIS_ADDR
               value: {{ .Values.engine.env.REDIS_ADDR | quote }}
             - name: JWT_SIGNING_KEY
-              value: {{ .Values.engine.env.JWT_SIGNING_KEY | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: prism-secrets
+                  key: engineJwtSigningKey
             - name: CONTROL_PLANE_URL
               value: {{ .Values.engine.env.CONTROL_PLANE_URL | quote }}
             - name: CP_HMAC_SECRET
-              value: {{ .Values.engine.env.CP_HMAC_SECRET | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: prism-secrets
+                  key: engineCpHmacSecret
             - name: REGO_POLICY_PATH
               value: {{ .Values.engine.env.REGO_POLICY_PATH | quote }}
             - name: REGO_POLICY_QUERY
               value: {{ .Values.engine.env.REGO_POLICY_QUERY | quote }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.engine.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.engine.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          resources:
+{{ toYaml .Values.engine.resources | indent 12 }}
           volumeMounts:
             - name: policy
               mountPath: /etc/prism

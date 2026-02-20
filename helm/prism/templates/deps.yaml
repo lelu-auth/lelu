@@ -61,7 +61,10 @@ spec:
             - name: POSTGRES_USER
               value: {{ .Values.postgres.user | quote }}
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.postgres.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: prism-secrets
+                  key: postgresPassword
 ---
 apiVersion: v1
 kind: Service

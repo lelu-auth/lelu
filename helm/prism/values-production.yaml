@@ -1,0 +1,77 @@
+global:
+  imagePullPolicy: IfNotPresent
+
+secrets:
+  engine:
+    jwtSigningKey: "REPLACE_ME"
+    cpHmacSecret: "REPLACE_ME"
+  platform:
+    apiKey: "REPLACE_ME"
+    databaseUrl: "postgres://prism:REPLACE_ME@managed-postgres:5432/prism?sslmode=require"
+  ui:
+    platformApiKey: "REPLACE_ME"
+  postgres:
+    password: "REPLACE_ME"
+
+engine:
+  enabled: true
+  replicaCount: 2
+  image: ghcr.io/abenezer0923/prism-engine:latest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    POLICY_PATH: /etc/prism/auth.yaml
+    REDIS_ADDR: managed-redis:6379
+    CONTROL_PLANE_URL: https://platform.prism.example.com
+    REGO_POLICY_PATH: ""
+    REGO_POLICY_QUERY: data.prism.authz
+
+platform:
+  enabled: true
+  replicaCount: 2
+  image: ghcr.io/abenezer0923/prism-platform:latest
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  env:
+    OIDC_ISSUER_URL: https://login.example.com
+    OIDC_AUDIENCE: prism-platform
+    SSO_TRUSTED_HEADER: X-Forwarded-Email
+    SSO_TRUSTED_EMAIL_DOMAIN: example.com
+
+ui:
+  enabled: true
+  replicaCount: 2
+  image: ghcr.io/abenezer0923/prism-ui:latest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    PLATFORM_URL: http://prism-platform:9090
+
+redis:
+  enabled: false
+
+postgres:
+  enabled: false
+
+ingress:
+  enabled: true
+  className: nginx
+  host: prism.example.com
+  tls:
+    enabled: true
+    secretName: prism-example-tls
