@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { PrismClient } from "../client";
 
+export * from './PrismApprovalUI';
+export * from './AgentReputationDashboard';
+
 export interface UseAgentPermissionOptions {
   /** Base URL of the Prism engine.  Defaults to http://localhost:8080 */
   baseUrl?: string;

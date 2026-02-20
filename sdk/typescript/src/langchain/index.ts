@@ -10,3 +10,4 @@
  */
 export { SecureTool } from "./secure-tool.js";
 export type { SecureToolOptions, ToolCallResult } from "./secure-tool.js";
+export { SemanticPolicyGenerator } from "./SemanticPolicyGenerator.js";
