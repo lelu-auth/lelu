@@ -1,35 +1,33 @@
-# ── Deps ──────────────────────────────────────────────────────────────────────
-FROM node:20-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm install --frozen-lockfile 2>/dev/null || npm install
+# ── Deps + Build (reuses the cached golang:1.22-alpine layer — no new pull) ───
+FROM golang:1.22-alpine AS builder
 
-# ── Builder ───────────────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+# Install Node.js + npm from Alpine's package repo (same CDN already working)
+RUN apk add --no-cache nodejs npm
+
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
+RUN npm install
+
 COPY . .
-
-# Standalone output for minimal runtime image
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# ── Runtime ───────────────────────────────────────────────────────────────────
-FROM node:20-alpine AS runtime
-WORKDIR /app
+# ── Runtime (reuses cached alpine:3.19) ──────────────────────────────────────
+FROM alpine:3.19 AS runtime
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
+RUN apk add --no-cache nodejs
 RUN addgroup -g 1001 nodejs && adduser -S -u 1001 -G nodejs nextjs
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-EXPOSE 3000
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+USER nextjs
+EXPOSE 3000
 CMD ["node", "server.js"]
