@@ -10,12 +10,12 @@ FROM golang:1.22-alpine AS builder
 # Install git + ca-certs (needed for go module downloads over HTTPS)
 RUN apk add --no-cache git ca-certificates tzdata
 
+ENV GOPROXY=https://goproxy.io,direct
+
 WORKDIR /build
 
 # Cache dependency downloads separately from source changes.
-# Copying only go.mod lets Docker cache this layer until dependencies change.
-# go mod download also writes go.sum so no pre-committed go.sum is required.
-COPY engine/go.mod ./
+COPY engine/go.mod engine/go.sum ./
 RUN go mod download
 
 # Copy source

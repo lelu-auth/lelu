@@ -61,7 +61,7 @@ services:
 
   # ── PostgreSQL — control plane store ─────────────────────────────────────────
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15
     container_name: prism-postgres
     restart: unless-stopped
     ports:
