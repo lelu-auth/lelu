@@ -1,14 +1,28 @@
-# Auth Permission Engine 🔐
+# Prism: Auth Permission Engine 🔐
 
 > **The immune system for autonomous AI agents.**
 
-A policy engine that issues **JIT tokens**, enforces **agent-scoped constraints**, and — uniquely — ties **authorization decisions to LLM confidence scores**.
+Prism is a developer-first authorization layer built specifically for the Agentic Web. It grants ephemeral, context-aware, and scoped permissions to AI agents, ensuring they act autonomously without hallucinating security breaches. 
+
+Unlike legacy IAM, Prism treats AI agents as first-class actors with their own distinct constraint model, tying authorization decisions directly to **LLM confidence scores**.
 
 [![CI](https://github.com/prism/auth-permission-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/prism/auth-permission-engine/actions/workflows/ci.yml)
 
 ---
 
-## Quick Start
+## 🌟 Key Features
+
+*   **Confidence-Aware Auth:** Automatically downgrade permissions or require human approval if an LLM's confidence score drops below a defined threshold.
+*   **Ephemeral Agent Tokens (JIT):** Never give an AI agent a permanent API key. Prism mints Just-In-Time tokens that expire the moment a task completes.
+*   **Local Evaluation (Sidecar):** Policies are evaluated in-memory with sub-2ms latency. Zero added latency to your agent's decision loop.
+*   **Human-in-the-Loop (HITL):** Seamlessly route uncertain agent actions to a human manager for 1-click approval.
+*   **The Black Box Audit:** A Trace Explorer that links the exact LLM prompt to the resulting authorization decision.
+
+---
+
+## 🚀 Quick Start
+
+The easiest way to get started is using Docker Compose, which spins up the Engine, Platform UI, and Redis.
 
 ```bash
 # 1. Start the engine + Redis sidecar
@@ -30,109 +44,66 @@ curl -s -X POST http://localhost:8082/v1/agent/authorize \
 
 ---
 
-## How it works
+## 🧠 How it Works
 
-Three deployable layers:
+Modern agentic applications have three distinct actor types: Users, Resources, and Agents. Prism separates Human Roles from Agent Scopes—a fundamental split that traditional IAM tools miss.
 
-```
+### The Architecture
+
+```text
 Cloud Control Plane  ──push──►  Local Sidecar Engine (Go)  ◄──►  SDK  ◄──►  Agent
 ```
 
-| Layer | What it does |
+| Component | Description |
 |---|---|
-| **Go Engine** | Sub-2 ms policy evaluation, JIT token minting, Confidence Gate ★ |
-| **TypeScript SDK** | LangChain, React, Express integrations |
-| **Python SDK** | LangGraph, FastAPI, AutoGPT integrations |
-| **YAML Config** | Human-readable, Git-diffable policy file |
+| **Go Engine** | Sub-2 ms policy evaluation, JIT token minting, and the Confidence Gate. |
+| **TypeScript SDK** | Middleware for LangChain, React, and Express. |
+| **Python SDK** | Middleware for LangGraph, FastAPI, and AutoGPT. |
+| **YAML Config** | Human-readable, Git-diffable policy definitions. |
+
+### Confidence-Aware Auth in Action
+
+LLMs are non-deterministic. Your auth layer shouldn't pretend otherwise. Configure thresholds per-agent in your `auth.yaml`:
+
+| Confidence | Prism's Automated Behaviour |
+|---|---|
+| **≥ 90%** | Agent acts autonomously (Full Scope) |
+| **70–89%** | Action queued for human review |
+| **< 70%** | Token downgraded to `read_only` |
+| **< 50%** | Hard deny + security alert triggered |
 
 ---
 
-## Confidence-Aware Auth ★
-
-The feature no competitor has — binding auth to LLM certainty.
-
-| Confidence | Behaviour |
-|---|---|
-| **≥ 90%** | Agent acts autonomously |
-| **70–89%** | Queued for human review |
-| **< 70%** | Downgraded to `read_only` |
-| **< 50%** | Hard deny + security alert |
-
-Configure thresholds per-agent in `config/auth.yaml`.
-
----
-
-## Development
+## 💻 Development & Deployment
 
 ### Prerequisites
-
 - Go 1.22+
 - Docker + Docker Compose
 - Node 20+ (TypeScript SDK)
 - Python 3.11+ (Python SDK)
 
-### Commands
+### Local Commands
 
 ```bash
-# Run everything in Docker
-make docker-up
-
-# Run Go tests with race detector
-make test
-
-# Build Go binary
-make build
-
-# TypeScript SDK
-make sdk-ts-install
-make sdk-ts-build
-make sdk-ts-test
-
-# Python SDK
-make sdk-py-install
-make sdk-py-test
-
-# Stop containers
-make docker-down
+make docker-up       # Run everything in Docker
+make test            # Run Go tests with race detector
+make build           # Build Go binary
+make sdk-ts-build    # Build TypeScript SDK
+make sdk-py-test     # Test Python SDK
 ```
-
-### Environment variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `LISTEN_ADDR` | `:8080` | Engine HTTP listen address |
-| `POLICY_PATH` | `/etc/prism/auth.yaml` | Policy file mount path |
-| `REDIS_ADDR` | _(empty)_ | Redis address for token store |
-| `JWT_SIGNING_KEY` | `change-me-in-production` | HMAC key for JIT tokens |
-| `CONTROL_PLANE_URL` | _(empty)_ | Cloud control plane URL (optional) |
-| `CP_HMAC_SECRET` | _(empty)_ | HMAC secret for policy signature verification |
-| `REGO_POLICY_PATH` | _(empty)_ | Optional Rego policy path (enables OPA compatibility mode) |
-| `REGO_POLICY_QUERY` | `data.prism.authz` | Rego query to evaluate |
-| `OIDC_ISSUER_URL` | _(empty)_ | Optional OIDC issuer for enterprise SSO on platform APIs |
-| `OIDC_AUDIENCE` | _(empty)_ | OIDC client/audience value used in token verification |
-| `SSO_TRUSTED_HEADER` | _(empty)_ | Optional trusted identity header from upstream SSO proxy |
-| `SSO_TRUSTED_EMAIL_DOMAIN` | _(empty)_ | Optional domain restriction for trusted header mode |
 
 ### Kubernetes (Helm)
 
+Prism includes a production-ready Helm chart with security hardening (Secrets, probes, TLS).
+
 ```bash
 helm install prism ./helm/prism
-```
-
-Production profile:
-
-```bash
 helm upgrade --install prism ./helm/prism -f ./helm/prism/values-production.yaml
 ```
 
-Security hardening included in the chart:
-- Kubernetes `Secret` for engine/platform/ui/postgres credentials
-- Liveness/readiness probes for engine/platform/ui
-- Optional ingress TLS (`ingress.tls.enabled=true`)
+### OPA / Rego Compatibility
 
-### OPA / Rego compatibility
-
-You can load a single Rego file or a directory of Rego plugins (for custom evaluators):
+Prism supports Open Policy Agent (OPA) Rego files. You can load a single Rego file or a directory of Rego plugins (for custom evaluators):
 
 ```bash
 # Load a single file
@@ -142,74 +113,6 @@ export REGO_POLICY_QUERY=data.prism.authz
 # Or load a directory of plugins
 export REGO_POLICY_PATH=./config/plugins/
 export REGO_POLICY_QUERY=data.prism.authz
-```
-
----
-
-## API Reference
-
-### `POST /v1/authorize`
-Human authorization check.
-
-```json
-{ "user_id": "user_123", "action": "approve_refunds" }
-```
-
-### `POST /v1/agent/authorize`
-Agent authorization with confidence gate.
-
-```json
-{
-  "actor":      "invoice_bot",
-  "action":     "approve_refunds",
-  "confidence": 0.92,
-  "acting_for": "user_123"
-}
-```
-
-### `POST /v1/tokens/mint`
-Mint a JIT-scoped token.
-
-```json
-{ "scope": "invoice_bot", "acting_for": "user_123", "ttl_seconds": 60 }
-```
-
-### `DELETE /v1/tokens/:tokenId`
-Revoke a token immediately.
-
-### `GET /healthz`
-Returns `{"status":"ok"}` if healthy.
-
----
-
-## Repository Structure
-
-```
-auth-permission-engine/
-├── engine/                   # Go source
-│   ├── cmd/engine/main.go    # Entrypoint
-│   ├── internal/
-│   │   ├── evaluator/        # OPA-style policy engine
-│   │   ├── tokens/           # JIT token minting + validation
-│   │   ├── confidence/       # Confidence-Aware Auth gate ★
-│   │   ├── audit/            # Async audit log pipeline
-│   │   ├── sync/             # Policy hot-reload worker
-│   │   └── server/           # HTTP handler
-│   └── proto/auth.proto      # gRPC service definition (Phase 2)
-├── sdk/typescript/           # TypeScript SDK
-│   └── src/
-│       ├── client.ts
-│       ├── types.ts
-│       └── index.ts
-├── sdk/python/               # Python SDK
-│   └── auth_pe/
-│       ├── client.py
-│       ├── models.py
-│       └── __init__.py
-├── config/auth.yaml          # Sample policy file
-├── docker-compose.yml
-├── Makefile
-└── .github/workflows/ci.yml
 ```
 
 ---
@@ -229,38 +132,40 @@ We are actively building integrations for the most popular AI agent frameworks. 
 
 ---
 
-## Roadmap
+## 📖 API Reference
 
-| Phase | Weeks | Milestone |
-|---|---|---|
-| **Phase 1** | 1–6 | Go engine + SDK core clients ← *you are here* |
-| **Phase 2** | 7–12 | Confidence Gate, LangChain/LangGraph wrappers |
-| **Phase 3** | 13–20 | Cloud control plane, Trace Explorer UI, first customer |
-| **Phase 4** | 21–28 | OSS release, Helm chart, AutoGPT plugin, Rego compatibility, enterprise SSO |
+### `POST /v1/agent/authorize`
+Agent authorization with confidence gate.
+```json
+{
+  "actor":      "invoice_bot",
+  "action":     "approve_refunds",
+  "confidence": 0.92,
+  "acting_for": "user_123"
+}
+```
+
+### `POST /v1/tokens/mint`
+Mint a JIT-scoped token.
+```json
+{ "scope": "invoice_bot", "acting_for": "user_123", "ttl_seconds": 60 }
+```
+
+### `POST /v1/authorize`
+Standard human authorization check.
+```json
+{ "user_id": "user_123", "action": "approve_refunds" }
+```
 
 ---
 
-## Status
+## 🤝 Contributing
 
-🚀 **Phase 4 in progress** — Helm chart, Rego adapter, OIDC auth path, and AutoGPT scaffold are now available.
+We welcome contributions! Whether it's adding a new SDK integration, writing custom Rego evaluators, or improving the core engine, please see our [Contributing Guide](CONTRIBUTING.md) to get started.
 
-## OSS Launch Ops
-
-- CI now validates Helm via `helm lint` and `helm template` for both default and production values.
-- Tagged releases (`v*`) publish engine binaries for Linux, macOS (arm64), and Windows.
-- GitHub Releases include generated release notes + curated highlights.
-
-Create a public OSS release:
-
-```bash
-git tag v0.4.0
-git push origin v0.4.0
-```
-
-## License
+## 📄 License
 
 MIT License
 
 ---
-
-*Auth Permission Engine · Go · TypeScript · Python · February 2026*
+*Prism: Auth Permission Engine · Go · TypeScript · Python · 2026*
