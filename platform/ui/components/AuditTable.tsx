@@ -49,12 +49,12 @@ export function AuditTable({ events }: { events: AuditEvent[] }) {
                 <div className="conf">
                   <div className="conf-bar">
                     <div
-                      className={`conf-fill ${confClass(e.confidence)}`}
-                      style={{ width: `${Math.round(e.confidence * 100)}%` }}
+                      className={`conf-fill ${confClass(e.confidence_score)}`}
+                      style={{ width: `${Math.round(e.confidence_score * 100)}%` }}
                     />
                   </div>
                   <span style={{ fontSize: "0.75rem", color: "#94a3b8", minWidth: 32 }}>
-                    {(e.confidence * 100).toFixed(0)}%
+                    {(e.confidence_score * 100).toFixed(0)}%
                   </span>
                 </div>
               </td>

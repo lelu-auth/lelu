@@ -13,7 +13,7 @@ export default async function TracePage({
 
   const avgConf =
     trace.events.length > 0
-      ? trace.events.reduce((s, e) => s + e.confidence, 0) / trace.events.length
+      ? trace.events.reduce((s, e) => s + e.confidence_score, 0) / trace.events.length
       : 0;
 
   const decisions = [...new Set(trace.events.map((e) => e.decision))];

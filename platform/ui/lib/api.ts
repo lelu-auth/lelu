@@ -49,17 +49,22 @@ export interface Policy {
 
 export async function listAuditEvents(params?: {
   actor?: string;
+  action?: string;
   decision?: string;
   from?: string;
   to?: string;
-}): Promise<AuditListResponse> {
-  const qs = new URLSearchParams(params as Record<string, string>).toString();
+  limit?: number;
+}): Promise<AuditEvent[]> {
+  const qs = new URLSearchParams(
+    Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v !== undefined)) as Record<string, string>
+  ).toString();
   const res = await fetch(`${PLATFORM_URL}/api/v1/audit${qs ? `?${qs}` : ""}`, {
     headers,
     next: { revalidate: 10 },
   });
   if (!res.ok) throw new Error(`Audit fetch failed: ${res.status}`);
-  return res.json();
+  const body = await res.json();
+  return body.events ?? body;
 }
 
 export async function getTrace(traceId: string): Promise<TraceResponse> {
@@ -73,11 +78,12 @@ export async function getTrace(traceId: string): Promise<TraceResponse> {
 
 // ─── Policies ─────────────────────────────────────────────────────────────────
 
-export async function listPolicies(): Promise<{ policies: Policy[]; count: number }> {
+export async function listPolicies(): Promise<Policy[]> {
   const res = await fetch(`${PLATFORM_URL}/api/v1/policies`, {
     headers,
     next: { revalidate: 30 },
   });
   if (!res.ok) throw new Error(`Policy fetch failed: ${res.status}`);
-  return res.json();
+  const body = await res.json();
+  return body.policies ?? body;
 }
