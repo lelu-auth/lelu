@@ -1,7 +1,7 @@
 # ── Build stage ────────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS builder
 
-ENV GOPROXY=https://goproxy.io,direct
+ENV GOPROXY=https://proxy.golang.org,direct
 
 WORKDIR /src
 COPY go.mod go.sum ./

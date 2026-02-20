@@ -10,7 +10,7 @@ FROM golang:1.22-alpine AS builder
 # Install git + ca-certs (needed for go module downloads over HTTPS)
 RUN apk add --no-cache git ca-certificates tzdata
 
-ENV GOPROXY=https://goproxy.io,direct
+ENV GOPROXY=https://proxy.golang.org,direct
 
 WORKDIR /build
 
