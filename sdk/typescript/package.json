@@ -1,5 +1,5 @@
 {
-  "name": "auth-permission-engine",
+  "name": "prism",
   "version": "0.1.0",
   "description": "TypeScript SDK for the Auth Permission Engine — the immune system for autonomous AI agents",
   "main": "dist/index.js",

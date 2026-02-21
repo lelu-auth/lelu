@@ -123,7 +123,7 @@ We are actively building integrations for the most popular AI agent frameworks. 
 
 | Framework | Language | Status |
 |---|---|---|
-| **LangChain** | TypeScript | ✅ Supported (`auth-permission-engine/langchain`) |
+| **LangChain** | TypeScript | ✅ Supported (`prism/langchain`) |
 | **AutoGPT** | Python | ✅ Supported (`auth_pe.autogpt_plugin`) |
 | **LlamaIndex** | Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |
 | **CrewAI** | Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |

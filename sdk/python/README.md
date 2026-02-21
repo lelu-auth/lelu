@@ -1,4 +1,4 @@
-# auth-permission-engine · Python SDK
+# Prism · Python SDK
 
 Python client for [Prism](https://github.com/Abenezer0923/Prism) — the confidence-aware authorization engine for autonomous AI agents.
 

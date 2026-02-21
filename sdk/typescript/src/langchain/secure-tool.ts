@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { SecureTool } from 'auth-permission-engine/langchain';
+ * import { SecureTool } from 'prism/langchain';
  *
  * const refundTool = new SecureTool({
  *   name: 'process_refund',

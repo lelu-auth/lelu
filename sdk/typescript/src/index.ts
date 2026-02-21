@@ -34,7 +34,7 @@ import type { ClientConfig } from "./types.js";
  *
  * @example
  * ```ts
- * import { createClient } from "auth-permission-engine";
+ * import { createClient } from "prism";
  *
  * const prism = createClient({ baseUrl: "http://localhost:8080" });
  * const { allowed } = await prism.agentAuthorize({ ... });

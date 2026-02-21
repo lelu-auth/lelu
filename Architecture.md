@@ -247,14 +247,14 @@ service AuthPermissionEngine {
 
 **Installation:**
 ```bash
-npm install auth-permission-engine
+npm install prism
 ```
 
 **Components:**
 
 #### 1. Core Client
 ```typescript
-import { authorize, agentAuthorize, mintAgentToken } from 'auth-permission-engine';
+import { authorize, agentAuthorize, mintAgentToken } from 'prism';
 
 // Human check
 const decision = await authorize({
@@ -274,7 +274,7 @@ const agentDecision = await agentAuthorize({
 
 #### 2. LangChain Middleware
 ```typescript
-import { SecureTool } from 'auth-permission-engine/langchain';
+import { SecureTool } from 'prism/langchain';
 
 const refundTool = new SecureTool({
   name: 'refund_transaction',
@@ -289,7 +289,7 @@ const refundTool = new SecureTool({
 
 #### 3. React Hook
 ```typescript
-import { useAgentPermission } from 'auth-permission-engine/react';
+import { useAgentPermission } from 'prism/react';
 
 function AgentChatBox() {
   const { canExecute, loading } = useAgentPermission('refund_payment');
@@ -304,7 +304,7 @@ function AgentChatBox() {
 
 #### 4. Express Middleware
 ```typescript
-import { authorize } from 'auth-permission-engine/express';
+import { authorize } from 'prism/express';
 
 app.post('/refund', authorize('approve_refund'), (req, res) => {
   // Route protected by permission check
