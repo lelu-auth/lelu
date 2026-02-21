@@ -32,8 +32,8 @@ fastapi = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/prism/auth-permission-engine"
-Repository = "https://github.com/prism/auth-permission-engine"
+Homepage = "https://github.com/Abenezer0923/Prism"
+Repository = "https://github.com/Abenezer0923/Prism"
 
 [tool.hatch.build.targets.wheel]
 packages = ["auth_pe"]

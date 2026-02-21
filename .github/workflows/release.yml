@@ -101,7 +101,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/auth-permission-engine
+      url: https://pypi.org/p/prism-engine
 
     steps:
       - uses: actions/checkout@v4

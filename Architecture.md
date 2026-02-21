@@ -320,7 +320,7 @@ Full TypeScript types for `Policy`, `Decision`, `AgentContext`, `ConfidenceGate`
 
 **Installation:**
 ```bash
-pip install auth-permission-engine
+pip install prism-engine
 ```
 
 **Components:**
@@ -558,7 +558,7 @@ if (!decision.allowed) {
 **Monorepo Layout: Single repo, three deployable units — engine, SDKs, platform**
 
 ```
-auth-permission-engine/
+Prism/
 ├── engine/                     # Go source
 │   ├── evaluator/
 │   ├── tokens/

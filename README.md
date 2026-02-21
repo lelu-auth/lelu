@@ -6,7 +6,7 @@ Prism is a developer-first authorization layer built specifically for the Agenti
 
 Unlike legacy IAM, Prism treats AI agents as first-class actors with their own distinct constraint model, tying authorization decisions directly to **LLM confidence scores**.
 
-[![CI](https://github.com/prism/auth-permission-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/prism/auth-permission-engine/actions/workflows/ci.yml)
+[![CI](https://github.com/Abenezer0923/Prism/actions/workflows/ci.yml/badge.svg)](https://github.com/Abenezer0923/Prism/actions/workflows/ci.yml)
 
 ---
 

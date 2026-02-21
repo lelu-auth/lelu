@@ -156,7 +156,7 @@ describe("PrismClient", () => {
 
   describe("isHealthy()", () => {
     it("returns true on ok status", async () => {
-      mockOK({ status: "ok", service: "auth-permission-engine" });
+      mockOK({ status: "ok", service: "prism-engine" });
       expect(await client.isHealthy()).toBe(true);
     });
 

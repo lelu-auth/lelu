@@ -302,7 +302,7 @@ func (h *Handler) handleQueueResolve(w http.ResponseWriter, r *http.Request, app
 func (h *Handler) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{
 		"status":  "ok",
-		"service": "auth-permission-engine",
+		"service": "prism-engine",
 	})
 }
 
