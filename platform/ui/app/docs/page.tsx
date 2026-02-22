@@ -16,18 +16,18 @@ export default function DocsIntroduction() {
       </p>
 
       <h2>Key Features</h2>
-      <div className="feature-list">
-        <div className="feature-item">
-          <h3>🛡️ Confidence-Aware Policies</h3>
-          <p>Write Rego policies that dynamically adjust permissions based on the agent's confidence score.</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 not-prose my-8">
+        <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-2 flex items-center gap-2">🛡️ Confidence-Aware</h3>
+          <p className="text-sm text-zinc-400">Write Rego policies that dynamically adjust permissions based on the agent's confidence score.</p>
         </div>
-        <div className="feature-item">
-          <h3>⏸️ Human-in-the-loop (HITL)</h3>
-          <p>Automatically route high-risk or low-confidence actions to a human approval queue.</p>
+        <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-2 flex items-center gap-2">⏸️ Human-in-the-loop</h3>
+          <p className="text-sm text-zinc-400">Automatically route high-risk or low-confidence actions to a human approval queue.</p>
         </div>
-        <div className="feature-item">
-          <h3>📜 SOC 2-Ready Audit Trails</h3>
-          <p>Every decision, confidence score, and human approval is cryptographically logged for compliance.</p>
+        <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-2 flex items-center gap-2">📜 SOC 2-Ready</h3>
+          <p className="text-sm text-zinc-400">Every decision, confidence score, and human approval is cryptographically logged for compliance.</p>
         </div>
       </div>
 

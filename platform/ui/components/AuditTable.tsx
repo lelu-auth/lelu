@@ -1,73 +1,72 @@
 import { AuditEvent } from "@/lib/api";
 
 function confClass(c: number) {
-  if (c >= 0.9) return "conf-high";
-  if (c >= 0.7) return "conf-mid";
-  return "conf-low";
+  if (c >= 0.9) return "text-green-400 bg-green-400/10 border-green-400/20";
+  if (c >= 0.7) return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
+  return "text-red-400 bg-red-400/10 border-red-400/20";
 }
 
 export function AuditTable({ events }: { events: AuditEvent[] }) {
-  if (!events.length) return <div className="empty">No audit events found.</div>;
+  if (!events.length) return <div className="p-8 text-center text-zinc-500">No audit events found.</div>;
   return (
-    <div className="table-wrap">
-      <table className="table">
-        <thead>
+    <div className="w-full overflow-x-auto">
+      <table className="w-full text-left text-sm whitespace-nowrap">
+        <thead className="text-xs text-zinc-400 uppercase bg-zinc-900/50 border-b border-zinc-800">
           <tr>
-            <th>ID</th>
-            <th>Trace</th>
-            <th>Actor</th>
-            <th>Action</th>
-            <th>Decision</th>
-            <th>Confidence</th>
-            <th>Timestamp</th>
+            <th className="px-6 py-4 font-medium">ID</th>
+            <th className="px-6 py-4 font-medium">Trace</th>
+            <th className="px-6 py-4 font-medium">Actor</th>
+            <th className="px-6 py-4 font-medium">Action</th>
+            <th className="px-6 py-4 font-medium">Decision</th>
+            <th className="px-6 py-4 font-medium">Confidence</th>
+            <th className="px-6 py-4 font-medium">Timestamp</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-zinc-800/50">
           {events.map((e) => (
-            <tr key={e.id}>
-              <td className="font-mono text-muted">{e.id}</td>
-              <td className="font-mono">
-                <a href={`/traces/${e.trace_id}`} style={{ color: 'var(--accent-purple)', textDecoration: 'none' }}>
+            <tr key={e.id} className="hover:bg-zinc-900/30 transition-colors">
+              <td className="px-6 py-4 font-mono text-zinc-500">{e.id}</td>
+              <td className="px-6 py-4 font-mono">
+                <a href={`/traces/${e.trace_id}`} className="text-blue-400 hover:text-blue-300 transition-colors">
                   {e.trace_id.slice(0, 8)}&hellip;
                 </a>
               </td>
-              <td>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-xs">
                     🤖
                   </div>
-                  {e.actor}
+                  <span className="text-zinc-200 font-medium">{e.actor}</span>
                 </div>
               </td>
-              <td className="font-mono text-sm">{e.action}</td>
-              <td>
+              <td className="px-6 py-4 font-mono text-zinc-300">{e.action}</td>
+              <td className="px-6 py-4">
                 <span
-                  className={
-                    "badge " +
-                    (e.decision === "allowed"
-                      ? "badge-allowed"
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                    e.decision === "allowed"
+                      ? "bg-green-500/10 text-green-400 border-green-500/20"
                       : e.decision === "denied"
-                      ? "badge-denied"
-                      : "badge-review")
-                  }
+                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                  }`}
                 >
                   {e.decision === "human_review" ? "Review" : e.decision.charAt(0).toUpperCase() + e.decision.slice(1)}
                 </span>
               </td>
-              <td>
-                <div className="conf">
-                  <div className="conf-bar">
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                     <div
-                      className={`conf-fill ${confClass(e.confidence_score)}`}
+                      className={`h-full rounded-full border ${confClass(e.confidence_score)}`}
                       style={{ width: `${Math.round(e.confidence_score * 100)}%` }}
                     />
                   </div>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", minWidth: 32 }}>
+                  <span className="text-xs text-zinc-400 min-w-[32px]">
                     {(e.confidence_score * 100).toFixed(0)}%
                   </span>
                 </div>
               </td>
-              <td className="text-muted text-sm" style={{ whiteSpace: "nowrap" }}>
+              <td className="px-6 py-4 text-zinc-400 text-sm whitespace-nowrap">
                 {new Date(e.created_at).toLocaleString()}
               </td>
             </tr>
