@@ -23,6 +23,7 @@ services:
       JWT_SIGNING_KEY:   "${JWT_SIGNING_KEY:-change-me-in-dev}"
       CONTROL_PLANE_URL: "${CONTROL_PLANE_URL:-}"
       CP_HMAC_SECRET:    "${CP_HMAC_SECRET:-}"
+      API_KEY:           "${API_KEY:-prism-dev-key}"
     volumes:
       - ./config:/etc/prism:ro
     depends_on:

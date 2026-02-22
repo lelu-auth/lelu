@@ -34,6 +34,7 @@ curl http://localhost:8082/healthz
 # 3. Authorize an agent action
 curl -s -X POST http://localhost:8082/v1/agent/authorize \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer prism-dev-key" \
   -d '{
     "actor":      "invoice_bot",
     "action":     "approve_refunds",
@@ -133,6 +134,8 @@ We are actively building integrations for the most popular AI agent frameworks. 
 ---
 
 ## 📖 API Reference
+
+*Note: All endpoints (except `/healthz`) require an `Authorization: Bearer <API_KEY>` header.*
 
 ### `POST /v1/agent/authorize`
 Agent authorization with confidence gate.

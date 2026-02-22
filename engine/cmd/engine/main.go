@@ -29,6 +29,7 @@ func main() {
 	cpHMACSecret := envOr("CP_HMAC_SECRET", "")
 	regoPolicyPath := envOr("REGO_POLICY_PATH", "")
 	regoPolicyQuery := envOr("REGO_POLICY_QUERY", "data.prism.authz")
+	apiKey := envOr("API_KEY", "")
 
 	// ── Bootstrap components ─────────────────────────────────────────────────
 	eval := evaluator.New()
@@ -72,7 +73,7 @@ func main() {
 	}
 
 	// ── HTTP server ───────────────────────────────────────────────────────────
-	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue)
+	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue, apiKey)
 	srv := server.NewHTTPServer(addr, h)
 
 	// ── Policy sync worker (optional) ─────────────────────────────────────────

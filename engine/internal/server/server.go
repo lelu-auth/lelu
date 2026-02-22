@@ -15,6 +15,29 @@ import (
 	"github.com/prism/engine/internal/evaluator"
 	"github.com/prism/engine/internal/queue"
 	"github.com/prism/engine/internal/tokens"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+// ─── Metrics ──────────────────────────────────────────────────────────────────
+
+var (
+	httpRequestsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "prism_http_requests_total",
+		Help: "Total number of HTTP requests",
+	}, []string{"method", "path", "status"})
+
+	httpRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "prism_http_request_duration_seconds",
+		Help:    "Duration of HTTP requests in seconds",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"method", "path"})
+
+	authDecisionsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "prism_auth_decisions_total",
+		Help: "Total number of authorization decisions",
+	}, []string{"type", "allowed"})
 )
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -26,6 +49,7 @@ type Handler struct {
 	confGate *confidence.Gate
 	audit    *audit.Writer
 	queue    *queue.Queue
+	apiKey   string
 }
 
 // New constructs a Handler from its dependencies.
@@ -35,6 +59,7 @@ func New(
 	confGate *confidence.Gate,
 	auditWriter *audit.Writer,
 	q *queue.Queue,
+	apiKey string,
 ) *Handler {
 	return &Handler{
 		eval:     eval,
@@ -42,6 +67,7 @@ func New(
 		confGate: confGate,
 		audit:    auditWriter,
 		queue:    q,
+		apiKey:   apiKey,
 	}
 }
 
@@ -57,6 +83,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/queue/{id}/approve", h.handleQueueApprove)
 	mux.HandleFunc("POST /v1/queue/{id}/deny", h.handleQueueDeny)
 	mux.HandleFunc("GET /healthz", h.handleHealth)
+	mux.Handle("GET /metrics", promhttp.Handler())
 }
 
 // ─── Authorize ────────────────────────────────────────────────────────────────
@@ -93,6 +120,8 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	traceID := audit.NewTraceID()
 	h.audit.LogDecision(r.Context(), req.UserID, req.Action, req.Resource, dec.Allowed, dec.Reason, 0, ms(start))
+
+	authDecisionsTotal.WithLabelValues("human", fmt.Sprintf("%t", dec.Allowed)).Inc()
 
 	writeJSON(w, http.StatusOK, authorizeResponse{
 		Allowed: dec.Allowed,
@@ -139,6 +168,9 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	if confDec.Level == confidence.LevelHardDeny {
 		traceID := audit.NewTraceID()
 		h.audit.LogDecision(r.Context(), req.Actor, req.Action, req.Resource, false, confDec.Reason, req.Confidence, ms(start))
+		
+		authDecisionsTotal.WithLabelValues("agent", "false").Inc()
+
 		writeJSON(w, http.StatusOK, agentAuthorizeResponse{
 			Allowed:        false,
 			Reason:         confDec.Reason,
@@ -164,6 +196,8 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	traceID := audit.NewTraceID()
 	h.audit.LogDecision(r.Context(), req.Actor, req.Action, req.Resource, evalDec.Allowed, evalDec.Reason, req.Confidence, ms(start))
+
+	authDecisionsTotal.WithLabelValues("agent", fmt.Sprintf("%t", evalDec.Allowed)).Inc()
 
 	// Phase 2 — enqueue for human review when flagged.
 	requiresReview := evalDec.RequiresHumanReview || confDec.RequiresHumanReview
@@ -315,7 +349,7 @@ func NewHTTPServer(addr string, handler *Handler) *http.Server {
 
 	return &http.Server{
 		Addr:         addr,
-		Handler:      logging(mux),
+		Handler:      logging(handler.authMiddleware(mux)),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -324,11 +358,60 @@ func NewHTTPServer(addr string, handler *Handler) *http.Server {
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
+// responseRecorder intercepts the status code for metrics
+type responseRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rec *responseRecorder) WriteHeader(statusCode int) {
+	rec.statusCode = statusCode
+	rec.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (h *Handler) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip auth for health check and metrics
+		if r.URL.Path == "/healthz" || r.URL.Path == "/metrics" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// If no API key is configured, allow all (for local dev/testing)
+		if h.apiKey == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		authHeader := r.Header.Get("Authorization")
+		expected := "Bearer " + h.apiKey
+		if authHeader != expected {
+			writeError(w, http.StatusUnauthorized, "unauthorized: invalid or missing API key")
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		next.ServeHTTP(w, r)
-		log.Printf("%s %s %.2fms", r.Method, r.URL.Path, ms(start))
+		
+		rec := &responseRecorder{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+		
+		next.ServeHTTP(rec, r)
+		
+		duration := time.Since(start).Seconds()
+		
+		// Record metrics
+		httpRequestsTotal.WithLabelValues(r.Method, r.URL.Path, fmt.Sprintf("%d", rec.statusCode)).Inc()
+		httpRequestDuration.WithLabelValues(r.Method, r.URL.Path).Observe(duration)
+		
+		log.Printf("%s %s %d %.2fms", r.Method, r.URL.Path, rec.statusCode, ms(start))
 	})
 }
 

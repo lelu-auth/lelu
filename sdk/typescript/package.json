@@ -1,7 +1,12 @@
 {
   "name": "prizm-engine",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "TypeScript SDK for the Auth Permission Engine — the immune system for autonomous AI agents",
+  "author": "Abenezer",
+  "homepage": "https://github.com/Abenezer0923/Prism#readme",
+  "bugs": {
+    "url": "https://github.com/Abenezer0923/Prism/issues"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
