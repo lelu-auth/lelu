@@ -19,6 +19,7 @@ import (
 
 // Event represents a single immutable audit record.
 type Event struct {
+	TenantID        string            `json:"tenant_id,omitempty"`
 	TraceID         string            `json:"trace_id"`
 	Timestamp       time.Time         `json:"timestamp"`
 	Actor           string            `json:"actor"`
@@ -148,12 +149,13 @@ func (w *Writer) start() {
 func NewTraceID() string { return uuid.NewString() }
 
 // LogFromContext is a convenience wrapper that populates common fields.
-func (w *Writer) LogDecision(_ context.Context, actor, action string, resource map[string]string, allowed bool, reason string, conf float64, latencyMS float64) {
+func (w *Writer) LogDecision(_ context.Context, tenantID, actor, action string, resource map[string]string, allowed bool, reason string, conf float64, latencyMS float64) {
 	decision := "denied"
 	if allowed {
 		decision = "allowed"
 	}
 	w.Log(Event{
+		TenantID:        tenantID,
 		Actor:           actor,
 		Action:          action,
 		Resource:        resource,

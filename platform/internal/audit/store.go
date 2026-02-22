@@ -14,6 +14,7 @@ import (
 // Event is a single immutable authorization decision record.
 type Event struct {
 	ID              int64             `json:"id"`
+	TenantID        string            `json:"tenant_id"`
 	TraceID         string            `json:"trace_id"`
 	Timestamp       time.Time         `json:"timestamp"`
 	Actor           string            `json:"actor"`
@@ -31,6 +32,7 @@ type Event struct {
 
 // QueryFilter filters the audit log query.
 type QueryFilter struct {
+	TenantID  string
 	Actor     string
 	Action    string
 	Decision  string
@@ -59,12 +61,12 @@ func (s *Store) Append(e Event) (int64, error) {
 	var id int64
 	err = s.db.QueryRow(`
 		INSERT INTO audit_events
-			(trace_id, timestamp, actor, action, resource, confidence_score,
+			(tenant_id, trace_id, timestamp, actor, action, resource, confidence_score,
 			 decision, reason, downgraded_scope, latency_ms, engine_version, policy_version)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
 		RETURNING id
 	`,
-		e.TraceID, e.Timestamp, e.Actor, e.Action,
+		e.TenantID, e.TraceID, e.Timestamp, e.Actor, e.Action,
 		string(res), e.ConfidenceScore,
 		e.Decision, e.Reason, e.DowngradedScope, e.LatencyMS,
 		e.EngineVersion, e.PolicyVersion,
@@ -84,13 +86,18 @@ func (s *Store) Query(f QueryFilter) ([]Event, error) {
 		f.Limit = 500
 	}
 
-	q := `SELECT id, trace_id, timestamp, actor, action, resource,
+	q := `SELECT id, tenant_id, trace_id, timestamp, actor, action, resource,
 		         confidence_score, decision, reason, downgraded_scope,
 		         latency_ms, engine_version, policy_version, created_at
 		  FROM audit_events WHERE 1=1`
 	args := []any{}
 	n := 1
 
+	if f.TenantID != "" {
+		q += fmt.Sprintf(" AND tenant_id = $%d", n)
+		args = append(args, f.TenantID)
+		n++
+	}
 	if f.Actor != "" {
 		q += fmt.Sprintf(" AND actor = $%d", n)
 		args = append(args, f.Actor)
@@ -137,7 +144,7 @@ func (s *Store) Query(f QueryFilter) ([]Event, error) {
 		var confidenceScore sql.NullFloat64
 		var engineVer, policyVer, reason, downgradedScope sql.NullString
 		if err := rows.Scan(
-			&e.ID, &e.TraceID, &e.Timestamp, &e.Actor, &e.Action,
+			&e.ID, &e.TenantID, &e.TraceID, &e.Timestamp, &e.Actor, &e.Action,
 			&resourceJSON, &confidenceScore, &e.Decision,
 			&reason, &downgradedScope, &e.LatencyMS,
 			&engineVer, &policyVer, &e.CreatedAt,

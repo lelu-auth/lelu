@@ -56,15 +56,22 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@ai-sdk/react": "^3.0.99",
+    "ai": "^6.0.97",
+    "openai": "^6.22.0",
     "zod": "^3.23.0"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "express": ">=4"
+    "express": ">=4",
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true },
-    "express": { "optional": true }
+    "react": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/express": "^4.17.0",

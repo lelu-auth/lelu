@@ -60,7 +60,7 @@ Requirements:
       temperature: 0.1,
     });
 
-    const regoCode = response.choices[0].message.content?.trim() || "";
+    const regoCode = response.choices[0]?.message.content?.trim() || "";
     
     // Strip markdown code blocks if the LLM accidentally included them
     return regoCode.replace(/^```rego\n/, '').replace(/\n```$/, '');

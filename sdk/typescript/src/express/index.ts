@@ -27,12 +27,14 @@ export interface AuthorizeOptions {
  * ```
  */
 export function authorize(action: string, opts: AuthorizeOptions = {}): RequestHandler {
-  const client =
-    opts.client ??
-    new PrismClient({
-      baseUrl: opts.baseUrl ?? process.env["PRISM_BASE_URL"] ?? "http://localhost:8080",
-      apiKey: opts.apiKey ?? process.env["PRISM_API_KEY"],
-    });
+  const clientConfig: any = {
+    baseUrl: opts.baseUrl ?? process.env["PRISM_BASE_URL"] ?? "http://localhost:8080",
+  };
+  const apiKey = opts.apiKey ?? process.env["PRISM_API_KEY"];
+  if (apiKey !== undefined) {
+    clientConfig.apiKey = apiKey;
+  }
+  const client = opts.client ?? new PrismClient(clientConfig);
 
   const actorHeader = opts.actorHeader ?? "x-actor";
   const confidence = opts.confidence ?? 1.0;
@@ -45,7 +47,7 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
     const actor = (req.headers[actorHeader] as string | undefined) ?? "anonymous";
 
     try {
-      const decision = await client.agentAuthorize({ actor, action, confidence });
+      const decision = await client.agentAuthorize({ actor, action, context: { confidence } });
 
       if (decision.allowed) {
         // Attach decision to request for downstream handlers
@@ -56,7 +58,7 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
 
       res.status(403).json({
         error: "forbidden",
-        decision: decision.decision,
+        decision: decision.allowed,
         reason: decision.reason ?? "denied by policy",
         actor,
         action,

@@ -38,17 +38,20 @@ var migrations = []string{
 	// ── 001 policies ─────────────────────────────────────────────────────────
 	`CREATE TABLE IF NOT EXISTS policies (
 		id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-		name        TEXT        NOT NULL UNIQUE,
+		tenant_id   TEXT        NOT NULL DEFAULT 'default',
+		name        TEXT        NOT NULL,
 		content     TEXT        NOT NULL,
 		version     TEXT        NOT NULL DEFAULT '1.0',
 		hmac_sha256 TEXT        NOT NULL,
 		created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-		updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		UNIQUE(tenant_id, name)
 	)`,
 
 	// ── 002 audit_events ─────────────────────────────────────────────────────
 	`CREATE TABLE IF NOT EXISTS audit_events (
 		id               BIGSERIAL   PRIMARY KEY,
+		tenant_id        TEXT        NOT NULL DEFAULT 'default',
 		trace_id         UUID        NOT NULL,
 		timestamp        TIMESTAMPTZ NOT NULL,
 		actor            TEXT        NOT NULL,
@@ -64,13 +67,14 @@ var migrations = []string{
 		created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	)`,
 
-	`CREATE INDEX IF NOT EXISTS idx_audit_trace ON audit_events(trace_id)`,
-	`CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_events(actor, timestamp DESC)`,
-	`CREATE INDEX IF NOT EXISTS idx_audit_ts    ON audit_events(timestamp DESC)`,
+	`CREATE INDEX IF NOT EXISTS idx_audit_tenant_trace ON audit_events(tenant_id, trace_id)`,
+	`CREATE INDEX IF NOT EXISTS idx_audit_tenant_actor ON audit_events(tenant_id, actor, timestamp DESC)`,
+	`CREATE INDEX IF NOT EXISTS idx_audit_tenant_ts    ON audit_events(tenant_id, timestamp DESC)`,
 
 	// ── 003 token_revocations ─────────────────────────────────────────────────
 	`CREATE TABLE IF NOT EXISTS token_revocations (
 		token_id   TEXT        PRIMARY KEY,
+		tenant_id  TEXT        NOT NULL DEFAULT 'default',
 		revoked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 		revoked_by TEXT
 	)`,
@@ -78,6 +82,7 @@ var migrations = []string{
 	// ── 004 api_keys ──────────────────────────────────────────────────────────
 	`CREATE TABLE IF NOT EXISTS api_keys (
 		id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+		tenant_id  TEXT        NOT NULL DEFAULT 'default',
 		key_hash   TEXT        NOT NULL UNIQUE,
 		name       TEXT        NOT NULL,
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

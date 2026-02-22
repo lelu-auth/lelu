@@ -16,6 +16,7 @@ import (
 // Policy is a stored YAML policy document.
 type Policy struct {
 	ID        string    `json:"id"`
+	TenantID  string    `json:"tenant_id"`
 	Name      string    `json:"name"`
 	Content   string    `json:"content"`
 	Version   string    `json:"version"`
@@ -36,23 +37,23 @@ func New(db *sql.DB, hmacSecret string) *Store {
 }
 
 // Upsert creates or replaces a policy by name. Returns the final record.
-func (s *Store) Upsert(name, content, version string) (*Policy, error) {
+func (s *Store) Upsert(tenantID, name, content, version string) (*Policy, error) {
 	mac := hmac.New(sha256.New, s.hmacSecret)
 	mac.Write([]byte(content))
 	sig := hex.EncodeToString(mac.Sum(nil))
 
 	var p Policy
 	err := s.db.QueryRow(`
-		INSERT INTO policies (name, content, version, hmac_sha256)
-		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (name) DO UPDATE
+		INSERT INTO policies (tenant_id, name, content, version, hmac_sha256)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (tenant_id, name) DO UPDATE
 		  SET content     = EXCLUDED.content,
 		      version     = EXCLUDED.version,
 		      hmac_sha256 = EXCLUDED.hmac_sha256,
 		      updated_at  = NOW()
-		RETURNING id, name, content, version, hmac_sha256, created_at, updated_at
-	`, name, content, version, sig).Scan(
-		&p.ID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt,
+		RETURNING id, tenant_id, name, content, version, hmac_sha256, created_at, updated_at
+	`, tenantID, name, content, version, sig).Scan(
+		&p.ID, &p.TenantID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("policy: upsert: %w", err)
@@ -61,16 +62,16 @@ func (s *Store) Upsert(name, content, version string) (*Policy, error) {
 }
 
 // Get returns a policy by name.
-func (s *Store) Get(name string) (*Policy, error) {
+func (s *Store) Get(tenantID, name string) (*Policy, error) {
 	var p Policy
 	err := s.db.QueryRow(`
-		SELECT id, name, content, version, hmac_sha256, created_at, updated_at
-		FROM policies WHERE name = $1
-	`, name).Scan(
-		&p.ID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt,
+		SELECT id, tenant_id, name, content, version, hmac_sha256, created_at, updated_at
+		FROM policies WHERE tenant_id = $1 AND name = $2
+	`, tenantID, name).Scan(
+		&p.ID, &p.TenantID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("policy: %q not found", name)
+		return nil, fmt.Errorf("policy: %q not found for tenant %q", name, tenantID)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("policy: get: %w", err)
@@ -79,19 +80,19 @@ func (s *Store) Get(name string) (*Policy, error) {
 }
 
 // GetByID returns a policy by UUID.
-func (s *Store) GetByID(id string) (*Policy, error) {
+func (s *Store) GetByID(tenantID, id string) (*Policy, error) {
 	if _, err := uuid.Parse(id); err != nil {
 		return nil, fmt.Errorf("policy: invalid id %q", id)
 	}
 	var p Policy
 	err := s.db.QueryRow(`
-		SELECT id, name, content, version, hmac_sha256, created_at, updated_at
-		FROM policies WHERE id = $1
-	`, id).Scan(
-		&p.ID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt,
+		SELECT id, tenant_id, name, content, version, hmac_sha256, created_at, updated_at
+		FROM policies WHERE tenant_id = $1 AND id = $2
+	`, tenantID, id).Scan(
+		&p.ID, &p.TenantID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("policy: id %q not found", id)
+		return nil, fmt.Errorf("policy: id %q not found for tenant %q", id, tenantID)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("policy: get by id: %w", err)

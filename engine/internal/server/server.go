@@ -89,6 +89,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 // ─── Authorize ────────────────────────────────────────────────────────────────
 
 type authorizeRequest struct {
+	TenantID string            `json:"tenant_id"`
 	UserID   string            `json:"user_id"`
 	Action   string            `json:"action"`
 	Resource map[string]string `json:"resource"`
@@ -109,6 +110,7 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dec, err := h.eval.Evaluate(r.Context(), evaluator.AuthRequest{
+		TenantID: req.TenantID,
 		UserID:   req.UserID,
 		Action:   req.Action,
 		Resource: req.Resource,
@@ -119,7 +121,7 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	traceID := audit.NewTraceID()
-	h.audit.LogDecision(r.Context(), req.UserID, req.Action, req.Resource, dec.Allowed, dec.Reason, 0, ms(start))
+	h.audit.LogDecision(r.Context(), req.TenantID, req.UserID, req.Action, req.Resource, dec.Allowed, dec.Reason, 0, ms(start))
 
 	authDecisionsTotal.WithLabelValues("human", fmt.Sprintf("%t", dec.Allowed)).Inc()
 
@@ -133,6 +135,7 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 // ─── Agent Authorize ─────────────────────────────────────────────────────────
 
 type agentAuthorizeRequest struct {
+	TenantID   string            `json:"tenant_id"`
 	Actor      string            `json:"actor"`
 	Action     string            `json:"action"`
 	Resource   map[string]string `json:"resource"`
@@ -167,7 +170,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	if confDec.Level == confidence.LevelHardDeny {
 		traceID := audit.NewTraceID()
-		h.audit.LogDecision(r.Context(), req.Actor, req.Action, req.Resource, false, confDec.Reason, req.Confidence, ms(start))
+		h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, false, confDec.Reason, req.Confidence, ms(start))
 		
 		authDecisionsTotal.WithLabelValues("agent", "false").Inc()
 
@@ -182,6 +185,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Policy evaluator.
 	evalDec, err := h.eval.EvaluateAgent(r.Context(), evaluator.AgentAuthRequest{
+		TenantID:   req.TenantID,
 		Actor:      req.Actor,
 		Action:     req.Action,
 		Resource:   req.Resource,
@@ -195,14 +199,14 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	traceID := audit.NewTraceID()
-	h.audit.LogDecision(r.Context(), req.Actor, req.Action, req.Resource, evalDec.Allowed, evalDec.Reason, req.Confidence, ms(start))
+	h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, evalDec.Allowed, evalDec.Reason, req.Confidence, ms(start))
 
 	authDecisionsTotal.WithLabelValues("agent", fmt.Sprintf("%t", evalDec.Allowed)).Inc()
 
 	// Phase 2 — enqueue for human review when flagged.
 	requiresReview := evalDec.RequiresHumanReview || confDec.RequiresHumanReview
 	if requiresReview && h.queue != nil {
-		_, _ = h.queue.Enqueue(r.Context(), req.Actor, req.Action, req.Resource, req.Confidence, evalDec.Reason, req.ActingFor)
+		_, _ = h.queue.Enqueue(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, req.Confidence, evalDec.Reason, req.ActingFor)
 	}
 
 	writeJSON(w, http.StatusOK, agentAuthorizeResponse{

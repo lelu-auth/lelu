@@ -49,20 +49,23 @@ export function useAgentPermission(
     let cancelled = false;
     setState({ canExecute: false, loading: true, reason: "", decision: "" });
 
-    const client = new PrismClient({
+    const clientConfig: any = {
       baseUrl: opts.baseUrl ?? "http://localhost:8080",
-      apiKey: opts.apiKey,
-    });
+    };
+    if (opts.apiKey !== undefined) {
+      clientConfig.apiKey = opts.apiKey;
+    }
+    const client = new PrismClient(clientConfig);
 
     client
-      .agentAuthorize({ actor, action, confidence, scope: opts.scope })
+      .agentAuthorize({ actor, action, context: { confidence, scope: opts.scope } })
       .then((res) => {
         if (cancelled) return;
         setState({
           canExecute: res.allowed,
           loading: false,
           reason: res.reason ?? (res.allowed ? "allowed" : "denied"),
-          decision: (res.decision ?? (res.allowed ? "allowed" : "denied")) as AgentPermissionState["decision"],
+          decision: res.allowed ? "allowed" : (res.requiresHumanReview ? "human_review" : "denied"),
         });
       })
       .catch((err: unknown) => {

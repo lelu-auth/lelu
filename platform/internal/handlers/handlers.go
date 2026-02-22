@@ -66,8 +66,12 @@ func (h *Handler) handleHealth(w http.ResponseWriter, _ *http.Request) {
 
 // ─── Policies ─────────────────────────────────────────────────────────────────
 
-func (h *Handler) handleListPolicies(w http.ResponseWriter, _ *http.Request) {
-	list, err := h.policies.List()
+func (h *Handler) handleListPolicies(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
+	list, err := h.policies.List(tenantID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -76,7 +80,11 @@ func (h *Handler) handleListPolicies(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (h *Handler) handleGetPolicy(w http.ResponseWriter, r *http.Request) {
-	p, err := h.policies.Get(r.PathValue("name"))
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
+	p, err := h.policies.Get(tenantID, r.PathValue("name"))
 	if err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
@@ -90,6 +98,10 @@ type upsertPolicyRequest struct {
 }
 
 func (h *Handler) handleUpsertPolicy(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
 	var req upsertPolicyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -102,7 +114,7 @@ func (h *Handler) handleUpsertPolicy(w http.ResponseWriter, r *http.Request) {
 	if req.Version == "" {
 		req.Version = "1.0"
 	}
-	p, err := h.policies.Upsert(r.PathValue("name"), req.Content, req.Version)
+	p, err := h.policies.Upsert(tenantID, r.PathValue("name"), req.Content, req.Version)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -111,7 +123,11 @@ func (h *Handler) handleUpsertPolicy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleDeletePolicy(w http.ResponseWriter, r *http.Request) {
-	if err := h.policies.Delete(r.PathValue("name")); err != nil {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
+	if err := h.policies.Delete(tenantID, r.PathValue("name")); err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
@@ -121,8 +137,13 @@ func (h *Handler) handleDeletePolicy(w http.ResponseWriter, r *http.Request) {
 // ─── Audit / Trace Explorer ───────────────────────────────────────────────────
 
 func (h *Handler) handleListAudit(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
 	q := r.URL.Query()
 	filter := auditstore.QueryFilter{
+		TenantID: tenantID,
 		Actor:    q.Get("actor"),
 		Action:   q.Get("action"),
 		Decision: q.Get("decision"),
@@ -151,7 +172,11 @@ func (h *Handler) handleListAudit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleGetTrace(w http.ResponseWriter, r *http.Request) {
-	events, err := h.audit.GetByTraceID(r.PathValue("traceID"))
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
+	events, err := h.audit.GetByTraceID(tenantID, r.PathValue("traceID"))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -160,10 +185,17 @@ func (h *Handler) handleGetTrace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleIngestAudit(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
 	var e auditstore.Event
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+	if e.TenantID == "" {
+		e.TenantID = tenantID
 	}
 	if e.Timestamp.IsZero() {
 		e.Timestamp = time.Now().UTC()

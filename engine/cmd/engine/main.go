@@ -30,6 +30,7 @@ func main() {
 	regoPolicyPath := envOr("REGO_POLICY_PATH", "")
 	regoPolicyQuery := envOr("REGO_POLICY_QUERY", "data.prism.authz")
 	apiKey := envOr("API_KEY", "")
+	tenantID := envOr("TENANT_ID", "default")
 
 	// ── Bootstrap components ─────────────────────────────────────────────────
 	eval := evaluator.New()
@@ -84,6 +85,8 @@ func main() {
 		worker := syncer.New(syncer.Config{
 			ControlPlaneURL: cpURL,
 			HMACSecret:      cpHMACSecret,
+			TenantID:        tenantID,
+			APIKey:          apiKey,
 		}, eval)
 		go worker.Start(ctx)
 		log.Printf("policy sync worker started → %s", cpURL)

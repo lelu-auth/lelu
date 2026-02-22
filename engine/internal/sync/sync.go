@@ -27,6 +27,8 @@ type Config struct {
 	ControlPlaneURL string        // e.g. https://api.prism.dev/policies/current
 	HMACSecret      string        // shared secret for signature verification
 	PollInterval    time.Duration // default 30 s
+	TenantID        string        // tenant ID to fetch policy for
+	APIKey          string        // API key for authentication
 }
 
 // ─── Worker ───────────────────────────────────────────────────────────────────
@@ -43,6 +45,9 @@ type Worker struct {
 func New(cfg Config, loader PolicyLoader) *Worker {
 	if cfg.PollInterval <= 0 {
 		cfg.PollInterval = 30 * time.Second
+	}
+	if cfg.TenantID == "" {
+		cfg.TenantID = "default"
 	}
 	return &Worker{
 		cfg:    cfg,
@@ -83,6 +88,12 @@ func (w *Worker) poll(ctx context.Context) error {
 	}
 	if w.etag != "" {
 		req.Header.Set("If-None-Match", w.etag)
+	}
+	if w.cfg.TenantID != "" {
+		req.Header.Set("X-Tenant-ID", w.cfg.TenantID)
+	}
+	if w.cfg.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+w.cfg.APIKey)
 	}
 
 	resp, err := w.client.Do(req)

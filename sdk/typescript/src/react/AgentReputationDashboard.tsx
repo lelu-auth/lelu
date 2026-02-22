@@ -52,7 +52,7 @@ export const AgentReputationDashboard: React.FC<AgentReputationDashboardProps> =
     try {
       const response = await fetch(`${apiBaseUrl}/v1/analytics/agents`);
       if (!response.ok) throw new Error('Failed to fetch agent analytics');
-      const data = await response.json();
+      const data = await response.json() as { stats: AgentStats[] };
       setStats(data.stats || []);
       setError(null);
     } catch (err: any) {
@@ -137,7 +137,7 @@ export const AgentReputationDashboard: React.FC<AgentReputationDashboardProps> =
               placeholder="Search agents..."
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-48 transition-shadow"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             />
           </div>
           <button 

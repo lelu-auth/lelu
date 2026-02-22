@@ -38,6 +38,7 @@ const (
 // ReviewRequest is an item enqueued for human approval.
 type ReviewRequest struct {
 	ID              string            `json:"id"`
+	TenantID        string            `json:"tenant_id,omitempty"`
 	Actor           string            `json:"actor"`
 	Action          string            `json:"action"`
 	Resource        map[string]string `json:"resource,omitempty"`
@@ -81,7 +82,7 @@ func NewInMemory() *Queue {
 
 // Enqueue adds a new ReviewRequest to the stream and writes the full payload.
 // Returns the assigned review ID.
-func (q *Queue) Enqueue(ctx context.Context, actor, action string, resource map[string]string, confidence float64, reason, actingFor string) (string, error) {
+func (q *Queue) Enqueue(ctx context.Context, tenantID, actor, action string, resource map[string]string, confidence float64, reason, actingFor string) (string, error) {
 	if q.rdb == nil {
 		return "", nil // no-op without Redis
 	}
@@ -89,6 +90,7 @@ func (q *Queue) Enqueue(ctx context.Context, actor, action string, resource map[
 	id := uuid.NewString()
 	req := ReviewRequest{
 		ID:              id,
+		TenantID:        tenantID,
 		Actor:           actor,
 		Action:          action,
 		Resource:        resource,

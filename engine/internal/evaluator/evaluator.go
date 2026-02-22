@@ -15,6 +15,7 @@ import (
 
 // AuthRequest represents a human authorization check.
 type AuthRequest struct {
+	TenantID string            `json:"tenant_id"`
 	UserID   string            `json:"user_id"`
 	Action   string            `json:"action"`
 	Resource map[string]string `json:"resource"`
@@ -22,6 +23,7 @@ type AuthRequest struct {
 
 // AgentAuthRequest represents an agent authorization check.
 type AgentAuthRequest struct {
+	TenantID   string            `json:"tenant_id"`
 	Actor      string            `json:"actor"`
 	Action     string            `json:"action"`
 	Resource   map[string]string `json:"resource"`
