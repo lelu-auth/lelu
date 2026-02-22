@@ -107,5 +107,5 @@ npm pack
 In a separate test app:
 
 ```bash
-npm install /path/to/prism-0.1.0.tgz
+npm install /path/to/prizm-engine-0.1.0.tgz
 ```

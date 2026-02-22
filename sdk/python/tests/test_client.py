@@ -176,7 +176,7 @@ async def test_revoke_token(client: PrismClient, httpx_mock: HTTPXMock) -> None:
 async def test_is_healthy_true(client: PrismClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         url="http://localhost:8080/healthz",
-        json={"status": "ok", "service": "prism-engine"},
+        json={"status": "ok", "service": "prizm-engine"},
     )
     assert await client.is_healthy() is True
 

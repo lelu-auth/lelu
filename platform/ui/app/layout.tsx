@@ -18,7 +18,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Prism <span>Explorer</span>
           </a>
           <div className="nav-links">
-            <a href="/" className="active">Audit Log</a>
+            <a href="/">Home</a>
+            <a href="/audit">Audit Log</a>
             <a href="/policies">Policies</a>
             <a href="https://github.com/Abenezer0923/Prism" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

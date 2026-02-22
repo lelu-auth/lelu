@@ -5,7 +5,7 @@ Python client for [Prism](https://github.com/Abenezer0923/Prism) — the confide
 ## Installation
 
 ```bash
-pip install prism-engine
+pip install prizm-engine
 ```
 
 ## Quick start

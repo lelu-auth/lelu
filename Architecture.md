@@ -247,14 +247,14 @@ service AuthPermissionEngine {
 
 **Installation:**
 ```bash
-npm install prism
+npm install prizm-engine
 ```
 
 **Components:**
 
 #### 1. Core Client
 ```typescript
-import { authorize, agentAuthorize, mintAgentToken } from 'prism';
+import { authorize, agentAuthorize, mintAgentToken } from 'prizm-engine';
 
 // Human check
 const decision = await authorize({
@@ -274,7 +274,7 @@ const agentDecision = await agentAuthorize({
 
 #### 2. LangChain Middleware
 ```typescript
-import { SecureTool } from 'prism/langchain';
+import { SecureTool } from 'prizm-engine/langchain';
 
 const refundTool = new SecureTool({
   name: 'refund_transaction',
@@ -289,7 +289,7 @@ const refundTool = new SecureTool({
 
 #### 3. React Hook
 ```typescript
-import { useAgentPermission } from 'prism/react';
+import { useAgentPermission } from 'prizm-engine/react';
 
 function AgentChatBox() {
   const { canExecute, loading } = useAgentPermission('refund_payment');
@@ -304,7 +304,7 @@ function AgentChatBox() {
 
 #### 4. Express Middleware
 ```typescript
-import { authorize } from 'prism/express';
+import { authorize } from 'prizm-engine/express';
 
 app.post('/refund', authorize('approve_refund'), (req, res) => {
   // Route protected by permission check
@@ -320,7 +320,7 @@ Full TypeScript types for `Policy`, `Decision`, `AgentContext`, `ConfidenceGate`
 
 **Installation:**
 ```bash
-pip install prism-engine
+pip install prizm-engine
 ```
 
 **Components:**

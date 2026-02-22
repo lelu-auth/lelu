@@ -2,16 +2,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prism-engine
+  name: prizm-engine
 spec:
   replicas: {{ .Values.engine.replicaCount }}
   selector:
     matchLabels:
-      app: prism-engine
+      app: prizm-engine
   template:
     metadata:
       labels:
-        app: prism-engine
+        app: prizm-engine
     spec:
       containers:
         - name: engine
@@ -67,10 +67,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prism-engine
+  name: prizm-engine
 spec:
   selector:
-    app: prism-engine
+    app: prizm-engine
   ports:
     - port: {{ .Values.engine.servicePort }}
       targetPort: {{ .Values.engine.port }}

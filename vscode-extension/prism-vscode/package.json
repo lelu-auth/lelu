@@ -1,0 +1,68 @@
+{
+  "name": "prism-vscode",
+  "displayName": "Prism",
+  "description": "Prism commands for engine health, agent authorization, and trace lookup.",
+  "version": "0.1.0",
+  "publisher": "prism",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:prism.healthCheck",
+    "onCommand:prism.authorizeAgent",
+    "onCommand:prism.getTrace"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "prism.healthCheck",
+        "title": "Prism: Health Check"
+      },
+      {
+        "command": "prism.authorizeAgent",
+        "title": "Prism: Authorize Agent Action"
+      },
+      {
+        "command": "prism.getTrace",
+        "title": "Prism: Get Trace By ID"
+      }
+    ],
+    "configuration": {
+      "title": "Prism",
+      "properties": {
+        "prism.engineUrl": {
+          "type": "string",
+          "default": "http://localhost:8082",
+          "description": "Base URL for Prism Engine."
+        },
+        "prism.platformUrl": {
+          "type": "string",
+          "default": "http://localhost:9090",
+          "description": "Base URL for Prism Platform API."
+        },
+        "prism.platformApiKey": {
+          "type": "string",
+          "default": "platform-dev-key",
+          "description": "Bearer token used for Prism Platform API routes."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.6.2",
+    "typescript": "^5.6.3"
+  }
+}

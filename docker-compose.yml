@@ -12,7 +12,7 @@ services:
       context: .
       dockerfile: engine/Dockerfile
     image: prism/engine:local
-    container_name: prism-engine
+    container_name: prizm-engine
     restart: unless-stopped
     ports:
       - "8082:8080"

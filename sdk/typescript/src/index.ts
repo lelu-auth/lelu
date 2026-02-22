@@ -34,7 +34,7 @@ import type { ClientConfig } from "./types.js";
  *
  * @example
  * ```ts
- * import { createClient } from "prism";
+ * import { createClient } from "prizm-engine";
  *
  * const prism = createClient({ baseUrl: "http://localhost:8080" });
  * const { allowed } = await prism.agentAuthorize({ ... });

@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { SecureTool } from 'prism/langchain';
+ * import { SecureTool } from 'prizm-engine/langchain';
  *
  * const refundTool = new SecureTool({
  *   name: 'process_refund',

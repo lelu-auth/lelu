@@ -16,7 +16,7 @@ secrets:
 engine:
   enabled: true
   replicaCount: 2
-  image: ghcr.io/abenezer0923/prism-engine:latest
+  image: ghcr.io/abenezer0923/prizm-engine:latest
   resources:
     requests:
       cpu: 100m

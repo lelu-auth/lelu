@@ -22,9 +22,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=amd64 go build -o dist/prism-engine-linux-amd64 ./engine/cmd/engine
-          GOOS=darwin GOARCH=arm64 go build -o dist/prism-engine-darwin-arm64 ./engine/cmd/engine
-          GOOS=windows GOARCH=amd64 go build -o dist/prism-engine-windows-amd64.exe ./engine/cmd/engine
+          GOOS=linux GOARCH=amd64 go build -o dist/prizm-engine-linux-amd64 ./engine/cmd/engine
+          GOOS=darwin GOARCH=arm64 go build -o dist/prizm-engine-darwin-arm64 ./engine/cmd/engine
+          GOOS=windows GOARCH=amd64 go build -o dist/prizm-engine-windows-amd64.exe ./engine/cmd/engine
 
       - name: Prepare release notes
         id: notes
@@ -34,9 +34,9 @@ jobs:
             echo "## Prism OSS Release"
             echo ""
             echo "### Artifacts"
-            echo "- prism-engine-linux-amd64"
-            echo "- prism-engine-darwin-arm64"
-            echo "- prism-engine-windows-amd64.exe"
+            echo "- prizm-engine-linux-amd64"
+            echo "- prizm-engine-darwin-arm64"
+            echo "- prizm-engine-windows-amd64.exe"
             echo ""
             echo "### Highlights"
             echo "- Confidence-aware auth engine"
@@ -51,6 +51,6 @@ jobs:
           body_path: RELEASE_NOTES.md
           generate_release_notes: true
           files: |
-            dist/prism-engine-linux-amd64
-            dist/prism-engine-darwin-arm64
-            dist/prism-engine-windows-amd64.exe
+            dist/prizm-engine-linux-amd64
+            dist/prizm-engine-darwin-arm64
+            dist/prizm-engine-windows-amd64.exe
