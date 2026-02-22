@@ -19,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </a>
           <div className="nav-links">
             <a href="/">Home</a>
+            <a href="/docs">Docs</a>
             <a href="/audit">Audit Log</a>
             <a href="/policies">Policies</a>
             <a href="https://github.com/Abenezer0923/Prism" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
