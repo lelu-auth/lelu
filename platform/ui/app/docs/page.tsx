@@ -6,10 +6,34 @@ export default function DocsPage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Prism Engine Overview
         </div>
-        <h1 id="introduction" className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Introduction to Prism</h1>
+        <h1 id="introduction" className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Introduction</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism is the first authorization engine built specifically for the AI era. It allows you to write policies that understand uncertainty, automatically routing low-confidence AI actions to human approvers while letting high-confidence actions pass through instantly.
+          Prism is a policy engine for AI-driven systems. It combines Rego-based authorization, confidence-aware decisioning, human approval queues, and auditable enforcement so teams can ship AI agents without giving up control.
         </p>
+      </div>
+
+      <h2 id="features" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Features</h2>
+      <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
+        Prism includes the core building blocks needed to govern AI actions in production, with simple defaults for development and stronger controls for enterprise workloads.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Confidence-aware policies</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Author policies that branch on confidence score instead of binary allow/deny only.</p>
+        </div>
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Human-in-the-loop approvals</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Automatically queue risky operations for reviewers before execution.</p>
+        </div>
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Token lifecycle control</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Mint short-lived tokens for approved actions and revoke them when needed.</p>
+        </div>
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Audit-ready trail</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Track every decision and approval with immutable, compliance-friendly records.</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
@@ -117,10 +141,21 @@ export default function DocsPage() {
         </div>
       </div>
 
-      <h2 id="mcp" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">AI Tooling (MCP)</h2>
+      <h2 id="mcp" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">AI Tooling</h2>
       <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
-        Prism natively supports the Model Context Protocol (MCP). This means you can give Claude, Cursor, or any other MCP-compatible agent secure access to your infrastructure. The agent proposes an action, Prism evaluates it, and if the confidence is too low, it pauses the agent until a human approves.
+        Prism exposes AI-friendly interfaces so coding assistants and agent runtimes can integrate safely with your policies and approval flows.
       </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">MCP server</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Use Prism tools from Cursor, Claude, or any MCP-compatible client.</p>
+        </div>
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">API-first design</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Integrate quickly with backend services, web apps, and SDK-based agents.</p>
+        </div>
+      </div>
 
       <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-12">
         <div className="px-4 py-3 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">

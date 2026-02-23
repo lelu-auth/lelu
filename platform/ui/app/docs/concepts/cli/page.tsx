@@ -32,26 +32,118 @@ export default function DocsConceptCli() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Model Context Protocol (MCP)</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Prism natively supports MCP, allowing you to wrap any existing MCP tools with Prism's confidence-aware authorization layer. When an AI assistant (like Cursor) tries to use a tool, Prism intercepts the call, evaluates the policy, and can pause the assistant to ask for human approval.
+            Prism ships a standalone MCP server (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">@prism/mcp</code>) that exposes policy-aware authorization tools over both stdio (for local AI clients) and HTTP/SSE (for networked or Docker deployments). When an AI assistant calls a tool, Prism evaluates your Rego policy and can pause execution to request human approval.
           </p>
-          
-          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+
+          {/* Docker (recommended) */}
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Docker (recommended)</h3>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+            The MCP server is included in the Prism <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">docker-compose.yml</code>. Start it alongside the engine:
+          </p>
+
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-4">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">Starting the MCP Server</span>
+              <span className="text-xs text-zinc-500 font-mono">terminal</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`# Start the Prism MCP server, pointing it to your Engine
-npx @prism/cli mcp start \\
-  --engine-url http://localhost:8082 \\
+              {`docker compose up -d mcp
+
+# Health check
+curl http://localhost:3001/healthz
+# {"status":"ok","service":"prism-mcp"}
+
+# SSE endpoint for AI clients
+# http://localhost:3001/sse`}
+            </pre>
+          </div>
+
+          <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-sm">
+            The container connects to the engine over the internal Docker network (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">http://engine:8080</code>) and listens on port <strong>3001</strong>. Configure your API key via the <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">PRISM_API_KEY</code> environment variable.
+          </p>
+
+          {/* npx / local */}
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">npx (local stdio)</h3>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+            For local development with Cursor or Claude Desktop, run the MCP server directly via npx in stdio mode:
+          </p>
+
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+              <span className="text-xs text-zinc-500 font-mono">terminal</span>
+            </div>
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+              {`npx @prism/mcp start --transport stdio \\
+  --engine-url http://localhost:8080 \\
   --api-key YOUR_API_KEY`}
             </pre>
           </div>
 
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            <div className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Cursor Integration:</strong> To use Prism in Cursor, go to Settings &gt; Features &gt; MCP, add a new server, select "command", and enter <code className="bg-blue-100 dark:bg-blue-800/50 px-1 rounded font-mono">npx @prism/cli mcp start</code>.
+          {/* Cursor */}
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Cursor integration</h3>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+            Add Prism to Cursor via <strong>Settings → Features → MCP</strong>. Use the SSE URL when Docker is running, or the command mode for stdio:
+          </p>
+
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-4">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+              <span className="text-xs text-zinc-500 font-mono">~/.cursor/mcp.json — SSE (Docker)</span>
             </div>
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+              {`{
+  "mcpServers": {
+    "prism": {
+      "url": "http://localhost:3001/sse"
+    }
+  }
+}`}
+            </pre>
+          </div>
+
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+              <span className="text-xs text-zinc-500 font-mono">~/.cursor/mcp.json — stdio (npx)</span>
+            </div>
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+              {`{
+  "mcpServers": {
+    "prism": {
+      "command": "npx",
+      "args": ["@prism/mcp", "start", "--transport", "stdio"],
+      "env": {
+        "PRISM_ENGINE_URL": "http://localhost:8080",
+        "PRISM_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}`}
+            </pre>
+          </div>
+
+          {/* Available tools */}
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Available MCP tools</h3>
+          <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/10 mb-6">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5">
+                  <th className="text-left px-4 py-3 font-semibold text-zinc-900 dark:text-white">Tool</th>
+                  <th className="text-left px-4 py-3 font-semibold text-zinc-900 dark:text-white">Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
+                {[
+                  ["prism_agent_authorize", "Confidence-aware authorization for an AI agent action"],
+                  ["prism_authorize", "Authorize a human user action against the active policy"],
+                  ["prism_mint_token", "Issue a short-lived JIT token for a specific action"],
+                  ["prism_revoke_token", "Revoke a previously issued token"],
+                  ["prism_health", "Check that the Prism engine is reachable"],
+                ].map(([tool, desc]) => (
+                  <tr key={tool}>
+                    <td className="px-4 py-3 font-mono text-blue-600 dark:text-blue-400 whitespace-nowrap">{tool}</td>
+                    <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">{desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 

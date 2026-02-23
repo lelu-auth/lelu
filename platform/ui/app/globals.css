@@ -60,6 +60,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Navigation */
 .nav {
   display: flex;
@@ -326,6 +330,39 @@ td a:hover { text-decoration: underline; }
   font-weight: 500;
 }
 
+.docs-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(113, 113, 122, 0.5) transparent;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 16px), transparent 100%);
+}
+
+.docs-sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.docs-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.docs-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(113, 113, 122, 0.45);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.docs-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.7);
+  background-clip: content-box;
+}
+
+.docs-sidebar-link.is-active {
+  font-weight: 600;
+}
+
 .docs-content {
   flex: 1;
   min-width: 0;
@@ -424,4 +461,59 @@ td a:hover { text-decoration: underline; }
   margin-bottom: 1.5rem;
   color: var(--text-secondary);
   font-style: italic;
+}
+
+.docs-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 460ms ease, transform 460ms ease;
+  transition-delay: var(--docs-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.docs-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.docs-copy-container {
+  position: relative;
+}
+
+.docs-copy-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.docs-copy-button:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+.docs-copy-button.is-copied {
+  color: var(--status-success-text);
+  border-color: var(--status-success-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .docs-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

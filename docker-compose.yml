@@ -126,6 +126,33 @@ services:
     networks:
       - prism
 
+  # ── Prism MCP Server ──────────────────────────────────────────────────────────
+  mcp:
+    build:
+      context: sdk/mcp
+      dockerfile: Dockerfile
+    image: prism/mcp:local
+    container_name: prism-mcp
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      MCP_TRANSPORT:       "http"
+      MCP_PORT:            "3001"
+      PRISM_ENGINE_URL:    "http://engine:8080"
+      PRISM_API_KEY:       "${API_KEY:-prism-dev-key}"
+    depends_on:
+      engine:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - prism
+
   # ── Redis Insight (optional dev UI) ─────────────────────────────────────────
   redis-ui:
     image: redislabs/redisinsight:latest
