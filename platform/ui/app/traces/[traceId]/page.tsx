@@ -19,8 +19,8 @@ export default async function TracePage({
   const decisions = Array.from(new Set(trace.events.map((e) => e.decision)));
 
   return (
-    <>
-      <a href="/" className="back-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '1rem' }}>
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <a href="/audit" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors mb-8">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
@@ -28,25 +28,23 @@ export default async function TracePage({
         Back to Audit Log
       </a>
 
-      <header className="header">
-        <div>
-          <h1>Trace Detail</h1>
-          <p className="subtitle font-mono text-muted">{params.traceId}</p>
-        </div>
+      <header className="mb-10">
+        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">Trace Detail</h1>
+        <p className="text-zinc-500 dark:text-zinc-400 font-mono text-sm">{params.traceId}</p>
       </header>
 
-      <div className="stats-grid" style={{ marginBottom: "2rem" }}>
-        <div className="stat-card">
-          <div className="stat-title">Events</div>
-          <div className="stat-value">{trace.events.length}</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
+          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Events</div>
+          <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{trace.events.length}</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-title">Avg Confidence</div>
-          <div className="stat-value">{(avgConf * 100).toFixed(0)}%</div>
+        <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
+          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Avg Confidence</div>
+          <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{(avgConf * 100).toFixed(0)}%</div>
         </div>
-        <div className="stat-card" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.5rem" }}>
-          <div className="stat-title">Decisions</div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 flex flex-col items-start gap-2">
+          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Decisions</div>
+          <div className="flex gap-2 flex-wrap">
             {decisions.map((d) => (
               <Badge key={d} decision={d} />
             ))}
@@ -55,16 +53,18 @@ export default async function TracePage({
       </div>
 
       {trace.events.length > 0 && (
-        <div className="stat-card" style={{ marginBottom: "2rem" }}>
-          <div className="stat-title">Actors involved</div>
-          <div className="stat-value" style={{ fontSize: '1.25rem', marginTop: '0.5rem' }}>
+        <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 mb-10">
+          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Actors involved</div>
+          <div className="text-xl font-medium text-zinc-900 dark:text-zinc-100 mt-2">
             {Array.from(new Set(trace.events.map((e) => e.actor))).join(", ")}
           </div>
         </div>
       )}
 
-      <h2 style={{ marginBottom: '1rem' }}>Events</h2>
-      <AuditTable events={trace.events} />
-    </>
+      <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Events</h2>
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900/30">
+        <AuditTable events={trace.events} />
+      </div>
+    </div>
   );
 }

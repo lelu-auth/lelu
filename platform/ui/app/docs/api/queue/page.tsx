@@ -1,143 +1,104 @@
-"use client";
-
-import { useState } from "react";
-
-export default function DocsQueueApi() {
-  const [reqTab, setReqTab] = useState<"curl" | "ts" | "py">("curl");
-
+export default function DocsApiQueue() {
   return (
-    <>
-      <h1>Queue API</h1>
-      <p className="lead">
-        Review and resolve requests that require human approval.
-      </p>
-
-      <h2>Endpoints</h2>
-      <p>
-        The Queue API provides endpoints to manage the human-in-the-loop approval process for AI agents.
-      </p>
-
-      <div className="endpoint-badge">
-        <span className="method get">GET</span>
-        <span className="path">/v1/queue/pending</span>
-      </div>
-      <p>Retrieves a list of all pending authorization requests that require human review.</p>
-
-      <div className="endpoint-badge">
-        <span className="method get">GET</span>
-        <span className="path">/v1/queue/{"{id}"}</span>
-      </div>
-      <p>Retrieves the details of a specific queued request by its ID.</p>
-
-      <div className="endpoint-badge">
-        <span className="method post">POST</span>
-        <span className="path">/v1/queue/{"{id}"}/approve</span>
-      </div>
-      <p>Approves a pending request, allowing the agent to proceed with the action.</p>
-
-      <div className="endpoint-badge">
-        <span className="method post">POST</span>
-        <span className="path">/v1/queue/{"{id}"}/deny</span>
-      </div>
-      <p>Denies a pending request, blocking the agent from performing the action.</p>
-
-      <h2>Resolve Payload</h2>
-      <p>
-        When approving or denying a request, you must provide a JSON payload indicating who resolved the request and an optional note.
-      </p>
-      <div className="table-wrap">
-        <table className="docs-table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Required</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>resolved_by</code></td>
-              <td><code>string</code></td>
-              <td>Yes</td>
-              <td>The identity of the human reviewer (e.g., email or user ID).</td>
-            </tr>
-            <tr>
-              <td><code>note</code></td>
-              <td><code>string</code></td>
-              <td>No</td>
-              <td>An optional comment explaining the decision.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h2>Example: Approve Request</h2>
-      <div className="code-showcase" style={{ margin: "1.5rem 0" }}>
-        <div className="code-tabs">
-          <div 
-            className={`code-tab ${reqTab === "curl" ? "active" : ""}`}
-            onClick={() => setReqTab("curl")}
-          >
-            cURL
-          </div>
-          <div 
-            className={`code-tab ${reqTab === "ts" ? "active" : ""}`}
-            onClick={() => setReqTab("ts")}
-          >
-            TypeScript
-          </div>
-          <div 
-            className={`code-tab ${reqTab === "py" ? "active" : ""}`}
-            onClick={() => setReqTab("py")}
-          >
-            Python
-          </div>
+    <div className="max-w-3xl">
+      <div className="mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 text-sm font-medium mb-6">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          API Reference
         </div>
-        <div className="code-block-wrapper">
-          {reqTab === "curl" && (
-            <pre><code>{`curl -X POST http://localhost:8082/v1/queue/req_123abc/approve \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "resolved_by": "admin@company.com",
-    "note": "Approved after review"
-  }'`}</code></pre>
-          )}
-          {reqTab === "ts" && (
-            <pre><code>{`import { PrizmClient } from "prizm-engine";
-
-const client = new PrizmClient({ endpoint: "http://localhost:8082" });
-
-await client.approveRequest("req_123abc", {
-  resolved_by: "admin@company.com",
-  note: "Approved after review"
-});`}</code></pre>
-          )}
-          {reqTab === "py" && (
-            <pre><code>{`from prizm_engine import PrizmClient
-
-client = PrizmClient(endpoint="http://localhost:8082")
-
-client.approve_request(
-    request_id="req_123abc",
-    resolved_by="admin@company.com",
-    note="Approved after review"
-)`}</code></pre>
-          )}
-        </div>
+        <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Queue API</h1>
+        <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+          Endpoints for managing the human-in-the-loop approval queue. Use these to list pending requests and submit human decisions.
+        </p>
       </div>
 
-      <h2>Response</h2>
-      <p>
-        A successful approval or denial returns a <code>200 OK</code> status with the updated request object.
-      </p>
-      <pre><code>{`{
-  "id": "req_123abc",
-  "status": "approved",
-  "resolved_by": "admin@company.com",
-  "resolved_at": "2023-10-27T10:00:00Z",
-  "note": "Approved after review"
+      <div className="space-y-12">
+        <section>
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">List Pending Requests</h2>
+          
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
+              <span className="text-xs font-bold text-blue-400">GET</span>
+              <span className="text-xs text-zinc-400 font-mono">/api/v1/queue</span>
+            </div>
+            <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+              <pre><code>{`// Response
+{
+  "requests": [
+    {
+      "id": "req_67890fghij",
+      "agent_id": "agent-123",
+      "action": "delete_user",
+      "resource": "user:456",
+      "confidence": 0.85,
+      "status": "pending",
+      "created_at": "2023-10-27T10:00:00Z"
+    }
+  ]
 }`}</code></pre>
-    </>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Approve a Request</h2>
+          
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
+              <span className="text-xs font-bold text-green-400">POST</span>
+              <span className="text-xs text-zinc-400 font-mono">/api/v1/queue/:id/approve</span>
+            </div>
+            <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+              <pre><code>{`// Request Body
+{
+  "reviewer_id": "user_789",
+  "comment": "Approved per support ticket #9921" // Optional
+}
+
+// Response (200 OK)
+{
+  "status": "success",
+  "message": "Request approved"
+}`}</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Deny a Request</h2>
+          
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
+              <span className="text-xs font-bold text-green-400">POST</span>
+              <span className="text-xs text-zinc-400 font-mono">/api/v1/queue/:id/deny</span>
+            </div>
+            <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+              <pre><code>{`// Request Body
+{
+  "reviewer_id": "user_789",
+  "comment": "Agent misunderstood the user's intent." // Optional
+}
+
+// Response (200 OK)
+{
+  "status": "success",
+  "message": "Request denied"
+}`}</code></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="flex justify-between items-center pt-12 mt-12 border-t border-zinc-200 dark:border-white/10">
+        <a href="/docs/api/authorize" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Previous: Authorize API
+        </a>
+        <a href="/docs/api/agent" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          Next: Agent API
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
   );
 }

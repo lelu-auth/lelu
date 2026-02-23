@@ -71,7 +71,7 @@ func (h *Handler) handleListPolicies(w http.ResponseWriter, r *http.Request) {
 	if tenantID == "" {
 		tenantID = "default"
 	}
-	list, err := h.policies.List(tenantID)
+	list, err := h.policies.List()
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -127,7 +127,7 @@ func (h *Handler) handleDeletePolicy(w http.ResponseWriter, r *http.Request) {
 	if tenantID == "" {
 		tenantID = "default"
 	}
-	if err := h.policies.Delete(tenantID, r.PathValue("name")); err != nil {
+	if err := h.policies.Delete(r.PathValue("name")); err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
@@ -176,7 +176,7 @@ func (h *Handler) handleGetTrace(w http.ResponseWriter, r *http.Request) {
 	if tenantID == "" {
 		tenantID = "default"
 	}
-	events, err := h.audit.GetByTraceID(tenantID, r.PathValue("traceID"))
+	events, err := h.audit.GetByTraceID(r.PathValue("traceID"))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return

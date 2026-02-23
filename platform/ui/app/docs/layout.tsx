@@ -1,37 +1,92 @@
-import Link from "next/link";
-
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[calc(100vh-73px)] max-w-7xl mx-auto">
-      <aside className="w-64 shrink-0 border-r border-zinc-800/50 p-6 hidden md:block sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto">
+    <div className="flex min-h-[calc(100vh-73px)] max-w-[1400px] mx-auto">
+      {/* Left Sidebar Navigation */}
+      <aside className="hidden md:block w-64 shrink-0 border-r border-zinc-200 dark:border-white/[0.08] py-8 pr-6 sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto">
         <nav className="space-y-8">
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Getting Started</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/docs" className="text-blue-400 font-medium hover:text-blue-300 transition-colors">Introduction</Link></li>
-              <li><Link href="/docs/installation" className="text-zinc-400 hover:text-zinc-200 transition-colors">Installation</Link></li>
-              <li><Link href="/docs/quickstart" className="text-zinc-400 hover:text-zinc-200 transition-colors">Quick Start</Link></li>
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Getting Started</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Introduction</a></li>
+              <li><a href="/docs/quickstart" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Quickstart</a></li>
+              <li><a href="/docs/installation" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Installation</a></li>
             </ul>
           </div>
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Core Concepts</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/docs/confidence" className="text-zinc-400 hover:text-zinc-200 transition-colors">Confidence-Aware Auth</Link></li>
-              <li><Link href="/docs/human-in-loop" className="text-zinc-400 hover:text-zinc-200 transition-colors">Human-in-the-loop</Link></li>
-              <li><Link href="/docs/audit-trail" className="text-zinc-400 hover:text-zinc-200 transition-colors">Audit Trails</Link></li>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Concepts</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/concepts/architecture" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Architecture</a></li>
+              <li><a href="/docs/concepts/api" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">API</a></li>
+              <li><a href="/docs/concepts/client" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Client SDK</a></li>
+              <li><a href="/docs/concepts/cli" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">CLI &amp; MCP</a></li>
             </ul>
           </div>
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">API Reference</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/docs/api/authorize" className="text-zinc-400 hover:text-zinc-200 transition-colors">/v1/authorize</Link></li>
-              <li><Link href="/docs/api/agent" className="text-zinc-400 hover:text-zinc-200 transition-colors">/v1/agent/authorize</Link></li>
-              <li><Link href="/docs/api/queue" className="text-zinc-400 hover:text-zinc-200 transition-colors">/v1/queue</Link></li>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Features</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/confidence" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Confidence Scores</a></li>
+              <li><a href="/docs/human-in-loop" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Human-in-the-loop</a></li>
+              <li><a href="/docs/audit-trail" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Audit Trail</a></li>
+              <li><a href="/docs/sso" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">SSO &amp; Authentication</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">API Reference</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/api/authorize" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">/authorize</a></li>
+              <li><a href="/docs/api/queue" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">/queue</a></li>
+              <li><a href="/docs/api/agent" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Agent SDK</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Integrations</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/integrations/backend" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Backend</a></li>
+              <li><a href="/docs/integrations/nextjs" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Next.js</a></li>
+              <li><a href="/docs/integrations/react" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">React / Frontend</a></li>
+              <li><a href="/docs/integrations/mobile" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Mobile</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Databases</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/databases" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Overview</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Plugins</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/plugins/confidence-plugin" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Confidence Score</a></li>
+              <li><a href="/docs/plugins/audit-plugin" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Audit Trail</a></li>
+              <li><a href="/docs/plugins/rate-limit" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Rate Limiting</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Guides</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/guides/production" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Production</a></li>
+              <li><a href="/docs/guides/testing" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Testing Policies</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-zinc-900 dark:text-white mb-3 px-2">Migrations</h4>
+            <ul className="space-y-1 text-sm">
+              <li><a href="/docs/migrations" className="block px-2 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 rounded-md transition-colors">Database Migrations</a></li>
             </ul>
           </div>
         </nav>
       </aside>
-      <main className="flex-1 p-8 md:p-12 max-w-3xl prose prose-invert prose-zinc prose-a:text-blue-400 hover:prose-a:text-blue-300 prose-headings:text-zinc-100 prose-p:text-zinc-400 prose-strong:text-zinc-200 prose-code:text-zinc-300 prose-code:bg-zinc-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none">
+
+      {/* Main Content Area */}
+      <main className="flex-1 min-w-0 py-8 px-6 md:px-12">
         {children}
       </main>
     </div>

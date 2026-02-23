@@ -71,6 +71,15 @@ var migrations = []string{
 	`CREATE INDEX IF NOT EXISTS idx_audit_tenant_actor ON audit_events(tenant_id, actor, timestamp DESC)`,
 	`CREATE INDEX IF NOT EXISTS idx_audit_tenant_ts    ON audit_events(tenant_id, timestamp DESC)`,
 
+	// ── 005 backfill tenant_id columns for existing databases ────────────────
+	`ALTER TABLE policies       ADD COLUMN IF NOT EXISTS tenant_id TEXT NOT NULL DEFAULT 'default'`,
+	`ALTER TABLE audit_events   ADD COLUMN IF NOT EXISTS tenant_id TEXT NOT NULL DEFAULT 'default'`,
+	`ALTER TABLE token_revocations ADD COLUMN IF NOT EXISTS tenant_id TEXT NOT NULL DEFAULT 'default'`,
+	`ALTER TABLE api_keys       ADD COLUMN IF NOT EXISTS tenant_id TEXT NOT NULL DEFAULT 'default'`,
+
+	// ── 006 add unique constraint on policies(tenant_id, name) if missing ────
+	`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'policies_tenant_id_name_key') THEN ALTER TABLE policies ADD CONSTRAINT policies_tenant_id_name_key UNIQUE (tenant_id, name); END IF; END $$`,
+
 	// ── 003 token_revocations ─────────────────────────────────────────────────
 	`CREATE TABLE IF NOT EXISTS token_revocations (
 		token_id   TEXT        PRIMARY KEY,

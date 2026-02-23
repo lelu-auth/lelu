@@ -1,6 +1,6 @@
-# Prism: Auth Permission Engine 🔐
+# Prism: The Authorization Engine for AI Agents 🔐
 
-> **The immune system for autonomous AI agents.**
+> **Confidence-aware access control, human-in-the-loop approvals, and SOC 2-ready audit trails for your autonomous agents.**
 
 Prism is a developer-first authorization layer built specifically for the Agentic Web. It grants ephemeral, context-aware, and scoped permissions to AI agents, ensuring they act autonomously without hallucinating security breaches. 
 
@@ -10,7 +10,11 @@ Unlike legacy IAM, Prism treats AI agents as first-class actors with their own d
 
 ---
 
-## 🌟 Key Features
+## 🌟 Why Prism?
+
+Traditional authorization systems (like OAuth or RBAC) were built for humans and deterministic software. AI agents are non-deterministic. They hallucinate, they get confused, and they make mistakes. 
+
+Prism bridges this gap by introducing **Confidence-Aware Auth**.
 
 *   **Confidence-Aware Auth:** Automatically downgrade permissions or require human approval if an LLM's confidence score drops below a defined threshold.
 *   **Ephemeral Agent Tokens (JIT):** Never give an AI agent a permanent API key. Prism mints Just-In-Time tokens that expire the moment a task completes.
@@ -24,23 +28,103 @@ Unlike legacy IAM, Prism treats AI agents as first-class actors with their own d
 
 The easiest way to get started is using Docker Compose, which spins up the Engine, Platform UI, and Redis.
 
+### 1. Start the Infrastructure
+
 ```bash
-# 1. Start the engine + Redis sidecar
+# Start the engine, platform, and Redis
 docker compose up -d
+```
 
-# 2. Check health
+### 2. Verify the Engine is Running
+
+```bash
 curl http://localhost:8082/healthz
+# {"status":"ok","version":"1.0.0"}
+```
 
-# 3. Authorize an agent action
+### 3. Authorize an Agent Action
+
+Prism evaluates the request against your defined policies (YAML or Rego) and the agent's current confidence score.
+
+```bash
 curl -s -X POST http://localhost:8082/v1/agent/authorize \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer prism-dev-key" \
   -d '{
-    "actor":      "invoice_bot",
-    "action":     "approve_refunds",
+    "actor": "invoice_bot",
+    "action": "approve_refunds",
     "confidence": 0.92,
     "acting_for": "user_123"
   }' | jq .
+```
+
+**Response:**
+```json
+{
+  "allowed": true,
+  "reason": "allowed by agent scope",
+  "requires_human_review": false,
+  "confidence_used": 0.92
+}
+```
+
+---
+
+## 💻 SDK Installation
+
+Prism provides official SDKs for seamless integration into your agent workflows.
+
+### TypeScript / Node.js
+
+```bash
+npm install prizm-engine
+```
+
+```typescript
+import { PrismClient } from "prizm-engine";
+
+const client = new PrismClient({
+  baseUrl: "http://localhost:8082",
+  apiKey: process.env.PRISM_API_KEY
+});
+
+const decision = await client.agentAuthorize({
+  actor: "support_agent",
+  action: "issue_refund",
+  context: { confidence: 0.85 }
+});
+
+if (decision.requiresHumanReview) {
+  console.log("Action paused. Waiting for human approval.");
+} else if (decision.allowed) {
+  console.log("Action approved autonomously.");
+}
+```
+
+### Python
+
+```bash
+pip install prizm-engine
+```
+
+```python
+from auth_pe.client import PrismClient
+
+client = PrismClient(
+    base_url="http://localhost:8082",
+    api_key="your-api-key"
+)
+
+decision = client.agent_authorize(
+    actor="support_agent",
+    action="issue_refund",
+    confidence=0.85
+)
+
+if decision.requires_human_review:
+    print("Action paused. Waiting for human approval.")
+elif decision.allowed:
+    print("Action approved autonomously.")
 ```
 
 ---
@@ -75,36 +159,33 @@ LLMs are non-deterministic. Your auth layer shouldn't pretend otherwise. Configu
 
 ---
 
-## 💻 Development & Deployment
+## ⚙️ Configuration
 
-### Prerequisites
-- Go 1.22+
-- Docker + Docker Compose
-- Node 20+ (TypeScript SDK)
-- Python 3.11+ (Python SDK)
+### Policy Definition (auth.yaml)
 
-### Local Commands
+Prism uses a simple, declarative YAML format to define roles and agent scopes.
 
-```bash
-make docker-up       # Run everything in Docker
-make test            # Run Go tests with race detector
-make build           # Build Go binary
-make sdk-ts-build    # Build TypeScript SDK
-make sdk-py-test     # Test Python SDK
-```
+```yaml
+version: "1.0"
+roles:
+  admin:
+    allow: ["*"]
+  support:
+    allow: ["tickets.read", "tickets.update", "refunds.issue"]
 
-### Kubernetes (Helm)
-
-Prism includes a production-ready Helm chart with security hardening (Secrets, probes, TLS).
-
-```bash
-helm install prism ./helm/prism
-helm upgrade --install prism ./helm/prism -f ./helm/prism/values-production.yaml
+agent_scopes:
+  support_bot:
+    inherits: support
+    constraints:
+      # Require human approval if the LLM is less than 90% confident
+      require_human_approval_if_confidence_below: 0.90
+      # Completely deny the action if confidence is below 70%
+      hard_deny_if_confidence_below: 0.70
 ```
 
 ### OPA / Rego Compatibility
 
-Prism supports Open Policy Agent (OPA) Rego files. You can load a single Rego file or a directory of Rego plugins (for custom evaluators):
+Prism also supports Open Policy Agent (OPA) Rego files for advanced, programmatic authorization logic.
 
 ```bash
 # Load a single file
@@ -171,4 +252,4 @@ We welcome contributions! Whether it's adding a new SDK integration, writing cus
 MIT License
 
 ---
-*Prism: Auth Permission Engine · Go · TypeScript · Python · 2026*
+*Prism: The Authorization Engine for AI Agents · Go · TypeScript · Python · 2026*
