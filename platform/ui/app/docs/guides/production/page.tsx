@@ -18,15 +18,15 @@ export default function DocsGuidesProduction() {
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Pre-Launch Checklist</h2>
           <div className="space-y-3">
             {[
-              { done: true,  text: "TLS terminated at load balancer or ingress for all services" },
-              { done: true,  text: "PRISM_API_KEY rotated from default and stored in a secret manager" },
-              { done: true,  text: "DATABASE_URL uses sslmode=require" },
-              { done: true,  text: "Redis connection uses TLS (rediss://) or private network" },
+              { done: false, text: "TLS terminated at load balancer or ingress for all services (ops)" },
+              { done: false, text: "PRISM_API_KEY rotated from default and stored in a secret manager (ops)" },
+              { done: false, text: "DATABASE_URL uses sslmode=require in production" },
+              { done: false, text: "Redis uses TLS (rediss://) or a private network" },
               { done: false, text: "Engine replicas ≥ 2 for high availability" },
-              { done: false, text: "Health checks configured on /healthz for all services" },
-              { done: false, text: "AUDIT_S3_ENABLED=true with bucket lifecycle policy (retain 1 year)" },
-              { done: false, text: "Structured logs shipped to Loki / CloudWatch / Datadog" },
-              { done: false, text: "OPA policy version-controlled and reviewed before deploy" },
+              { done: true,  text: "Health checks configured on /healthz for Engine, Platform, MCP, and UI" },
+              { done: false, text: "Audit retention configured (S3/object-store lifecycle, 1+ year)" },
+              { done: false, text: "Structured logs exported to your log platform" },
+              { done: true,  text: "OPA/Rego policies are version-controlled before deploy" },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800">
                 <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 ${item.done ? "bg-emerald-500" : "border-2 border-zinc-300 dark:border-zinc-600"}`}>
@@ -36,6 +36,9 @@ export default function DocsGuidesProduction() {
               </div>
             ))}
           </div>
+          <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+            In Docker Compose healthchecks, prefer <span className="font-mono">127.0.0.1</span> over <span className="font-mono">localhost</span> to avoid container-local hostname resolution edge cases.
+          </p>
         </section>
 
         <section>
@@ -82,11 +85,14 @@ export default function DocsGuidesProduction() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">Key metrics to alert on</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose">{`prism_engine_decisions_total{result="allow"}    # Authorization volume
-prism_engine_decisions_total{result="deny"}     # Deny rate anomaly
-prism_engine_queue_depth                        # Pending approvals
-prism_engine_confidence_score{agent="..."}      # Per-agent trust
-prism_engine_latency_p99_ms                     # Latency SLO`}</pre>
+            <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose">{`prism_http_requests_total{method="POST",path="/v1/agent/authorize",status="200"}
+  # Request volume and status-code anomalies
+
+prism_http_request_duration_seconds{method="POST",path="/v1/agent/authorize"}
+  # Latency SLO / p95 / p99
+
+prism_auth_decisions_total{type="agent",allowed="false"}
+  # Deny-rate spikes and confidence policy pressure`}</pre>
           </div>
         </section>
 

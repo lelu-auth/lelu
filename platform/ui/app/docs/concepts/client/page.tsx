@@ -8,7 +8,7 @@ export default function DocsConceptClient() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Client SDKs</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism offers official client SDKs for TypeScript and Python. These SDKs provide a type-safe, ergonomic way to interact with the Prism Engine from your AI agents.
+          Prism offers official client SDKs for TypeScript, Python, and Go. These SDKs provide a type-safe, ergonomic way to interact with the Prism Engine from agents and backend services.
         </p>
       </div>
 
@@ -102,6 +102,87 @@ if decision.allowed:
             </pre>
           </div>
         </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Go SDK</h2>
+
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+              <span className="text-xs text-zinc-500 font-mono">Installation</span>
+            </div>
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+{`go get github.com/Abenezer0923/Prism/sdk/go`}
+            </pre>
+          </div>
+
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+              <span className="text-xs text-zinc-500 font-mono">Usage</span>
+            </div>
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+{`package main
+
+import (
+  "context"
+  "fmt"
+
+  prism "github.com/Abenezer0923/Prism/sdk/go"
+)
+
+func main() {
+  client := prism.NewClient(prism.ClientConfig{
+    BaseURL: "http://localhost:8082",
+    APIKey:  "your-api-key",
+  })
+
+  decision, err := client.AgentAuthorize(context.Background(), prism.AgentAuthRequest{
+    Actor:      "invoice_bot",
+    Action:     "approve_refunds",
+    Confidence: 0.92,
+    ActingFor:  "user_123",
+  })
+  if err != nil {
+    panic(err)
+  }
+
+  fmt.Println("allowed:", decision.Allowed, "reason:", decision.Reason)
+}`}
+            </pre>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-white/10">
+            <table className="w-full text-sm">
+              <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-zinc-700 dark:text-zinc-300 font-medium">Method</th>
+                  <th className="text-left px-4 py-3 text-zinc-700 dark:text-zinc-300 font-medium">Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 dark:divide-white/10">
+                <tr>
+                  <td className="px-4 py-3 font-mono text-zinc-900 dark:text-zinc-100">Authorize</td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">Human authorization via <span className="font-mono">/v1/authorize</span></td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-mono text-zinc-900 dark:text-zinc-100">AgentAuthorize</td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">Confidence-aware agent authorization via <span className="font-mono">/v1/agent/authorize</span></td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-mono text-zinc-900 dark:text-zinc-100">MintToken</td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">Mint JIT token via <span className="font-mono">/v1/tokens/mint</span></td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-mono text-zinc-900 dark:text-zinc-100">RevokeToken</td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">Revoke token via <span className="font-mono">DELETE /v1/tokens/{"{id}"}</span></td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-mono text-zinc-900 dark:text-zinc-100">IsHealthy</td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">Engine health check via <span className="font-mono">/healthz</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
       <div className="flex justify-between items-center pt-12 mt-12 border-t border-zinc-200 dark:border-white/10">
@@ -110,7 +191,7 @@ if decision.allowed:
           Previous: API
         </a>
         <a href="/docs/concepts/cli" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-          Next: CLI & MCP
+          Next: CLI &amp; MCP
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
       </div>

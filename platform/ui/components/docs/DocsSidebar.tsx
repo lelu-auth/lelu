@@ -27,8 +27,8 @@ const sections: NavSection[] = [
     ),
     items: [
       { href: "/docs", label: "Introduction" },
-      { href: "/docs/quickstart", label: "Quickstart" },
       { href: "/docs/installation", label: "Installation" },
+      { href: "/llms.txt", label: "LLMs.txt" },
     ],
   },
   {
@@ -45,6 +45,7 @@ const sections: NavSection[] = [
       { href: "/docs/concepts/api", label: "API" },
       { href: "/docs/concepts/client", label: "Client SDK" },
       { href: "/docs/concepts/cli", label: "CLI & MCP" },
+      { href: "/docs/concepts/skills", label: "Skills" },
     ],
   },
   {

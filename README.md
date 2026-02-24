@@ -74,6 +74,41 @@ curl -s -X POST http://localhost:8082/v1/agent/authorize \
 
 Prism provides official SDKs for seamless integration into your agent workflows.
 
+### Go
+
+```bash
+go get github.com/Abenezer0923/Prism/sdk/go
+```
+
+```go
+package main
+
+import (
+  "context"
+  "fmt"
+
+  prism "github.com/Abenezer0923/Prism/sdk/go"
+)
+
+func main() {
+  client := prism.NewClient(prism.ClientConfig{
+    BaseURL: "http://localhost:8082",
+    APIKey:  "your-api-key",
+  })
+
+  decision, err := client.AgentAuthorize(context.Background(), prism.AgentAuthRequest{
+    Actor:      "support_agent",
+    Action:     "issue_refund",
+    Confidence: 0.85,
+  })
+  if err != nil {
+    panic(err)
+  }
+
+  fmt.Println("allowed:", decision.Allowed, "reason:", decision.Reason)
+}
+```
+
 ### TypeScript / Node.js
 
 ```bash
@@ -142,6 +177,7 @@ Cloud Control Plane  ──push──►  Local Sidecar Engine (Go)  ◄──�
 | Component | Description |
 |---|---|
 | **Go Engine** | Sub-2 ms policy evaluation, JIT token minting, and the Confidence Gate. |
+| **Go SDK** | Native Go client for backend services and microservices. |
 | **TypeScript SDK** | Middleware for LangChain, React, and Express. |
 | **Python SDK** | Middleware for LangGraph, FastAPI, and AutoGPT. |
 | **YAML Config** | Human-readable, Git-diffable policy definitions. |

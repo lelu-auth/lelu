@@ -30,7 +30,8 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      # Use 127.0.0.1 (not localhost) to avoid container-local hostname resolution edge cases.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -99,7 +100,8 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:9090/healthz"]
+      # Use 127.0.0.1 (not localhost) to avoid container-local hostname resolution edge cases.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/healthz"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -123,6 +125,13 @@ services:
     depends_on:
       platform:
         condition: service_healthy
+    healthcheck:
+      # Use 127.0.0.1 (not localhost) to avoid container-local hostname resolution edge cases.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - prism
 
@@ -145,7 +154,8 @@ services:
       engine:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/healthz"]
+      # Use 127.0.0.1 (not localhost) to avoid container-local hostname resolution edge cases.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/healthz"]
       interval: 10s
       timeout: 5s
       retries: 3

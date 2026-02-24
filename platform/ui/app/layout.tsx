@@ -4,8 +4,17 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
-  title: "Prism — Trace Explorer",
+  title: {
+    default: "Prism Engine",
+    template: "%s | Prism Engine",
+  },
   description: "Confidence-Aware Auth audit trail",
+  applicationName: "Prism Engine",
+  icons: {
+    icon: "/prism-mark.svg",
+    shortcut: "/prism-mark.svg",
+    apple: "/prism-mark.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -15,12 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-white/60 dark:bg-black/60 backdrop-blur-xl border-b border-zinc-200 dark:border-white/[0.08] transition-colors duration-300">
             <a href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-80 transition-opacity text-black dark:text-white">
-              <div className="w-6 h-6 rounded bg-black dark:bg-white flex items-center justify-center transition-colors duration-300">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="stroke-white dark:stroke-black transition-colors duration-300" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-              Prism
+              <img src="/prism-mark.svg" alt="Prism logo" className="w-6 h-6 rounded-md" />
+              Prism Engine
             </a>
             <div className="flex items-center gap-4 sm:gap-6 text-sm font-medium text-zinc-600 dark:text-zinc-400">
               <a href="/docs" className="hover:text-black dark:hover:text-white transition-colors">Docs</a>
@@ -40,11 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="border-t border-zinc-200 dark:border-white/[0.08] py-12 mt-20 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="flex items-center gap-2 font-bold text-lg tracking-tight text-zinc-800 dark:text-zinc-300">
-                <div className="w-5 h-5 rounded bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center transition-colors duration-300">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="stroke-zinc-600 dark:stroke-white transition-colors duration-300" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
-                </div>
+                <img src="/prism-mark.svg" alt="Prism logo" className="w-5 h-5 rounded" />
                 Prism Engine
               </div>
               <div className="flex gap-6 text-sm text-zinc-500">

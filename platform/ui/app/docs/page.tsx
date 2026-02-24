@@ -1,4 +1,30 @@
+"use client";
+
+import { useState } from "react";
+
 export default function DocsPage() {
+  const [cliTab, setCliTab] = useState<"Cursor" | "Claude Code" | "Open Code" | "Manual">("Cursor");
+  const [manualTab, setManualTab] = useState<"Claude Code" | "Open Code" | "Manual">("Claude Code");
+
+  const cliCommands: Record<typeof cliTab, string> = {
+    Cursor: "npx @prism/mcp add --cursor",
+    "Claude Code": "npx @prism/mcp add --claude",
+    "Open Code": "npx @prism/mcp add --open-code",
+    Manual: "npx @prism/mcp start --transport stdio",
+  };
+
+  const manualCommands: Record<typeof manualTab, string> = {
+    "Claude Code": "claude mcp add --transport http prism http://localhost:3001/sse",
+    "Open Code": "open-code mcp add --transport http prism http://localhost:3001/sse",
+    Manual: `{
+  "mcpServers": {
+    "prism": {
+      "url": "http://localhost:3001/sse"
+    }
+  }
+}`,
+  };
+
   return (
     <div className="max-w-3xl">
       <div className="mb-10">
@@ -37,20 +63,20 @@ export default function DocsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-        <a href="/docs/quickstart" className="group p-6 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          </div>
-          <h3 className="font-semibold text-zinc-900 dark:text-white mb-2">Quickstart</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Get up and running with Prism in less than 5 minutes.</p>
-        </a>
-        
         <a href="/docs/installation" className="group p-6 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all">
           <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600 dark:text-purple-400"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           </div>
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-2">Installation</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Deploy Prism via Docker, Helm, or bare metal.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Get started with Prism in less than 5 minutes.</p>
+        </a>
+
+        <a href="/docs/concepts/architecture" className="group p-6 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all">
+          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2v10l8.66 5"/></svg>
+          </div>
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-2">Architecture</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Learn how Prism works under the hood.</p>
         </a>
       </div>
 
@@ -141,38 +167,130 @@ export default function DocsPage() {
         </div>
       </div>
 
-      <h2 id="mcp" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">AI Tooling</h2>
+      <h2 id="mcp" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">MCP</h2>
       <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
-        Prism exposes AI-friendly interfaces so coding assistants and agent runtimes can integrate safely with your policies and approval flows.
+        Prism provides an MCP server so you can use it with any AI model that supports the Model Context Protocol (MCP).
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
-          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">MCP server</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Use Prism tools from Cursor, Claude, or any MCP-compatible client.</p>
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3 mb-6">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          We provide a first-party MCP, powered by <a href="https://github.com/modelcontextprotocol/servers" className="underline hover:text-blue-600 dark:hover:text-blue-200">fastmcp</a>. You can alternatively use <a href="https://github.com/zckly/mcp-server-prism" className="underline hover:text-blue-600 dark:hover:text-blue-200">zckly/mcp-server-prism</a> and other MCP providers.
+        </p>
+      </div>
+
+      <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">CLI Options</h3>
+      <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+        Use the Prism CLI to easily add the MCP server to your preferred client:
+      </p>
+
+      {/* Tab-like interface */}
+      <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-8">
+        <div className="flex items-center px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+          <div className="flex gap-2">
+            <button onClick={() => setCliTab("Cursor")} className={`px-3 py-1 text-xs rounded transition-colors ${cliTab === "Cursor" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+              Cursor
+            </button>
+            <button onClick={() => setCliTab("Claude Code")} className={`px-3 py-1 text-xs rounded transition-colors ${cliTab === "Claude Code" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+              Claude Code
+            </button>
+            <button onClick={() => setCliTab("Open Code")} className={`px-3 py-1 text-xs rounded transition-colors ${cliTab === "Open Code" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+              Open Code
+            </button>
+            <button onClick={() => setCliTab("Manual")} className={`px-3 py-1 text-xs rounded transition-colors ${cliTab === "Manual" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+              Manual
+            </button>
+          </div>
         </div>
-        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
-          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">API-first design</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Integrate quickly with backend services, web apps, and SDK-based agents.</p>
+        <div className="p-4">
+          <div className="flex items-center gap-2 text-xs text-zinc-500 mb-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 17l6-6-6-6M12 19h8"/>
+            </svg>
+            <span>terminal</span>
+          </div>
+          <pre className="font-mono text-sm text-zinc-300">
+            {cliCommands[cliTab]}
+          </pre>
         </div>
       </div>
 
-      <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-12">
-        <div className="px-4 py-3 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-          <span className="ml-2 text-xs text-zinc-500 font-mono">terminal</span>
+      <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Manual Configuration</h3>
+      <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+        Alternatively, you can manually configure the MCP server for each client with the Prism SSE endpoint:
+      </p>
+
+      {/* Manual config tabs */}
+      <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
+        <div className="flex items-center px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+          <div className="flex gap-2">
+            <button onClick={() => setManualTab("Claude Code")} className={`px-3 py-1 text-xs rounded transition-colors ${manualTab === "Claude Code" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+              Claude Code
+            </button>
+            <button onClick={() => setManualTab("Open Code")} className={`px-3 py-1 text-xs rounded transition-colors ${manualTab === "Open Code" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+              Open Code
+            </button>
+            <button onClick={() => setManualTab("Manual")} className={`px-3 py-1 text-xs rounded transition-colors ${manualTab === "Manual" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+              Manual
+            </button>
+          </div>
         </div>
-        <div className="p-5 font-mono text-sm text-zinc-300 overflow-x-auto">
-          <code>npx @prism/mcp start --config ./prism.yaml</code>
+        <div className="p-4">
+          <div className="flex items-center gap-2 text-xs text-zinc-500 mb-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 17l6-6-6-6M12 19h8"/>
+            </svg>
+            <span>terminal</span>
+          </div>
+          <pre className="font-mono text-sm text-zinc-300 leading-relaxed">
+            {manualCommands[manualTab]}
+          </pre>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+        <a href="/docs/concepts/cli" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">AI Tooling</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Use Prism tools from Cursor, Claude, or any MCP-compatible client.</p>
+        </a>
+        <a href="/llms.txt" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">LLMs.txt</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Prism supports the LLMs.txt standard for AI-friendly documentation.</p>
+        </a>
+        <a href="/docs/concepts/skills" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Skills</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Pre-built authorization patterns for common AI agent workflows.</p>
+        </a>
+        <a href="/docs/concepts/cli" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">MCP</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Model Context Protocol support for seamless AI integration.</p>
+        </a>
+        <a href="/docs/concepts/cli" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">CLI Options</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Command-line setup for Cursor, Claude Code, Open Code, and local development.</p>
+        </a>
+        <a href="/docs/concepts/cli" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Manual Configuration</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Full control over Prism configuration for advanced use cases.</p>
+        </a>
       </div>
 
       <div className="flex justify-between items-center pt-8 border-t border-zinc-200 dark:border-white/10">
         <div className="text-sm text-zinc-500">Last updated: Today</div>
-        <a href="/docs/quickstart" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-          Next: Quickstart
+        <a href="/docs/installation" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          Next: Installation
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
       </div>

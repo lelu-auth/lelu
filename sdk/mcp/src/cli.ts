@@ -4,6 +4,7 @@
  *
  * Usage:
  *   npx @prism/mcp start [options]
+ *   npx @prism/mcp add [target] [options]
  *
  * Options:
  *   --engine-url  <url>   Prism Engine base URL (default: http://localhost:8082)
@@ -43,6 +44,7 @@ function printHelp() {
 
 Usage:
   npx @prism/mcp start [options]
+  npx @prism/mcp add [target] [options]
 
 Options:
   --engine-url <url>    Prism Engine base URL (default: http://localhost:8082)
@@ -50,6 +52,15 @@ Options:
   --timeout    <ms>     Request timeout in ms  (default: 10000)
   --transport  <mode>   Transport mode: stdio | http  (default: stdio)
   --port       <port>   HTTP port when --transport=http  (default: 3001)
+
+Add command options:
+  --cursor             Print Cursor MCP config snippet
+  --claude             Print Claude Code command
+  --open-code          Print Open Code MCP config snippet
+  --manual             Print a generic mcpServers config snippet
+  --mode <mode>        Connection mode: sse | stdio (default: sse)
+  --url <url>          SSE endpoint URL (default: http://localhost:3001/sse)
+  --write              Write config to a local file for Cursor/Open Code
 
 Tools exposed to the AI agent:
   prism_agent_authorize   Authorize an agent action (confidence-aware)
@@ -78,7 +89,88 @@ Examples:
   #     }
   #   }
   # }
+
+  # Print client setup snippets
+  npx @prism/mcp add --cursor
+  npx @prism/mcp add --claude
+  npx @prism/mcp add --open-code
+
+  # Write a Cursor config file in the current project
+  npx @prism/mcp add --cursor --write
 `);
+}
+
+type AddTarget = "cursor" | "claude" | "open-code" | "manual";
+
+function detectAddTarget(flags: Record<string, string>): AddTarget {
+  if (flags["cursor"] === "true") return "cursor";
+  if (flags["claude"] === "true") return "claude";
+  if (flags["open-code"] === "true") return "open-code";
+  if (flags["manual"] === "true") return "manual";
+  return "manual";
+}
+
+function buildMcpServerConfig(flags: Record<string, string>): Record<string, unknown> {
+  const mode = flags["mode"] ?? "sse";
+  const engineUrl = flags["engine-url"] ?? process.env["PRISM_ENGINE_URL"] ?? "http://localhost:8082";
+  const apiKey = flags["api-key"] ?? process.env["PRISM_API_KEY"] ?? "YOUR_API_KEY";
+  const sseUrl = flags["url"] ?? process.env["PRISM_MCP_URL"] ?? "http://localhost:3001/sse";
+
+  if (mode === "stdio") {
+    return {
+      command: "npx",
+      args: ["@prism/mcp", "start", "--transport", "stdio"],
+      env: {
+        PRISM_ENGINE_URL: engineUrl,
+        PRISM_API_KEY: apiKey,
+      },
+    };
+  }
+
+  return { url: sseUrl };
+}
+
+async function runAdd(flags: Record<string, string>): Promise<void> {
+  const fs = await import("node:fs/promises");
+  const path = await import("node:path");
+
+  const mode = flags["mode"] ?? "sse";
+  if (mode !== "sse" && mode !== "stdio") {
+    console.error(`--mode must be 'sse' or 'stdio', got: ${mode}`);
+    process.exit(1);
+  }
+
+  const target = detectAddTarget(flags);
+  const mcpServerConfig = buildMcpServerConfig(flags);
+  const wrappedConfig = { mcpServers: { prism: mcpServerConfig } };
+
+  if (target === "claude") {
+    const sseUrl = flags["url"] ?? process.env["PRISM_MCP_URL"] ?? "http://localhost:3001/sse";
+    if (mode === "stdio") {
+      console.log("npx @prism/mcp start --transport stdio --engine-url http://localhost:8082 --api-key YOUR_API_KEY");
+      return;
+    }
+    console.log(`claude mcp add --transport http prism ${sseUrl}`);
+    return;
+  }
+
+  const output = JSON.stringify(wrappedConfig, null, 2);
+  const shouldWrite = flags["write"] === "true";
+
+  if (!shouldWrite || target === "manual") {
+    console.log(output);
+    return;
+  }
+
+  const cwd = process.cwd();
+  const targetPath = target === "cursor"
+    ? path.join(cwd, ".cursor", "mcp.json")
+    : path.join(cwd, ".opencode", "mcp.json");
+
+  await fs.mkdir(path.dirname(targetPath), { recursive: true });
+  await fs.writeFile(targetPath, output + "\n", "utf8");
+  console.error(`[prism-mcp] Wrote ${targetPath}`);
+  console.log(output);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -92,12 +184,17 @@ async function main() {
     process.exit(command ? 0 : 1);
   }
 
-  if (command !== "start") {
+  if (command !== "start" && command !== "add") {
     console.error(`Unknown command: ${command}\nRun "npx @prism/mcp --help" for usage.`);
     process.exit(1);
   }
 
   const flags = parseArgs(args.slice(1));
+
+  if (command === "add") {
+    await runAdd(flags);
+    return;
+  }
 
   const engineUrl  = flags["engine-url"] ?? process.env["PRISM_ENGINE_URL"] ?? "http://localhost:8082";
   const apiKey     = flags["api-key"]    ?? process.env["PRISM_API_KEY"];

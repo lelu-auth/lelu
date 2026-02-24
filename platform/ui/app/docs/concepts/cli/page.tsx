@@ -1,4 +1,41 @@
+"use client";
+
+import { useState } from "react";
+
 export default function DocsConceptCli() {
+  const [quickTab, setQuickTab] = useState<"Cursor" | "Claude Code" | "Open Code" | "Manual">("Cursor");
+  const [configTab, setConfigTab] = useState<"SSE (Docker)" | "stdio (npx)" | "Claude Code">("SSE (Docker)");
+
+  const quickAddCommands: Record<typeof quickTab, string> = {
+    Cursor: "npx @prism/mcp add --cursor",
+    "Claude Code": "npx @prism/mcp add --claude",
+    "Open Code": "npx @prism/mcp add --open-code",
+    Manual: "npx @prism/mcp start --transport stdio --engine-url http://localhost:8080 --api-key YOUR_API_KEY",
+  };
+
+  const configSnippets: Record<typeof configTab, string> = {
+    "SSE (Docker)": `{
+  "mcpServers": {
+    "prism": {
+      "url": "http://localhost:3001/sse"
+    }
+  }
+}`,
+    "stdio (npx)": `{
+  "mcpServers": {
+    "prism": {
+      "command": "npx",
+      "args": ["@prism/mcp", "start", "--transport", "stdio"],
+      "env": {
+        "PRISM_ENGINE_URL": "http://localhost:8080",
+        "PRISM_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}`,
+    "Claude Code": "claude mcp add --transport http prism http://localhost:3001/sse",
+  };
+
   return (
     <div className="max-w-3xl">
       <div className="mb-10">
@@ -78,44 +115,54 @@ curl http://localhost:3001/healthz
             </pre>
           </div>
 
-          {/* Cursor */}
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Cursor integration</h3>
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Client setup</h3>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-            Add Prism to Cursor via <strong>Settings → Features → MCP</strong>. Use the SSE URL when Docker is running, or the command mode for stdio:
+            Use CLI quick-add for your client, or choose manual configuration for full control:
           </p>
 
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-4">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">~/.cursor/mcp.json — SSE (Docker)</span>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-wrap gap-2">
+                  {(["Cursor", "Claude Code", "Open Code", "Manual"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setQuickTab(tab)}
+                      className={`px-3 py-1 text-xs rounded transition-colors ${
+                        quickTab === tab ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`{
-  "mcpServers": {
-    "prism": {
-      "url": "http://localhost:3001/sse"
-    }
-  }
-}`}
+              {quickAddCommands[quickTab]}
             </pre>
           </div>
 
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">~/.cursor/mcp.json — stdio (npx)</span>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-wrap gap-2">
+                  {(["SSE (Docker)", "stdio (npx)", "Claude Code"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setConfigTab(tab)}
+                      className={`px-3 py-1 text-xs rounded transition-colors ${
+                        configTab === tab ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`{
-  "mcpServers": {
-    "prism": {
-      "command": "npx",
-      "args": ["@prism/mcp", "start", "--transport", "stdio"],
-      "env": {
-        "PRISM_ENGINE_URL": "http://localhost:8080",
-        "PRISM_API_KEY": "YOUR_API_KEY"
-      }
-    }
-  }
-}`}
+              {configSnippets[configTab]}
             </pre>
           </div>
 

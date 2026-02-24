@@ -480,6 +480,10 @@ td a:hover { text-decoration: underline; }
   position: relative;
 }
 
+.docs-copy-wrapper {
+  position: relative;
+}
+
 .docs-copy-button {
   position: absolute;
   top: 0.75rem;
@@ -488,12 +492,20 @@ td a:hover { text-decoration: underline; }
   background: var(--bg-base);
   color: var(--text-secondary);
   border-radius: 0.5rem;
-  padding: 0.25rem 0.55rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  z-index: 2;
   transition: all 160ms ease;
+}
+
+.docs-copy-button svg {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .docs-copy-button:hover {
