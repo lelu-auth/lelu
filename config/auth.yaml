@@ -62,3 +62,31 @@ agent_scopes:
     deny:
       - delete_invoices
       - approve_refunds
+
+  # ── Multi-agent delegation example ──────────────────────────────────────────
+  # orchestrator_agent can delegate a constrained sub-scope to research_agent.
+  # research_agent receives a child JIT token capped to: [research, read_reports]
+  # and capped to 300 s TTL, only when orchestrator's confidence ≥ 85%.
+  orchestrator_agent:
+    inherits: finance_manager
+    constraints:
+      - require_human_approval_if_confidence_below: 0.90
+      - hard_deny_if_confidence_below: 0.60
+    can_delegate:
+      - to: research_agent
+        scoped_to:
+          - research
+          - read_reports
+        max_ttl_seconds: 300
+        require_confidence_above: 0.85
+    deny:
+      - delete_invoices
+
+  research_agent:
+    inherits: read_only_auditor
+    constraints:
+      - require_human_approval_if_confidence_below: 0.80
+      - hard_deny_if_confidence_below: 0.50
+    deny:
+      - approve_refunds
+      - delete_invoices

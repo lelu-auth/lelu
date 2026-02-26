@@ -40,6 +40,8 @@ spec:
               value: {{ .Values.platform.env.SSO_TRUSTED_HEADER | quote }}
             - name: SSO_TRUSTED_EMAIL_DOMAIN
               value: {{ .Values.platform.env.SSO_TRUSTED_EMAIL_DOMAIN | quote }}
+            - name: EVIDENCE_SIGNING_KEY
+              value: {{ .Values.platform.env.EVIDENCE_SIGNING_KEY | quote }}
           readinessProbe:
             httpGet:
               path: /healthz

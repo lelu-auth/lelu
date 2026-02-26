@@ -32,10 +32,19 @@ from .models import (
     RevokeTokenResult,
 )
 
+# CrewAI integration — requires `pip install crewai`
+try:
+    from .crewai import PrismTool, PermissionDeniedError as CrewAIPermissionDeniedError  # noqa: F401
+except ImportError:
+    pass  # crewai not installed; PrismTool not available
+
 __all__ = [
     "PrismClient",
     "PrismAutoGPTPlugin",
     "AgentMiddleware",
+    # CrewAI
+    "PrismTool",
+    "CrewAIPermissionDeniedError",
     # Requests
     "AuthRequest",
     "AgentAuthRequest",

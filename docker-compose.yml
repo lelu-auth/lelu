@@ -24,6 +24,9 @@ services:
       CONTROL_PLANE_URL: "${CONTROL_PLANE_URL:-}"
       CP_HMAC_SECRET:    "${CP_HMAC_SECRET:-}"
       API_KEY:           "${API_KEY:-prism-dev-key}"
+      PRISM_MODE:        "${PRISM_MODE:-enforce}"
+      INCIDENT_WEBHOOK_URL: "${INCIDENT_WEBHOOK_URL:-}"
+      INCIDENT_WEBHOOK_TIMEOUT_MS: "${INCIDENT_WEBHOOK_TIMEOUT_MS:-2000}"
     volumes:
       - ./config:/etc/prism:ro
     depends_on:
@@ -96,6 +99,7 @@ services:
       LISTEN_ADDR:      ":9090"
       DATABASE_URL:     "postgres://prism:${POSTGRES_PASSWORD:-prism-dev-secret}@postgres:5432/prism?sslmode=disable"
       PLATFORM_API_KEY: "${PLATFORM_API_KEY:-platform-dev-key}"
+      EVIDENCE_SIGNING_KEY: "${EVIDENCE_SIGNING_KEY:-}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -122,6 +126,8 @@ services:
     environment:
       PLATFORM_URL:     "http://platform:9090"
       PLATFORM_API_KEY: "${PLATFORM_API_KEY:-platform-dev-key}"
+      PRISM_ENGINE_URL: "http://engine:8080"
+      PRISM_API_KEY:    "${API_KEY:-prism-dev-key}"
     depends_on:
       platform:
         condition: service_healthy

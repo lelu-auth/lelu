@@ -8,6 +8,7 @@
 //   OIDC_AUDIENCE      OIDC audience/client ID (optional)
 //   SSO_TRUSTED_HEADER Trusted upstream identity header (optional)
 //   SSO_TRUSTED_EMAIL_DOMAIN Optional email-domain restriction for trusted header mode
+//   EVIDENCE_SIGNING_KEY Optional HMAC key used to sign compliance export evidence payloads
 package main
 
 import (
@@ -33,6 +34,7 @@ func main() {
 	oidcAudience := envOr("OIDC_AUDIENCE", "")
 	trustedSSOHeader := envOr("SSO_TRUSTED_HEADER", "")
 	trustedSSODomain := envOr("SSO_TRUSTED_EMAIL_DOMAIN", "")
+	evidenceSigningKey := envOr("EVIDENCE_SIGNING_KEY", "")
 
 	// ── Database ──────────────────────────────────────────────────────────────
 	database, err := db.Open(dsn)
@@ -68,7 +70,7 @@ func main() {
 			log.Printf("platform: trusted SSO header enabled (%s)", trustedSSOHeader)
 		}
 	}
-	h := handlers.New(policyStore, auditStore, apiKey, oidcAuth, trustedSSOHeader, trustedSSODomain)
+	h := handlers.New(policyStore, auditStore, apiKey, oidcAuth, trustedSSOHeader, trustedSSODomain, evidenceSigningKey)
 	h.RegisterRoutes(mux)
 
 	srv := &http.Server{

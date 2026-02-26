@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"os/signal"
 	"syscall"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/prism/engine/internal/audit"
 	"github.com/prism/engine/internal/confidence"
 	"github.com/prism/engine/internal/evaluator"
+	"github.com/prism/engine/internal/incident"
 	"github.com/prism/engine/internal/queue"
 	"github.com/prism/engine/internal/server"
 	syncer "github.com/prism/engine/internal/sync"
@@ -31,6 +33,11 @@ func main() {
 	regoPolicyQuery := envOr("REGO_POLICY_QUERY", "data.prism.authz")
 	apiKey := envOr("API_KEY", "")
 	tenantID := envOr("TENANT_ID", "default")
+	allowUnverifiedConfidence := envOr("CONFIDENCE_ALLOW_UNVERIFIED", "false") == "true"
+	missingConfidenceMode := server.ParseMissingConfidenceMode(envOr("CONFIDENCE_MISSING_MODE", "deny"))
+	enforcementMode := server.ParseEnforcementMode(envOr("PRISM_MODE", "enforce"))
+	incidentWebhookURL := envOr("INCIDENT_WEBHOOK_URL", "")
+	incidentTimeoutMS := parseIntOr(envOr("INCIDENT_WEBHOOK_TIMEOUT_MS", "2000"), 2000)
 
 	// ── Bootstrap components ─────────────────────────────────────────────────
 	eval := evaluator.New()
@@ -56,6 +63,10 @@ func main() {
 	})
 	confGate := confidence.New()
 	auditWriter := audit.New()
+	incidentNotifier := incident.New(incident.Config{
+		WebhookURL: incidentWebhookURL,
+		Timeout:    time.Duration(incidentTimeoutMS) * time.Millisecond,
+	})
 
 	// ── Human review queue (Phase 2) ──────────────────────────────────────────
 	var reviewQueue *queue.Queue
@@ -74,7 +85,10 @@ func main() {
 	}
 
 	// ── HTTP server ───────────────────────────────────────────────────────────
-	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue, apiKey)
+	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue, apiKey, server.ConfidenceConfig{
+		AllowUnverifiedConfidence: allowUnverifiedConfidence,
+		MissingSignalMode:         missingConfidenceMode,
+	}, enforcementMode, incidentNotifier)
 	srv := server.NewHTTPServer(addr, h)
 
 	// ── Policy sync worker (optional) ─────────────────────────────────────────
@@ -123,4 +137,12 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func parseIntOr(value string, fallback int) int {
+	v, err := strconv.Atoi(value)
+	if err != nil || v <= 0 {
+		return fallback
+	}
+	return v
 }

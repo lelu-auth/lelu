@@ -35,6 +35,11 @@ agent_scopes:
 
 func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
+	return newTestServerWithMode(t, server.EnforcementModeEnforce)
+}
+
+func newTestServerWithMode(t *testing.T, mode server.EnforcementMode) *httptest.Server {
+	t.Helper()
 	eval := evaluator.New()
 	require.NoError(t, eval.LoadPolicyBytes(samplePolicy))
 
@@ -44,6 +49,10 @@ func newTestServer(t *testing.T) *httptest.Server {
 		confidence.New(),
 		audit.New(audit.Config{Sink: &bytes.Buffer{}}),
 		nil, // queue — not needed in unit tests
+		"",
+		server.ConfidenceConfig{},
+		mode,
+		nil,
 	)
 
 	mux := http.NewServeMux()
@@ -109,9 +118,12 @@ func TestAgentAuthorize_FullConfidence(t *testing.T) {
 	defer srv.Close()
 
 	resp := postJSON(t, srv, "/v1/agent/authorize", map[string]any{
-		"actor":      "invoice_bot",
-		"action":     "approve_refunds",
-		"confidence": 0.95,
+		"actor":  "invoice_bot",
+		"action": "approve_refunds",
+		"confidence_signal": map[string]any{
+			"provider":       "openai",
+			"token_logprobs": []float64{-0.04, -0.05, -0.03},
+		},
 		"acting_for": "user_123",
 	})
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -127,9 +139,12 @@ func TestAgentAuthorize_HardDeny(t *testing.T) {
 	defer srv.Close()
 
 	resp := postJSON(t, srv, "/v1/agent/authorize", map[string]any{
-		"actor":      "invoice_bot",
-		"action":     "approve_refunds",
-		"confidence": 0.30,
+		"actor":  "invoice_bot",
+		"action": "approve_refunds",
+		"confidence_signal": map[string]any{
+			"provider":       "openai",
+			"token_logprobs": []float64{-2.0, -1.8, -1.9},
+		},
 	})
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -155,4 +170,150 @@ func TestMintToken(t *testing.T) {
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
 	assert.NotEmpty(t, body["token"])
 	assert.NotEmpty(t, body["token_id"])
+}
+
+func TestAuthorize_ShadowMode_AllowsButShowsWouldHaveDenied(t *testing.T) {
+	srv := newTestServerWithMode(t, server.EnforcementModeShadow)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/authorize", map[string]any{
+		"user_id": "user_123",
+		"action":  "delete_invoices",
+	})
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	assert.True(t, body["allowed"].(bool))
+	assert.True(t, body["shadow_mode"].(bool))
+	assert.False(t, body["would_have_allowed"].(bool))
+	assert.NotEmpty(t, body["would_have_reason"])
+}
+
+func TestAgentAuthorize_ShadowMode_AllowsButShowsWouldHaveDenied(t *testing.T) {
+	srv := newTestServerWithMode(t, server.EnforcementModeShadow)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/agent/authorize", map[string]any{
+		"actor":  "invoice_bot",
+		"action": "approve_refunds",
+		"confidence_signal": map[string]any{
+			"provider":       "openai",
+			"token_logprobs": []float64{-2.0, -1.8, -1.9},
+		},
+	})
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	assert.True(t, body["allowed"].(bool))
+	assert.True(t, body["shadow_mode"].(bool))
+	assert.False(t, body["would_have_allowed"].(bool))
+	assert.False(t, body["requires_human_review"].(bool))
+	assert.NotEmpty(t, body["would_have_reason"])
+}
+
+func TestSimulatorReplay_ReturnsDeltaSummary(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+
+	proposedPolicy := `
+version: "1.0"
+roles:
+  finance_manager:
+    allow: [view_invoices]
+    deny:  [delete_invoices, approve_refunds]
+agent_scopes:
+  invoice_bot:
+    inherits: finance_manager
+    constraints:
+      - require_human_approval_if_confidence_below: 0.90
+      - downgrade_to_read_only_if_confidence_below: 0.70
+      - hard_deny_if_confidence_below: 0.50
+    deny: [delete_invoices]
+`
+
+	resp := postJSON(t, srv, "/v1/simulator/replay", map[string]any{
+		"proposed_policy_yaml": proposedPolicy,
+		"traces": []map[string]any{
+			{
+				"id":      "t1",
+				"kind":    "human",
+				"user_id": "user_123",
+				"action":  "approve_refunds",
+			},
+			{
+				"id":      "t2",
+				"kind":    "human",
+				"user_id": "user_123",
+				"action":  "delete_invoices",
+			},
+		},
+	})
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+
+	summary := body["summary"].(map[string]any)
+	assert.Equal(t, float64(2), summary["total"])
+	assert.Equal(t, float64(1), summary["changed"])
+	assert.Equal(t, float64(1), summary["allow_to_deny"])
+
+	items := body["items"].([]any)
+	require.Len(t, items, 2)
+
+	first := items[0].(map[string]any)
+	assert.Equal(t, true, first["changed"])
+	assert.Equal(t, "t1", first["id"])
+	assert.Equal(t, "human", first["kind"])
+
+	before := first["before"].(map[string]any)
+	after := first["after"].(map[string]any)
+	assert.Equal(t, "allow", before["outcome"])
+	assert.Equal(t, "deny", after["outcome"])
+}
+
+func TestShadowSummary_TracksWouldHaveOutcomes(t *testing.T) {
+	srv := newTestServerWithMode(t, server.EnforcementModeShadow)
+	defer srv.Close()
+
+	_ = postJSON(t, srv, "/v1/authorize", map[string]any{
+		"user_id": "user_123",
+		"action":  "delete_invoices",
+	})
+
+	_ = postJSON(t, srv, "/v1/agent/authorize", map[string]any{
+		"actor":  "invoice_bot",
+		"action": "approve_refunds",
+		"confidence_signal": map[string]any{
+			"provider":       "openai",
+			"token_logprobs": []float64{-0.23, -0.22, -0.24},
+		},
+	})
+
+	_ = postJSON(t, srv, "/v1/agent/authorize", map[string]any{
+		"actor":  "invoice_bot",
+		"action": "approve_refunds",
+		"confidence_signal": map[string]any{
+			"provider":       "openai",
+			"token_logprobs": []float64{-0.01, -0.02, -0.01},
+		},
+	})
+
+	resp, err := http.Get(srv.URL + "/v1/shadow/summary?window_minutes=120")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+
+	assert.Equal(t, "shadow", body["mode"])
+	totals := body["totals"].(map[string]any)
+	assert.Equal(t, float64(1), totals["deny"])
+	assert.Equal(t, float64(1), totals["review"])
+	assert.Equal(t, float64(1), totals["allow"])
+
+	buckets := body["buckets"].([]any)
+	assert.NotEmpty(t, buckets)
 }

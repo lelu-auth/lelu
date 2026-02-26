@@ -2,11 +2,13 @@
 package handlers
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -24,10 +26,11 @@ type Handler struct {
 	oidcAuth *OIDCAuth
 	trustedHeader string
 	trustedDomain string
+	evidenceSigningKey string
 }
 
 // New returns a Handler.
-func New(policies *policy.Store, audit *auditstore.Store, apiKey string, oidcAuth *OIDCAuth, trustedHeader, trustedDomain string) *Handler {
+func New(policies *policy.Store, audit *auditstore.Store, apiKey string, oidcAuth *OIDCAuth, trustedHeader, trustedDomain, evidenceSigningKey string) *Handler {
 	hash := sha256.Sum256([]byte(apiKey))
 	return &Handler{
 		policies: policies,
@@ -36,6 +39,7 @@ func New(policies *policy.Store, audit *auditstore.Store, apiKey string, oidcAut
 		oidcAuth: oidcAuth,
 		trustedHeader: trustedHeader,
 		trustedDomain: strings.ToLower(strings.TrimSpace(trustedDomain)),
+		evidenceSigningKey: evidenceSigningKey,
 	}
 }
 
@@ -53,6 +57,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	// Audit / Trace Explorer (requires API key)
 	mux.HandleFunc("GET /api/v1/audit", h.auth(h.handleListAudit))
 	mux.HandleFunc("GET /api/v1/audit/trace/{traceID}", h.auth(h.handleGetTrace))
+	mux.HandleFunc("GET /api/v1/compliance/export", h.auth(h.handleComplianceExport))
 
 	// Ingest — called by engine sidecar (requires API key)
 	mux.HandleFunc("POST /api/v1/audit/ingest", h.auth(h.handleIngestAudit))
@@ -206,6 +211,246 @@ func (h *Handler) handleIngestAudit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"id": id})
+}
+
+type complianceFramework string
+
+const (
+	frameworkOWASPGenAI complianceFramework = "owasp_genai"
+	frameworkNISTAIRMF  complianceFramework = "nist_ai_rmf"
+)
+
+type complianceControlSummary struct {
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	EventCount  int      `json:"event_count"`
+	SampleTrace []string `json:"sample_trace_ids"`
+}
+
+type complianceExportResponse struct {
+	Framework   string                     `json:"framework"`
+	TenantID    string                     `json:"tenant_id"`
+	GeneratedAt string                     `json:"generated_at"`
+	From        string                     `json:"from,omitempty"`
+	To          string                     `json:"to,omitempty"`
+	TotalEvents int                        `json:"total_events"`
+	Controls    []complianceControlSummary `json:"controls"`
+	Evidence    complianceEvidenceMetadata `json:"evidence"`
+}
+
+type complianceEvidenceMetadata struct {
+	ChecksumSHA256 string `json:"checksum_sha256"`
+	Signature      string `json:"signature,omitempty"`
+	Signed         bool   `json:"signed"`
+	Signer         string `json:"signer,omitempty"`
+	Algorithm      string `json:"algorithm"`
+}
+
+func (h *Handler) handleComplianceExport(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
+		tenantID = "default"
+	}
+
+	q := r.URL.Query()
+	framework := parseComplianceFramework(q.Get("framework"))
+	if framework == "" {
+		writeError(w, http.StatusBadRequest, "framework must be one of: owasp_genai, nist_ai_rmf, all")
+		return
+	}
+
+	filter := auditstore.QueryFilter{
+		TenantID: tenantID,
+		Limit:    500,
+	}
+	if from := q.Get("from"); from != "" {
+		t, err := time.Parse(time.RFC3339, from)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "from must be RFC3339")
+			return
+		}
+		filter.From = &t
+	}
+	if to := q.Get("to"); to != "" {
+		t, err := time.Parse(time.RFC3339, to)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "to must be RFC3339")
+			return
+		}
+		filter.To = &t
+	}
+
+	events, err := h.audit.Query(filter)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := complianceExportResponse{
+		Framework:   string(framework),
+		TenantID:    tenantID,
+		GeneratedAt: time.Now().UTC().Format(time.RFC3339),
+		TotalEvents: len(events),
+		Controls:    summarizeControls(framework, events),
+	}
+	if filter.From != nil {
+		resp.From = filter.From.Format(time.RFC3339)
+	}
+	if filter.To != nil {
+		resp.To = filter.To.Format(time.RFC3339)
+	}
+	resp.Evidence = buildComplianceEvidence(resp, h.evidenceSigningKey)
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func buildComplianceEvidence(resp complianceExportResponse, signingKey string) complianceEvidenceMetadata {
+	payload := struct {
+		Framework   string                     `json:"framework"`
+		TenantID    string                     `json:"tenant_id"`
+		GeneratedAt string                     `json:"generated_at"`
+		From        string                     `json:"from,omitempty"`
+		To          string                     `json:"to,omitempty"`
+		TotalEvents int                        `json:"total_events"`
+		Controls    []complianceControlSummary `json:"controls"`
+	}{
+		Framework:   resp.Framework,
+		TenantID:    resp.TenantID,
+		GeneratedAt: resp.GeneratedAt,
+		From:        resp.From,
+		To:          resp.To,
+		TotalEvents: resp.TotalEvents,
+		Controls:    resp.Controls,
+	}
+
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return complianceEvidenceMetadata{Algorithm: "sha256"}
+	}
+	hash := sha256.Sum256(raw)
+	checksum := hex.EncodeToString(hash[:])
+
+	evidence := complianceEvidenceMetadata{
+		ChecksumSHA256: checksum,
+		Signed:         false,
+		Algorithm:      "sha256",
+	}
+
+	key := strings.TrimSpace(signingKey)
+	if key == "" {
+		return evidence
+	}
+
+	m := hmac.New(sha256.New, []byte(key))
+	_, _ = m.Write(raw)
+	sig := m.Sum(nil)
+	evidence.Signature = hex.EncodeToString(sig)
+	evidence.Signed = true
+	evidence.Signer = "platform-hmac"
+	evidence.Algorithm = "hmac-sha256"
+	return evidence
+}
+
+func parseComplianceFramework(value string) complianceFramework {
+	v := strings.ToLower(strings.TrimSpace(value))
+	switch v {
+	case "", "all":
+		return complianceFramework("all")
+	case string(frameworkOWASPGenAI):
+		return frameworkOWASPGenAI
+	case string(frameworkNISTAIRMF):
+		return frameworkNISTAIRMF
+	default:
+		return ""
+	}
+}
+
+func summarizeControls(framework complianceFramework, events []auditstore.Event) []complianceControlSummary {
+	type bucket struct {
+		title   string
+		count   int
+		traces  []string
+		traceSet map[string]struct{}
+	}
+
+	buckets := make(map[string]*bucket)
+
+	add := func(id, title, traceID string) {
+		b, ok := buckets[id]
+		if !ok {
+			b = &bucket{title: title, traceSet: make(map[string]struct{})}
+			buckets[id] = b
+		}
+		b.count++
+		if traceID != "" {
+			if _, seen := b.traceSet[traceID]; !seen && len(b.traces) < 10 {
+				b.traceSet[traceID] = struct{}{}
+				b.traces = append(b.traces, traceID)
+			}
+		}
+	}
+
+	for _, e := range events {
+		controls := mapEventToControls(framework, e)
+		for _, c := range controls {
+			add(c.ID, c.Title, e.TraceID)
+		}
+	}
+
+	ids := make([]string, 0, len(buckets))
+	for id := range buckets {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+
+	out := make([]complianceControlSummary, 0, len(ids))
+	for _, id := range ids {
+		b := buckets[id]
+		out = append(out, complianceControlSummary{
+			ID:          id,
+			Title:       b.title,
+			EventCount:  b.count,
+			SampleTrace: b.traces,
+		})
+	}
+	return out
+}
+
+type controlRef struct {
+	ID    string
+	Title string
+}
+
+func mapEventToControls(framework complianceFramework, e auditstore.Event) []controlRef {
+	refs := make([]controlRef, 0, 4)
+	addOWASP := framework == frameworkOWASPGenAI || framework == complianceFramework("all")
+	addNIST := framework == frameworkNISTAIRMF || framework == complianceFramework("all")
+
+	if addOWASP {
+		if e.Decision == "denied" {
+			refs = append(refs, controlRef{ID: "OWASP-LLM01", Title: "Prompt Injection Controls"})
+		}
+		if e.Decision == "human_review" {
+			refs = append(refs, controlRef{ID: "OWASP-LLM06", Title: "Sensitive Action Approval"})
+		}
+		if e.Decision == "denied" || e.Decision == "human_review" {
+			refs = append(refs, controlRef{ID: "OWASP-LLM08", Title: "Excessive Agency Mitigation"})
+		}
+	}
+
+	if addNIST {
+		if e.Decision == "denied" {
+			refs = append(refs, controlRef{ID: "NIST-AI-RMF-MAP-2.3", Title: "Risk-Based Decision Controls"})
+		}
+		if e.Decision == "human_review" {
+			refs = append(refs, controlRef{ID: "NIST-AI-RMF-GOV-1.6", Title: "Human Oversight Procedures"})
+		}
+		if e.Decision == "allowed" || e.Decision == "denied" || e.Decision == "human_review" {
+			refs = append(refs, controlRef{ID: "NIST-AI-RMF-MEASURE-2.11", Title: "Decision Logging and Traceability"})
+		}
+	}
+
+	return refs
 }
 
 // ─── Auth middleware ──────────────────────────────────────────────────────────

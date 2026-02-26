@@ -30,6 +30,8 @@ engine:
     CONTROL_PLANE_URL: https://platform.prism.example.com
     REGO_POLICY_PATH: ""
     REGO_POLICY_QUERY: data.prism.authz
+    INCIDENT_WEBHOOK_URL: ""
+    INCIDENT_WEBHOOK_TIMEOUT_MS: "2000"
 
 platform:
   enabled: true
@@ -47,6 +49,7 @@ platform:
     OIDC_AUDIENCE: prism-platform
     SSO_TRUSTED_HEADER: X-Forwarded-Email
     SSO_TRUSTED_EMAIL_DOMAIN: example.com
+    EVIDENCE_SIGNING_KEY: "REPLACE_ME"
 
 ui:
   enabled: true

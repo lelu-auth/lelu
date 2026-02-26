@@ -143,6 +143,48 @@ export class PrismClient {
     return { success: data.success };
   }
 
+  // ── Multi-agent delegation ─────────────────────────────────────────────────
+
+  /**
+   * Delegates a constrained sub-scope from one agent to another.
+   *
+   * Validates the delegation rule in the loaded policy, caps the TTL to the
+   * policy maximum, and mints a child JIT token scoped to the granted actions.
+   *
+   * The delegator's `confidence` score is checked against the policy's
+   * `require_confidence_above` before delegation is granted.
+   */
+  async delegateScope(req: DelegateScopeRequest): Promise<DelegateScopeResult> {
+    const body = {
+      delegator: req.delegator,
+      delegatee: req.delegatee,
+      scoped_to: req.scopedTo ?? [],
+      ttl_seconds: req.ttlSeconds ?? 60,
+      confidence: req.confidence ?? 1.0,
+      acting_for: req.actingFor ?? "",
+      tenant_id: req.tenantId ?? "",
+    };
+    const data = await this.post<{
+      token: string;
+      token_id: string;
+      expires_at: number;
+      delegator: string;
+      delegatee: string;
+      granted_scopes: string[];
+      trace_id: string;
+    }>("/v1/agent/delegate", body);
+
+    return {
+      token: data.token,
+      tokenId: data.token_id,
+      expiresAt: new Date(data.expires_at * 1000),
+      delegator: data.delegator,
+      delegatee: data.delegatee,
+      grantedScopes: data.granted_scopes,
+      traceId: data.trace_id,
+    };
+  }
+
   // ── Health check ───────────────────────────────────────────────────────────
 
   /**

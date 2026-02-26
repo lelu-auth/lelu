@@ -51,6 +51,18 @@ class MintTokenRequest(BaseModel):
     ttl_seconds: int | None = Field(default=None, gt=0)
 
 
+class DelegateScopeRequest(BaseModel):
+    """Agent-to-agent delegation request."""
+
+    delegator: str = Field(..., min_length=1, description="Agent delegating the scope")
+    delegatee: str = Field(..., min_length=1, description="Agent receiving the scope")
+    scoped_to: list[str] = Field(default_factory=list, description="Actions to grant")
+    ttl_seconds: int | None = Field(default=None, gt=0, description="Token TTL (capped by policy)")
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    acting_for: str | None = None
+    tenant_id: str | None = None
+
+
 # ─── Decisions ────────────────────────────────────────────────────────────────
 
 
@@ -79,6 +91,18 @@ class MintTokenResult(BaseModel):
     token: str
     token_id: str
     expires_at: datetime
+
+
+class DelegateScopeResult(BaseModel):
+    """Result of a successful agent-to-agent delegation."""
+
+    token: str
+    token_id: str
+    expires_at: datetime
+    delegator: str
+    delegatee: str
+    granted_scopes: list[str]
+    trace_id: str
 
 
 class RevokeTokenResult(BaseModel):

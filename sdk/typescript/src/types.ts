@@ -53,6 +53,32 @@ export interface MintTokenResult {
   expiresAt: Date;
 }
 
+export interface DelegateScopeRequest {
+  /** Agent delegating the scope */
+  delegator: string;
+  /** Agent receiving the constrained sub-scope */
+  delegatee: string;
+  /** Actions to grant (must be subset of policy's can_delegate.scoped_to) */
+  scopedTo?: string[];
+  /** Token TTL in seconds — capped by the policy's max_ttl_seconds */
+  ttlSeconds?: number;
+  /** Delegator's confidence score — checked against require_confidence_above */
+  confidence?: number;
+  /** User the delegated agent acts on behalf of */
+  actingFor?: string;
+  tenantId?: string;
+}
+
+export interface DelegateScopeResult {
+  token: string;
+  tokenId: string;
+  expiresAt: Date;
+  delegator: string;
+  delegatee: string;
+  grantedScopes: string[];
+  traceId: string;
+}
+
 export interface RevokeTokenResult {
   success: boolean;
 }

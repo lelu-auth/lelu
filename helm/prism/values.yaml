@@ -26,6 +26,8 @@ engine:
     CONTROL_PLANE_URL: ""
     REGO_POLICY_PATH: ""
     REGO_POLICY_QUERY: data.prism.authz
+    INCIDENT_WEBHOOK_URL: ""
+    INCIDENT_WEBHOOK_TIMEOUT_MS: "2000"
 
 platform:
   enabled: true
@@ -39,6 +41,7 @@ platform:
     OIDC_AUDIENCE: ""
     SSO_TRUSTED_HEADER: ""
     SSO_TRUSTED_EMAIL_DOMAIN: ""
+    EVIDENCE_SIGNING_KEY: ""
 
 ui:
   enabled: true

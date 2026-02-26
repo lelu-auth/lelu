@@ -2,10 +2,17 @@
 
 const PLATFORM_URL = process.env.PLATFORM_URL ?? "http://localhost:9090";
 const API_KEY = process.env.PLATFORM_API_KEY ?? "change-me-in-production";
+const ENGINE_URL = process.env.PRISM_ENGINE_URL ?? "http://localhost:8082";
+const ENGINE_API_KEY = process.env.PRISM_API_KEY ?? "prism-dev-key";
 
 const headers = {
   "Content-Type": "application/json",
   Authorization: `Bearer ${API_KEY}`,
+};
+
+const engineHeaders = {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${ENGINE_API_KEY}`,
 };
 
 export interface AuditEvent {
@@ -43,6 +50,49 @@ export interface Policy {
   hmac_sha256: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ShadowSummaryBucket {
+  minute: string;
+  allow: number;
+  review: number;
+  deny: number;
+}
+
+export interface ShadowSummaryResponse {
+  mode: "enforce" | "shadow";
+  window_minutes: number;
+  generated_at: string;
+  totals: {
+    allow: number;
+    review: number;
+    deny: number;
+  };
+  buckets: ShadowSummaryBucket[];
+}
+
+export interface ComplianceControlSummary {
+  id: string;
+  title: string;
+  event_count: number;
+  sample_trace_ids: string[];
+}
+
+export interface ComplianceExportResponse {
+  framework: string;
+  tenant_id: string;
+  generated_at: string;
+  from?: string;
+  to?: string;
+  total_events: number;
+  controls: ComplianceControlSummary[];
+  evidence: {
+    checksum_sha256: string;
+    signature?: string;
+    signed: boolean;
+    signer?: string;
+    algorithm: string;
+  };
 }
 
 // ─── Audit ────────────────────────────────────────────────────────────────────
@@ -90,4 +140,34 @@ export async function listPolicies(): Promise<Policy[]> {
   if (Array.isArray(body)) return body;
   if (Array.isArray(body?.policies)) return body.policies;
   return [];
+}
+
+export async function getShadowSummary(windowMinutes = 60): Promise<ShadowSummaryResponse | null> {
+  try {
+    const res = await fetch(`${ENGINE_URL}/v1/shadow/summary?window_minutes=${windowMinutes}`, {
+      headers: engineHeaders,
+      next: { revalidate: 15 },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function getComplianceExport(framework: "owasp_genai" | "nist_ai_rmf" | "all" = "all"): Promise<ComplianceExportResponse | null> {
+  try {
+    const res = await fetch(`${PLATFORM_URL}/api/v1/compliance/export?framework=${framework}`, {
+      headers,
+      next: { revalidate: 30 },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    return res.json();
+  } catch {
+    return null;
+  }
 }

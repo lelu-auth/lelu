@@ -1,6 +1,12 @@
 // Auth Permission Engine — TypeScript SDK
 // Public API surface
 
+// ─── Vercel AI SDK integration ────────────────────────────────────────────────
+// Import via: import { secureTool } from 'prizm-engine/vercel'
+// (tree-shakeable — does not add weight to non-Vercel users)
+export { secureTool } from "./vercel/index.js";
+export type { SecureToolOptions, PrismDeniedResult, VercelTool } from "./vercel/index.js";
+
 export { PrismClient } from "./client.js";
 
 export type {

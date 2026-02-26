@@ -42,6 +42,10 @@ spec:
               value: {{ .Values.engine.env.REGO_POLICY_PATH | quote }}
             - name: REGO_POLICY_QUERY
               value: {{ .Values.engine.env.REGO_POLICY_QUERY | quote }}
+            - name: INCIDENT_WEBHOOK_URL
+              value: {{ .Values.engine.env.INCIDENT_WEBHOOK_URL | quote }}
+            - name: INCIDENT_WEBHOOK_TIMEOUT_MS
+              value: {{ .Values.engine.env.INCIDENT_WEBHOOK_TIMEOUT_MS | quote }}
           readinessProbe:
             httpGet:
               path: /healthz

@@ -1,7 +1,32 @@
-import { listAuditEvents } from "@/lib/api";
+import { getComplianceExport, getShadowSummary, listAuditEvents, type ShadowSummaryResponse } from "@/lib/api";
 import { AuditTable } from "@/components/AuditTable";
 
 export const dynamic = "force-dynamic";
+
+function buildSparklinePoints(summary: ShadowSummaryResponse): string {
+  const values = summary.buckets.map((bucket) => bucket.allow + bucket.review + bucket.deny);
+  if (values.length === 0) return "0,24 240,24";
+  const maxValue = Math.max(...values, 1);
+  const width = 240;
+  const height = 48;
+  return values
+    .map((value, index) => {
+      const x = values.length === 1 ? 0 : (index / (values.length - 1)) * width;
+      const y = height - (value / maxValue) * height;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function formatAgo(ts: string): string {
+  const then = new Date(ts).getTime();
+  const now = Date.now();
+  const delta = Math.max(0, Math.floor((now - then) / 1000));
+  if (delta < 60) return `${delta}s ago`;
+  if (delta < 3600) return `${Math.floor(delta / 60)}m ago`;
+  if (delta < 86400) return `${Math.floor(delta / 3600)}h ago`;
+  return `${Math.floor(delta / 86400)}d ago`;
+}
 
 export default async function AuditPage({
   searchParams,
@@ -14,11 +39,20 @@ export default async function AuditPage({
     decision: searchParams.decision,
     limit: 100,
   });
+  const shadow = await getShadowSummary(60);
+  const compliance = await getComplianceExport("all");
+  const sparklinePoints = shadow ? buildSparklinePoints(shadow) : "0,24 240,24";
+  const knownControls = 6;
+  const coverageCount = compliance?.controls.length ?? 0;
+  const coveragePercent = Math.round((coverageCount / knownControls) * 100);
 
   const total = events.length;
   const allowed  = events.filter((e) => e.decision === "allowed").length;
   const denied   = events.filter((e) => e.decision === "denied").length;
   const review   = events.filter((e) => e.decision === "human_review").length;
+  const highRiskIncidents = events
+    .filter((event) => event.decision === "denied" || event.decision === "human_review")
+    .slice(0, 8);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
@@ -81,6 +115,125 @@ export default async function AuditPage({
             </svg>
             Stable
           </div>
+        </div>
+      </div>
+
+      <div className="mb-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Shadow Mode (last 60m)</h2>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            {shadow?.mode === "shadow" ? "active" : "enforce mode"}
+          </span>
+        </div>
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Allow</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals.allow ?? 0}</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Review</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals.review ?? 0}</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Deny</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals.deny ?? 0}</p>
+          </div>
+        </div>
+        <div className="mt-3 rounded-lg border border-zinc-200 dark:border-zinc-800 px-2 py-2 bg-white dark:bg-zinc-900/40">
+          <svg viewBox="0 0 240 48" className="h-12 w-full" role="img" aria-label="Shadow decisions sparkline">
+            <polyline
+              fill="none"
+              stroke="currentColor"
+              className="text-zinc-700 dark:text-zinc-300"
+              strokeWidth="2"
+              points={sparklinePoints}
+            />
+          </svg>
+        </div>
+      </div>
+
+      <div className="mb-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Compliance Coverage</h2>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">OWASP GenAI + NIST AI RMF</span>
+        </div>
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Controls Observed</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{coverageCount}</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Coverage</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{coveragePercent}%</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Mapped Events</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{compliance?.total_events ?? 0}</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Evidence</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              {compliance?.evidence?.signed ? "Signed" : "Unsigned"}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Top Controls</p>
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            {(compliance?.controls ?? [])
+              .slice(0, 3)
+              .map((control) => `${control.id} (${control.event_count})`)
+              .join(" · ") || "No controls mapped yet"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Recent High-Risk Incidents</h2>
+          <div className="flex items-center gap-3 text-xs">
+            <a href="/audit?decision=denied" className="text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+              Denied
+            </a>
+            <a href="/audit?decision=human_review" className="text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+              Human review
+            </a>
+          </div>
+        </div>
+        <div className="mt-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 overflow-hidden">
+          {highRiskIncidents.length === 0 ? (
+            <p className="px-3 py-3 text-sm text-zinc-600 dark:text-zinc-400">No high-risk incidents in current view.</p>
+          ) : (
+            <ul>
+              {highRiskIncidents.map((event, index) => (
+                <li
+                  key={`${event.id}-${event.trace_id}-${index}`}
+                  className="px-3 py-3 border-b last:border-b-0 border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm text-zinc-900 dark:text-zinc-100 truncate">
+                      <span className="font-medium">{event.actor}</span> · {event.action}
+                    </p>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 truncate">
+                      {event.reason || "Policy-triggered escalation"} · {event.trace_id}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs border ${
+                        event.decision === "denied"
+                          ? "text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/60"
+                          : "text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/60"
+                      }`}
+                    >
+                      {event.decision === "denied" ? "Denied" : "Human review"}
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">{formatAgo(event.timestamp || event.created_at)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

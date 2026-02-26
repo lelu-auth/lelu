@@ -13,6 +13,8 @@ from .models import (
     AuthDecision,
     AuthEngineError,
     AuthRequest,
+    DelegateScopeRequest,
+    DelegateScopeResult,
     MintTokenRequest,
     MintTokenResult,
     RevokeTokenResult,
@@ -136,6 +138,39 @@ class PrismClient:
         resp = await self._client.delete(f"/v1/tokens/{token_id}")
         await self._raise_for_status(resp)
         return RevokeTokenResult(**resp.json())
+
+    # ── Multi-agent delegation ────────────────────────────────────────
+
+    async def delegate_scope(self, req: DelegateScopeRequest) -> DelegateScopeResult:
+        """
+        Delegate a constrained sub-scope from one agent to another.
+
+        Validates the delegation rule in the policy, caps the TTL, and mints a
+        child JIT token scoped to the granted actions.
+
+        Confidence-Aware: the delegator's confidence score is checked against
+        ``require_confidence_above`` in the policy before delegation is granted.
+        """
+        payload = {
+            "delegator": req.delegator,
+            "delegatee": req.delegatee,
+            "scoped_to": req.scoped_to,
+            "ttl_seconds": req.ttl_seconds or 60,
+            "confidence": req.confidence,
+            "acting_for": req.acting_for or "",
+            "tenant_id": req.tenant_id or "",
+        }
+        data = await self._post("/v1/agent/delegate", payload)
+        from datetime import datetime, timezone
+        return DelegateScopeResult(
+            token=data["token"],
+            token_id=data["token_id"],
+            expires_at=datetime.fromtimestamp(data["expires_at"], tz=timezone.utc),
+            delegator=data["delegator"],
+            delegatee=data["delegatee"],
+            granted_scopes=data["granted_scopes"],
+            trace_id=data["trace_id"],
+        )
 
     # ── Health check ──────────────────────────────────────────────────────────
 

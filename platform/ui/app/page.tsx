@@ -11,24 +11,24 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
-              Own Your Auth
+              Runtime Authorization for AI Agents
             </div>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-zinc-900 dark:text-white leading-[1.1]">
-              The most comprehensive authorization framework for AI.
+              Prevent risky agent actions before they execute.
             </h1>
             
             <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl">
-              Prism is a confidence-aware authorization engine for AI systems. Write policies that adapt to uncertainty, queue risky actions for human review, and maintain cryptographic audit trails.
+              Prism enforces policy at tool-call time using confidence-aware decisions, human review queues, and audit-grade traces mapped to every action.
             </p>
 
             <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-500">
               <code className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono">
-                npm i @prism/auth
+                npm i prizm-engine
               </code>
               <span>or</span>
               <code className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono">
-                go get prism
+                go get github.com/Abenezer0923/Prism/sdk/go
               </code>
             </div>
 
@@ -65,7 +65,7 @@
                   <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">auth.ts</span>
+                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">agent-guard.ts</span>
                   <button className="p-1 hover:bg-zinc-800 rounded">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -79,27 +79,27 @@
               <div className="p-6 font-mono text-sm overflow-x-auto">
                 <pre className="text-zinc-300">
                   <code>
-<span className="text-purple-400">export</span> <span className="text-purple-400">const</span> <span className="text-blue-300">auth</span> = <span className="text-yellow-300">betterAuth</span>({"{"}
-  <span className="text-blue-300">database</span>: <span className="text-purple-400">new</span> <span className="text-yellow-300">Pool</span>({"{"}
-    <span className="text-blue-300">connectionString</span>: <span className="text-orange-300">DATABASE_URL</span>,
-  {"}"}),
-  <span className="text-blue-300">emailAndPassword</span>: {"{"}
-    <span className="text-blue-300">enabled</span>: <span className="text-green-400">true</span>,
+<span className="text-purple-400">const</span> <span className="text-blue-300">decision</span> = <span className="text-purple-400">await</span> <span className="text-yellow-300">client</span>.<span className="text-blue-300">agentAuthorize</span>({"{"}
+  <span className="text-blue-300">actor</span>: <span className="text-orange-300">"invoice_bot"</span>,
+  <span className="text-blue-300">action</span>: <span className="text-orange-300">"approve_refunds"</span>,
+  <span className="text-blue-300">confidence_signal</span>: {"{"}
+    <span className="text-blue-300">provider</span>: <span className="text-orange-300">"openai"</span>,
+    <span className="text-blue-300">token_logprobs</span>: [<span className="text-green-400">-0.04</span>, <span className="text-green-400">-0.05</span>, <span className="text-green-400">-0.03</span>],
   {"}"},
-  <span className="text-blue-300">plugins</span>: [
-    <span className="text-yellow-300">organization</span>(),
-    <span className="text-yellow-300">twoFactor</span>(),
-  ]
 {"}"})
+
+<span className="text-purple-400">if</span> (<span className="text-blue-300">decision</span>.<span className="text-blue-300">requires_human_review</span>) {"{"}
+  <span className="text-yellow-300">queueForApproval</span>()
+{"}"}
                   </code>
                 </pre>
               </div>
 
               {/* Bottom Action */}
               <div className="px-6 py-4 bg-zinc-950 dark:bg-zinc-950 border-t border-zinc-800 flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Simple, type-safe configuration</span>
+                <span className="text-xs text-zinc-500">Authorize every tool call with policy + confidence</span>
                 <a href="/docs" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                  Demo
+                  API Docs
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
@@ -114,10 +114,10 @@
       <div className="max-w-7xl w-full mt-32 space-y-12">
         <div className="text-center space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">
-            Features
+            Why Teams Choose Prism
           </h2>
           <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-            Prism includes the core building blocks needed to govern AI actions in production, with simple defaults for development and stronger controls for enterprise workloads.
+            Prism combines enforcement, human oversight, and evidence generation in one runtime control plane for agentic workflows.
           </p>
         </div>
 
@@ -132,10 +132,10 @@
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Framework Agnostic
+              Confidence-Aware Enforcement
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-              Support for most popular frameworks including Next.js, React, Vue, Svelte, and more.
+              Block, downgrade, or route actions to review based on extracted model confidence and policy thresholds.
             </p>
           </div>
 
@@ -147,10 +147,10 @@
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Email & Password
+              Human-in-the-Loop Queue
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-              Built-in support for secure email and password authentication with custom rules.
+              Risky actions automatically pause for human approval with auditable resolution history.
             </p>
           </div>
 
@@ -165,10 +165,10 @@
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Account & Session Management
+              Audit-Grade Traceability
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-              Manage user accounts and sessions with ease using built-in utilities.
+              Every authorization decision is linked to actor, action, reason, confidence, and timestamp.
             </p>
           </div>
 
@@ -180,10 +180,10 @@
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Social Sign-on
+              Shadow Mode Onboarding
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-              Multiple social sign-on providers including Google, GitHub, Discord, and more.
+              Observe policy impact safely before enforce mode with would-have deny/review metrics.
             </p>
           </div>
 
@@ -196,10 +196,10 @@
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Built-in Rate Limiter
+              Policy Replay Simulator
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-              Build-in rate limiter with custom rules to prevent abuse and ensure fair usage.
+              Replay historical traces against proposed policies and quantify blast radius before rollout.
             </p>
           </div>
 
@@ -213,47 +213,47 @@
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Automatic Database Management
+              MCP + SDK Integrations
             </h3>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-              Automatic database management and migrations for PostgreSQL, MySQL, and SQLite.
+              Integrate quickly across Go, TypeScript, Python, and MCP tool-call workflows.
             </p>
           </div>
 
         </div>
       </div>
 
-      {/* Social Sign-on Section */}
+      {/* Integrations Section */}
       <div className="max-w-7xl w-full mt-32 space-y-8">
         <div className="text-center space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">
-            Social Sign-on
+            Operational Integrations
           </h2>
           <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-            Prism supports multiple social sign-on providers out of the box.
+            Ship faster with opinionated integrations for agent frameworks and incident workflows.
           </p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[
-            { name: "Saml", icon: "🔐" },
-            { name: "Atlassian", icon: "🔷" },
-            { name: "Cognito", icon: "🧠" },
-            { name: "Discord", icon: "💬" },
-            { name: "Dropbox", icon: "📦" },
-            { name: "Facebook", icon: "👤" },
-            { name: "Figma", icon: "🎨" },
-            { name: "GitHub", icon: "🐙" },
-            { name: "GitLab", icon: "🦊" },
-            { name: "Google", icon: "🔍" },
-            { name: "Kick", icon: "⚽" },
-            { name: "Linear", icon: "📐" },
-            { name: "LinkedIn", icon: "💼" },
-            { name: "Microsoft", icon: "🪟" },
-            { name: "Notion", icon: "📝" },
-            { name: "Roblox", icon: "🎮" },
-            { name: "Spotify", icon: "🎵" },
-            { name: "Twitch", icon: "📺" },
+            { name: "LangChain", icon: "⛓️" },
+            { name: "LangGraph", icon: "🕸️" },
+            { name: "AutoGPT", icon: "🤖" },
+            { name: "MCP", icon: "🧰" },
+            { name: "FastAPI", icon: "⚡" },
+            { name: "Express", icon: "🚏" },
+            { name: "React", icon: "⚛️" },
+            { name: "Go SDK", icon: "🐹" },
+            { name: "TypeScript SDK", icon: "📘" },
+            { name: "Python SDK", icon: "🐍" },
+            { name: "Datadog", icon: "📊" },
+            { name: "Splunk", icon: "🧭" },
+            { name: "PagerDuty", icon: "🚨" },
+            { name: "Jira", icon: "📝" },
+            { name: "Postgres", icon: "🐘" },
+            { name: "Redis", icon: "🟥" },
+            { name: "Helm", icon: "⎈" },
+            { name: "Docker", icon: "🐳" },
           ].map((provider) => (
             <div
               key={provider.name}

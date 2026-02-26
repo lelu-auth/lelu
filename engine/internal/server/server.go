@@ -4,15 +4,22 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/prism/engine/internal/audit"
 	"github.com/prism/engine/internal/confidence"
 	"github.com/prism/engine/internal/evaluator"
+	"github.com/prism/engine/internal/incident"
+	"github.com/prism/engine/internal/injection"
 	"github.com/prism/engine/internal/queue"
 	"github.com/prism/engine/internal/tokens"
 	"github.com/prometheus/client_golang/prometheus"
@@ -38,6 +45,16 @@ var (
 		Name: "prism_auth_decisions_total",
 		Help: "Total number of authorization decisions",
 	}, []string{"type", "allowed"})
+
+	injectionAttemptsTotal = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "prism_injection_attempts_total",
+		Help: "Total number of detected prompt injection attempts",
+	})
+
+	anomalyAlertsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "prism_anomaly_alerts_total",
+		Help: "Total number of anomaly spike alerts fired per actor",
+	}, []string{"actor"})
 )
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -50,6 +67,110 @@ type Handler struct {
 	audit    *audit.Writer
 	queue    *queue.Queue
 	apiKey   string
+	confCfg  ConfidenceConfig
+	mode     EnforcementMode
+	shadow   *shadowStats
+	incident *incident.Notifier
+	anomaly  *anomalyTracker
+}
+
+// ─── Anomaly Tracker ──────────────────────────────────────────────────────────
+
+// anomalyTracker counts agent denials using a sliding window to detect
+// abnormal denial spikes for a single actor within a configurable time window.
+type anomalyTracker struct {
+	mu        sync.Mutex
+	buckets   map[string][]time.Time
+	threshold int
+	window    time.Duration
+}
+
+func newAnomalyTracker(threshold int, window time.Duration) *anomalyTracker {
+	if threshold <= 0 {
+		threshold = 5
+	}
+	if window <= 0 {
+		window = 60 * time.Second
+	}
+	return &anomalyTracker{
+		buckets:   make(map[string][]time.Time),
+		threshold: threshold,
+		window:    window,
+	}
+}
+
+// record registers a denial for the actor and returns true if the spike
+// threshold has been crossed within the sliding window.
+func (a *anomalyTracker) record(actor string) bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	now := time.Now()
+	cutoff := now.Add(-a.window)
+
+	// Prune old entries.
+	times := a.buckets[actor]
+	filtered := times[:0]
+	for _, t := range times {
+		if t.After(cutoff) {
+			filtered = append(filtered, t)
+		}
+	}
+	filtered = append(filtered, now)
+	a.buckets[actor] = filtered
+
+	return len(filtered) >= a.threshold
+}
+
+type EnforcementMode string
+
+const (
+	EnforcementModeEnforce EnforcementMode = "enforce"
+	EnforcementModeShadow  EnforcementMode = "shadow"
+)
+
+func ParseEnforcementMode(v string) EnforcementMode {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "shadow", "observe", "observation":
+		return EnforcementModeShadow
+	case "enforce", "":
+		fallthrough
+	default:
+		return EnforcementModeEnforce
+	}
+}
+
+type MissingConfidenceMode string
+
+const (
+	MissingConfidenceDeny     MissingConfidenceMode = "deny"
+	MissingConfidenceReview   MissingConfidenceMode = "review"
+	MissingConfidenceReadOnly MissingConfidenceMode = "read_only"
+)
+
+type ConfidenceConfig struct {
+	AllowUnverifiedConfidence bool
+	MissingSignalMode         MissingConfidenceMode
+}
+
+func (c ConfidenceConfig) withDefaults() ConfidenceConfig {
+	if c.MissingSignalMode == "" {
+		c.MissingSignalMode = MissingConfidenceDeny
+	}
+	return c
+}
+
+func ParseMissingConfidenceMode(v string) MissingConfidenceMode {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "deny", "":
+		return MissingConfidenceDeny
+	case "review", "human_review", "requires_human_review":
+		return MissingConfidenceReview
+	case "read_only", "readonly":
+		return MissingConfidenceReadOnly
+	default:
+		return MissingConfidenceDeny
+	}
 }
 
 // New constructs a Handler from its dependencies.
@@ -60,7 +181,13 @@ func New(
 	auditWriter *audit.Writer,
 	q *queue.Queue,
 	apiKey string,
+	confCfg ConfidenceConfig,
+	mode EnforcementMode,
+	incidentNotifier *incident.Notifier,
 ) *Handler {
+	if mode == "" {
+		mode = EnforcementModeEnforce
+	}
 	return &Handler{
 		eval:     eval,
 		tokenSvc: tokenSvc,
@@ -68,6 +195,11 @@ func New(
 		audit:    auditWriter,
 		queue:    q,
 		apiKey:   apiKey,
+		confCfg:  confCfg.withDefaults(),
+		mode:     mode,
+		shadow:   newShadowStats(),
+		incident: incidentNotifier,
+		anomaly:  newAnomalyTracker(5, 60*time.Second),
 	}
 }
 
@@ -75,6 +207,9 @@ func New(
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/authorize", h.handleAuthorize)
 	mux.HandleFunc("POST /v1/agent/authorize", h.handleAgentAuthorize)
+	mux.HandleFunc("POST /v1/agent/delegate", h.handleAgentDelegate) // multi-agent delegation
+	mux.HandleFunc("POST /v1/simulator/replay", h.handleSimulatorReplay)
+	mux.HandleFunc("GET /v1/shadow/summary", h.handleShadowSummary)
 	mux.HandleFunc("POST /v1/tokens/mint", h.handleMintToken)
 	mux.HandleFunc("DELETE /v1/tokens/{tokenID}", h.handleRevokeToken)
 	// Phase 2 — Human approval queue
@@ -96,9 +231,12 @@ type authorizeRequest struct {
 }
 
 type authorizeResponse struct {
-	Allowed bool   `json:"allowed"`
-	Reason  string `json:"reason"`
-	TraceID string `json:"trace_id"`
+	Allowed          bool    `json:"allowed"`
+	Reason           string  `json:"reason"`
+	TraceID          string  `json:"trace_id"`
+	ShadowMode       bool    `json:"shadow_mode,omitempty"`
+	WouldHaveAllowed *bool   `json:"would_have_allowed,omitempty"`
+	WouldHaveReason  string  `json:"would_have_reason,omitempty"`
 }
 
 func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
@@ -125,10 +263,39 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	authDecisionsTotal.WithLabelValues("human", fmt.Sprintf("%t", dec.Allowed)).Inc()
 
+	allowed := dec.Allowed
+	reason := dec.Reason
+	var wouldHaveAllowed *bool
+	var wouldHaveReason string
+	shadowMode := false
+	if h.mode == EnforcementModeShadow {
+		shadowMode = true
+		wouldHaveAllowed = boolPtr(dec.Allowed)
+		wouldHaveReason = dec.Reason
+		h.shadow.record(outcomeFrom(dec.Allowed, false))
+		allowed = true
+		reason = "shadow mode: action allowed (observation only)"
+	}
+	h.notifyIncident(r.Context(), incident.Event{
+		Type:                "authorization.denied",
+		Severity:            "high",
+		TenantID:            req.TenantID,
+		Actor:               req.UserID,
+		Action:              req.Action,
+		TraceID:             traceID,
+		Reason:              dec.Reason,
+		Decision:            decisionString(allowed, false),
+		RequiresHumanReview: false,
+		Resource:            req.Resource,
+	}, allowed, false)
+
 	writeJSON(w, http.StatusOK, authorizeResponse{
-		Allowed: dec.Allowed,
-		Reason:  dec.Reason,
-		TraceID: traceID,
+		Allowed:          allowed,
+		Reason:           reason,
+		TraceID:          traceID,
+		ShadowMode:       shadowMode,
+		WouldHaveAllowed: wouldHaveAllowed,
+		WouldHaveReason:  wouldHaveReason,
 	})
 }
 
@@ -139,18 +306,23 @@ type agentAuthorizeRequest struct {
 	Actor      string            `json:"actor"`
 	Action     string            `json:"action"`
 	Resource   map[string]string `json:"resource"`
-	Confidence float64           `json:"confidence"`
+	Confidence *float64          `json:"confidence,omitempty"`
+	Signal     *confidence.Signal `json:"confidence_signal,omitempty"`
 	ActingFor  string            `json:"acting_for"`
 	Scope      string            `json:"scope"`
 }
 
 type agentAuthorizeResponse struct {
-	Allowed             bool    `json:"allowed"`
-	Reason              string  `json:"reason"`
-	TraceID             string  `json:"trace_id"`
-	DowngradedScope     string  `json:"downgraded_scope,omitempty"`
-	RequiresHumanReview bool    `json:"requires_human_review"`
-	ConfidenceUsed      float64 `json:"confidence_used"`
+	Allowed                      bool    `json:"allowed"`
+	Reason                       string  `json:"reason"`
+	TraceID                      string  `json:"trace_id"`
+	DowngradedScope              string  `json:"downgraded_scope,omitempty"`
+	RequiresHumanReview          bool    `json:"requires_human_review"`
+	ConfidenceUsed               float64 `json:"confidence_used"`
+	ShadowMode                   bool    `json:"shadow_mode,omitempty"`
+	WouldHaveAllowed             *bool   `json:"would_have_allowed,omitempty"`
+	WouldHaveReason              string  `json:"would_have_reason,omitempty"`
+	WouldHaveRequiresHumanReview *bool   `json:"would_have_requires_human_review,omitempty"`
 }
 
 func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
@@ -161,8 +333,61 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ── Prompt injection pre-filter (fastest path, before confidence gate) ──
+	if hit := injection.Detect(req.Action, req.Resource); hit.Detected {
+		traceID := audit.NewTraceID()
+		reason := fmt.Sprintf("prompt injection detected in %s: %q", hit.Source, hit.Pattern)
+		h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, false, reason, 0, ms(start))
+		injectionAttemptsTotal.Inc()
+		h.notifyIncident(r.Context(), incident.Event{
+			Type:     "security.injection_attempt",
+			Severity: "critical",
+			TenantID: req.TenantID,
+			Actor:    req.Actor,
+			Action:   req.Action,
+			TraceID:  traceID,
+			Reason:   reason,
+			Decision: "denied",
+			Resource: req.Resource,
+		}, false, false)
+		writeJSON(w, http.StatusOK, agentAuthorizeResponse{
+			Allowed: false,
+			Reason:  reason,
+			TraceID: traceID,
+		})
+		return
+	}
+
+	confidenceScore, missingSignal, err := h.resolveConfidence(req)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("confidence: %v", err))
+		return
+	}
+
+	if missingSignal {
+		traceID := audit.NewTraceID()
+		resp := h.decisionForMissingSignal(r.Context(), req, traceID, start)
+		h.notifyIncident(r.Context(), incident.Event{
+			Type:                eventTypeFrom(resp.Allowed, resp.RequiresHumanReview),
+			Severity:            severityFrom(resp.Allowed, resp.RequiresHumanReview),
+			TenantID:            req.TenantID,
+			Actor:               req.Actor,
+			ActingFor:           req.ActingFor,
+			Action:              req.Action,
+			TraceID:             traceID,
+			Reason:              resp.Reason,
+			Decision:            decisionString(resp.Allowed, resp.RequiresHumanReview),
+			RequiresHumanReview: resp.RequiresHumanReview,
+			ConfidenceUsed:      resp.ConfidenceUsed,
+			Resource:            req.Resource,
+		}, resp.Allowed, resp.RequiresHumanReview)
+		resp = h.applyShadowMode(resp)
+		writeJSON(w, http.StatusOK, resp)
+		return
+	}
+
 	// 1. Confidence gate first (fastest path).
-	confDec, err := h.confGate.Evaluate(r.Context(), req.Confidence, nil)
+	confDec, err := h.confGate.Evaluate(r.Context(), confidenceScore, nil)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf("confidence: %v", err))
 		return
@@ -170,16 +395,47 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	if confDec.Level == confidence.LevelHardDeny {
 		traceID := audit.NewTraceID()
-		h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, false, confDec.Reason, req.Confidence, ms(start))
+		h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, false, confDec.Reason, confidenceScore, ms(start))
 		
 		authDecisionsTotal.WithLabelValues("agent", "false").Inc()
 
-		writeJSON(w, http.StatusOK, agentAuthorizeResponse{
+		// Anomaly tracking — spike alert if denial threshold crossed.
+		if spike := h.anomaly.record(req.Actor); spike {
+			anomalyAlertsTotal.WithLabelValues(req.Actor).Inc()
+			h.notifyIncident(r.Context(), incident.Event{
+				Type:     "security.anomaly_spike",
+				Severity: "high",
+				TenantID: req.TenantID,
+				Actor:    req.Actor,
+				Action:   req.Action,
+				TraceID:  traceID,
+				Reason:   fmt.Sprintf("anomaly: actor %q exceeded denial spike threshold", req.Actor),
+				Decision: "denied",
+				Resource: req.Resource,
+			}, false, false)
+		}
+
+		resp := agentAuthorizeResponse{
 			Allowed:        false,
 			Reason:         confDec.Reason,
 			TraceID:        traceID,
-			ConfidenceUsed: req.Confidence,
-		})
+			ConfidenceUsed: confidenceScore,
+		}
+		h.notifyIncident(r.Context(), incident.Event{
+			Type:                "authorization.denied",
+			Severity:            "high",
+			TenantID:            req.TenantID,
+			Actor:               req.Actor,
+			ActingFor:           req.ActingFor,
+			Action:              req.Action,
+			TraceID:             traceID,
+			Reason:              confDec.Reason,
+			Decision:            decisionString(resp.Allowed, resp.RequiresHumanReview),
+			RequiresHumanReview: false,
+			ConfidenceUsed:      confidenceScore,
+			Resource:            req.Resource,
+		}, resp.Allowed, resp.RequiresHumanReview)
+		writeJSON(w, http.StatusOK, h.applyShadowMode(resp))
 		return
 	}
 
@@ -189,7 +445,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 		Actor:      req.Actor,
 		Action:     req.Action,
 		Resource:   req.Resource,
-		Confidence: req.Confidence,
+		Confidence: confidenceScore,
 		ActingFor:  req.ActingFor,
 		Scope:      req.Scope,
 	})
@@ -199,24 +455,554 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	traceID := audit.NewTraceID()
-	h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, evalDec.Allowed, evalDec.Reason, req.Confidence, ms(start))
+	h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, evalDec.Allowed, evalDec.Reason, confidenceScore, ms(start))
 
 	authDecisionsTotal.WithLabelValues("agent", fmt.Sprintf("%t", evalDec.Allowed)).Inc()
 
 	// Phase 2 — enqueue for human review when flagged.
 	requiresReview := evalDec.RequiresHumanReview || confDec.RequiresHumanReview
-	if requiresReview && h.queue != nil {
-		_, _ = h.queue.Enqueue(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, req.Confidence, evalDec.Reason, req.ActingFor)
+	if requiresReview && h.queue != nil && h.mode != EnforcementModeShadow {
+		_, _ = h.queue.Enqueue(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, confidenceScore, evalDec.Reason, req.ActingFor)
 	}
 
-	writeJSON(w, http.StatusOK, agentAuthorizeResponse{
+	resp := agentAuthorizeResponse{
 		Allowed:             evalDec.Allowed,
 		Reason:              evalDec.Reason,
 		TraceID:             traceID,
 		DowngradedScope:     evalDec.DowngradedScope,
 		RequiresHumanReview: requiresReview,
-		ConfidenceUsed:      req.Confidence,
+		ConfidenceUsed:      confidenceScore,
+	}
+	h.notifyIncident(r.Context(), incident.Event{
+		Type:                eventTypeFrom(resp.Allowed, resp.RequiresHumanReview),
+		Severity:            severityFrom(resp.Allowed, resp.RequiresHumanReview),
+		TenantID:            req.TenantID,
+		Actor:               req.Actor,
+		ActingFor:           req.ActingFor,
+		Action:              req.Action,
+		TraceID:             traceID,
+		Reason:              resp.Reason,
+		Decision:            decisionString(resp.Allowed, resp.RequiresHumanReview),
+		RequiresHumanReview: resp.RequiresHumanReview,
+		ConfidenceUsed:      confidenceScore,
+		Resource:            req.Resource,
+	}, resp.Allowed, resp.RequiresHumanReview)
+
+	// Anomaly tracking — record denials to the sliding window tracker.
+	if !resp.Allowed && !resp.RequiresHumanReview {
+		if spike := h.anomaly.record(req.Actor); spike {
+			anomalyAlertsTotal.WithLabelValues(req.Actor).Inc()
+			h.notifyIncident(r.Context(), incident.Event{
+				Type:     "security.anomaly_spike",
+				Severity: "high",
+				TenantID: req.TenantID,
+				Actor:    req.Actor,
+				Action:   req.Action,
+				TraceID:  traceID,
+				Reason:   fmt.Sprintf("anomaly: actor %q exceeded denial spike threshold", req.Actor),
+				Decision: "denied",
+				Resource: req.Resource,
+			}, false, false)
+		}
+	}
+
+	writeJSON(w, http.StatusOK, h.applyShadowMode(resp))
+}
+
+// ─── Agent Delegate ────────────────────────────────────────────────────────────
+
+type agentDelegateRequest struct {
+	TenantID   string   `json:"tenant_id"`
+	Delegator  string   `json:"delegator"`
+	Delegatee  string   `json:"delegatee"`
+	ScopedTo   []string `json:"scoped_to"`
+	TTLSeconds int64    `json:"ttl_seconds"`
+	Confidence float64  `json:"confidence"`
+	ActingFor  string   `json:"acting_for"`
+}
+
+type agentDelegateResponse struct {
+	Token         string   `json:"token"`
+	TokenID       string   `json:"token_id"`
+	ExpiresAt     int64    `json:"expires_at"`
+	Delegator     string   `json:"delegator"`
+	Delegatee     string   `json:"delegatee"`
+	GrantedScopes []string `json:"granted_scopes"`
+	TraceID       string   `json:"trace_id"`
+}
+
+func (h *Handler) handleAgentDelegate(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var req agentDelegateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if req.Delegator == "" || req.Delegatee == "" {
+		writeError(w, http.StatusBadRequest, "delegator and delegatee are required")
+		return
+	}
+
+	// Validate delegation rules via evaluator.
+	dec, err := h.eval.CheckDelegation(r.Context(), req.Delegator, req.Delegatee, req.ScopedTo, req.Confidence)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if !dec.Allowed {
+		traceID := audit.NewTraceID()
+		h.audit.LogDecision(r.Context(), req.TenantID, req.Delegator,
+			"agent:delegate", map[string]string{"delegatee": req.Delegatee},
+			false, dec.Reason, req.Confidence, ms(start))
+		writeJSON(w, http.StatusForbidden, map[string]any{
+			"allowed": false,
+			"reason":  dec.Reason,
+			"trace_id": traceID,
+		})
+		return
+	}
+
+	// Cap TTL to policy maximum.
+	ttl := time.Duration(req.TTLSeconds) * time.Second
+	if dec.MaxTTL > 0 {
+		policyMax := time.Duration(dec.MaxTTL) * time.Second
+		if ttl <= 0 || ttl > policyMax {
+			ttl = policyMax
+		}
+	}
+	if ttl <= 0 {
+		ttl = 60 * time.Second // fallback
+	}
+
+	// Mint a child JIT token scoped to granted actions.
+	scope := req.Delegatee
+	if len(dec.GrantedScopes) > 0 {
+		scope = strings.Join(dec.GrantedScopes, ",")
+	}
+	minted, err := h.tokenSvc.MintAgentToken(r.Context(), scope, req.ActingFor, ttl)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	traceID := audit.NewTraceID()
+	h.audit.LogDecision(r.Context(), req.TenantID, req.Delegator,
+		"agent:delegate", map[string]string{"delegatee": req.Delegatee, "scope": scope},
+		true, dec.Reason, req.Confidence, ms(start))
+
+	writeJSON(w, http.StatusOK, agentDelegateResponse{
+		Token:         minted.Token,
+		TokenID:       minted.TokenID,
+		ExpiresAt:     minted.ExpiresAt.Unix(),
+		Delegator:     req.Delegator,
+		Delegatee:     req.Delegatee,
+		GrantedScopes: dec.GrantedScopes,
+		TraceID:       traceID,
 	})
+}
+
+func (h *Handler) resolveConfidence(req agentAuthorizeRequest) (score float64, missingSignal bool, err error) {
+	if req.Signal != nil {
+		score, err = confidence.ExtractScore(req.Signal)
+		return score, false, err
+	}
+	if h.confCfg.AllowUnverifiedConfidence && req.Confidence != nil {
+		return *req.Confidence, false, nil
+	}
+	return 0, true, nil
+}
+
+func (h *Handler) decisionForMissingSignal(ctx context.Context, req agentAuthorizeRequest, traceID string, start time.Time) agentAuthorizeResponse {
+	var reason string
+	var allowed bool
+	var requiresReview bool
+	var downgradedScope string
+
+	switch h.confCfg.MissingSignalMode {
+	case MissingConfidenceReview:
+		reason = "missing confidence signal from provider; routed to human review"
+		requiresReview = true
+	case MissingConfidenceReadOnly:
+		reason = "missing confidence signal from provider; downgraded to read_only"
+		downgradedScope = "read_only"
+	default:
+		reason = "missing confidence signal from provider; request denied"
+	}
+
+	h.audit.LogDecision(ctx, req.TenantID, req.Actor, req.Action, req.Resource, allowed, reason, 0, ms(start))
+	authDecisionsTotal.WithLabelValues("agent", fmt.Sprintf("%t", allowed)).Inc()
+
+	if requiresReview && h.queue != nil && h.mode != EnforcementModeShadow {
+		_, _ = h.queue.Enqueue(ctx, req.TenantID, req.Actor, req.Action, req.Resource, 0, reason, req.ActingFor)
+	}
+
+	return agentAuthorizeResponse{
+		Allowed:             allowed,
+		Reason:              reason,
+		TraceID:             traceID,
+		DowngradedScope:     downgradedScope,
+		RequiresHumanReview: requiresReview,
+		ConfidenceUsed:      0,
+	}
+}
+
+func (h *Handler) applyShadowMode(resp agentAuthorizeResponse) agentAuthorizeResponse {
+	if h.mode != EnforcementModeShadow {
+		return resp
+	}
+	h.shadow.record(outcomeFrom(resp.Allowed, resp.RequiresHumanReview))
+	resp.ShadowMode = true
+	resp.WouldHaveAllowed = boolPtr(resp.Allowed)
+	resp.WouldHaveReason = resp.Reason
+	resp.WouldHaveRequiresHumanReview = boolPtr(resp.RequiresHumanReview)
+	resp.Allowed = true
+	resp.RequiresHumanReview = false
+	resp.DowngradedScope = ""
+	resp.Reason = "shadow mode: action allowed (observation only)"
+	return resp
+}
+
+type shadowOutcome string
+
+const (
+	shadowOutcomeAllow  shadowOutcome = "allow"
+	shadowOutcomeReview shadowOutcome = "review"
+	shadowOutcomeDeny   shadowOutcome = "deny"
+)
+
+type shadowBucket struct {
+	Allow  int `json:"allow"`
+	Review int `json:"review"`
+	Deny   int `json:"deny"`
+}
+
+type shadowStats struct {
+	mu       sync.Mutex
+	byMinute map[time.Time]*shadowBucket
+}
+
+func newShadowStats() *shadowStats {
+	return &shadowStats{byMinute: make(map[time.Time]*shadowBucket)}
+}
+
+func (s *shadowStats) record(outcome shadowOutcome) {
+	now := time.Now().UTC().Truncate(time.Minute)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	b, ok := s.byMinute[now]
+	if !ok {
+		b = &shadowBucket{}
+		s.byMinute[now] = b
+	}
+	switch outcome {
+	case shadowOutcomeAllow:
+		b.Allow++
+	case shadowOutcomeReview:
+		b.Review++
+	default:
+		b.Deny++
+	}
+}
+
+type shadowSummaryBucket struct {
+	Minute string `json:"minute"`
+	Allow  int    `json:"allow"`
+	Review int    `json:"review"`
+	Deny   int    `json:"deny"`
+}
+
+type shadowSummaryResponse struct {
+	Mode          EnforcementMode       `json:"mode"`
+	WindowMinutes int                   `json:"window_minutes"`
+	GeneratedAt   string                `json:"generated_at"`
+	Totals        shadowBucket          `json:"totals"`
+	Buckets       []shadowSummaryBucket `json:"buckets"`
+}
+
+func (h *Handler) handleShadowSummary(w http.ResponseWriter, r *http.Request) {
+	windowMinutes := 60
+	if raw := strings.TrimSpace(r.URL.Query().Get("window_minutes")); raw != "" {
+		v, err := strconv.Atoi(raw)
+		if err != nil || v <= 0 || v > 24*60 {
+			writeError(w, http.StatusBadRequest, "window_minutes must be an integer between 1 and 1440")
+			return
+		}
+		windowMinutes = v
+	}
+
+	resp := shadowSummaryResponse{
+		Mode:          h.mode,
+		WindowMinutes: windowMinutes,
+		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
+		Totals:        shadowBucket{},
+		Buckets:       []shadowSummaryBucket{},
+	}
+
+	if h.mode != EnforcementModeShadow {
+		writeJSON(w, http.StatusOK, resp)
+		return
+	}
+
+	cutoff := time.Now().UTC().Add(-time.Duration(windowMinutes) * time.Minute).Truncate(time.Minute)
+	h.shadow.mu.Lock()
+	minutes := make([]time.Time, 0, len(h.shadow.byMinute))
+	for minute := range h.shadow.byMinute {
+		if !minute.Before(cutoff) {
+			minutes = append(minutes, minute)
+		}
+	}
+	sort.Slice(minutes, func(i, j int) bool { return minutes[i].Before(minutes[j]) })
+
+	for _, minute := range minutes {
+		b := h.shadow.byMinute[minute]
+		resp.Totals.Allow += b.Allow
+		resp.Totals.Review += b.Review
+		resp.Totals.Deny += b.Deny
+		resp.Buckets = append(resp.Buckets, shadowSummaryBucket{
+			Minute: minute.Format(time.RFC3339),
+			Allow:  b.Allow,
+			Review: b.Review,
+			Deny:   b.Deny,
+		})
+	}
+	h.shadow.mu.Unlock()
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func outcomeFrom(allowed, requiresReview bool) shadowOutcome {
+	if requiresReview {
+		return shadowOutcomeReview
+	}
+	if allowed {
+		return shadowOutcomeAllow
+	}
+	return shadowOutcomeDeny
+}
+
+// ─── Policy Simulator / Replay ──────────────────────────────────────────────
+
+type simulatorReplayRequest struct {
+	ProposedPolicyYAML string              `json:"proposed_policy_yaml"`
+	Traces             []simulatorTraceItem `json:"traces"`
+}
+
+type simulatorTraceItem struct {
+	ID         string            `json:"id,omitempty"`
+	Kind       string            `json:"kind"` // "human" | "agent"
+	TenantID   string            `json:"tenant_id"`
+	UserID     string            `json:"user_id,omitempty"`
+	Actor      string            `json:"actor,omitempty"`
+	Action     string            `json:"action"`
+	Resource   map[string]string `json:"resource,omitempty"`
+	ActingFor  string            `json:"acting_for,omitempty"`
+	Scope      string            `json:"scope,omitempty"`
+	Confidence *float64          `json:"confidence,omitempty"`
+	Signal     *confidence.Signal `json:"confidence_signal,omitempty"`
+}
+
+type simulatorDecision struct {
+	Allowed             bool    `json:"allowed"`
+	RequiresHumanReview bool    `json:"requires_human_review"`
+	DowngradedScope     string  `json:"downgraded_scope,omitempty"`
+	Reason              string  `json:"reason"`
+	Outcome             string  `json:"outcome"` // allow | review | deny
+	ConfidenceUsed      float64 `json:"confidence_used,omitempty"`
+}
+
+type simulatorReplayDelta struct {
+	ID      string            `json:"id,omitempty"`
+	Index   int               `json:"index"`
+	Kind    string            `json:"kind"`
+	Action  string            `json:"action"`
+	Actor   string            `json:"actor,omitempty"`
+	UserID  string            `json:"user_id,omitempty"`
+	Changed bool              `json:"changed"`
+	Before  simulatorDecision `json:"before"`
+	After   simulatorDecision `json:"after"`
+}
+
+type simulatorReplaySummary struct {
+	Total         int `json:"total"`
+	Changed       int `json:"changed"`
+	AllowToDeny   int `json:"allow_to_deny"`
+	AllowToReview int `json:"allow_to_review"`
+	ReviewToDeny  int `json:"review_to_deny"`
+	DenyToAllow   int `json:"deny_to_allow"`
+	ReviewToAllow int `json:"review_to_allow"`
+	DenyToReview  int `json:"deny_to_review"`
+	OtherChanges  int `json:"other_changes"`
+}
+
+type simulatorReplayResponse struct {
+	Summary simulatorReplaySummary `json:"summary"`
+	Items   []simulatorReplayDelta `json:"items"`
+}
+
+func (h *Handler) handleSimulatorReplay(w http.ResponseWriter, r *http.Request) {
+	var req simulatorReplayRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if strings.TrimSpace(req.ProposedPolicyYAML) == "" {
+		writeError(w, http.StatusBadRequest, "proposed_policy_yaml is required")
+		return
+	}
+
+	proposed := evaluator.New()
+	if err := proposed.LoadPolicyBytes([]byte(req.ProposedPolicyYAML)); err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("invalid proposed_policy_yaml: %v", err))
+		return
+	}
+
+	resp := simulatorReplayResponse{
+		Summary: simulatorReplaySummary{Total: len(req.Traces)},
+		Items:   make([]simulatorReplayDelta, 0, len(req.Traces)),
+	}
+
+	for i, tr := range req.Traces {
+		before, err := h.evaluateTraceForSimulator(r.Context(), h.eval, tr)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("trace[%d]: %v", i, err))
+			return
+		}
+		after, err := h.evaluateTraceForSimulator(r.Context(), proposed, tr)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("trace[%d] against proposed policy: %v", i, err))
+			return
+		}
+
+		changed := before.Outcome != after.Outcome || before.DowngradedScope != after.DowngradedScope
+		if changed {
+			resp.Summary.Changed++
+			h.incrementTransitionCounter(&resp.Summary, before.Outcome, after.Outcome)
+		}
+
+		resp.Items = append(resp.Items, simulatorReplayDelta{
+			ID:      tr.ID,
+			Index:   i,
+			Kind:    strings.ToLower(strings.TrimSpace(tr.Kind)),
+			Action:  tr.Action,
+			Actor:   tr.Actor,
+			UserID:  tr.UserID,
+			Changed: changed,
+			Before:  before,
+			After:   after,
+		})
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) evaluateTraceForSimulator(ctx context.Context, eval *evaluator.Evaluator, tr simulatorTraceItem) (simulatorDecision, error) {
+	kind := strings.ToLower(strings.TrimSpace(tr.Kind))
+	switch kind {
+	case "human":
+		dec, err := eval.Evaluate(ctx, evaluator.AuthRequest{
+			TenantID: tr.TenantID,
+			UserID:   tr.UserID,
+			Action:   tr.Action,
+			Resource: tr.Resource,
+		})
+		if err != nil {
+			return simulatorDecision{}, err
+		}
+		return simulatorDecision{
+			Allowed: dec.Allowed,
+			Reason:  dec.Reason,
+			Outcome: simulatorOutcome(dec.Allowed, false),
+		}, nil
+
+	case "agent":
+		if strings.TrimSpace(tr.Actor) == "" {
+			return simulatorDecision{}, fmt.Errorf("actor is required for agent traces")
+		}
+		confidenceScore, err := h.resolveSimulatorConfidence(tr)
+		if err != nil {
+			return simulatorDecision{}, err
+		}
+
+		confDec, err := h.confGate.Evaluate(ctx, confidenceScore, nil)
+		if err != nil {
+			return simulatorDecision{}, err
+		}
+		if confDec.Level == confidence.LevelHardDeny {
+			return simulatorDecision{
+				Allowed:        false,
+				Reason:         confDec.Reason,
+				Outcome:        "deny",
+				ConfidenceUsed: confidenceScore,
+			}, nil
+		}
+
+		evalDec, err := eval.EvaluateAgent(ctx, evaluator.AgentAuthRequest{
+			TenantID:   tr.TenantID,
+			Actor:      tr.Actor,
+			Action:     tr.Action,
+			Resource:   tr.Resource,
+			Confidence: confidenceScore,
+			ActingFor:  tr.ActingFor,
+			Scope:      tr.Scope,
+		})
+		if err != nil {
+			return simulatorDecision{}, err
+		}
+
+		requiresReview := evalDec.RequiresHumanReview || confDec.RequiresHumanReview
+		return simulatorDecision{
+			Allowed:             evalDec.Allowed,
+			RequiresHumanReview: requiresReview,
+			DowngradedScope:     evalDec.DowngradedScope,
+			Reason:              evalDec.Reason,
+			Outcome:             simulatorOutcome(evalDec.Allowed, requiresReview),
+			ConfidenceUsed:      confidenceScore,
+		}, nil
+
+	default:
+		return simulatorDecision{}, fmt.Errorf("kind must be one of: human, agent")
+	}
+}
+
+func (h *Handler) resolveSimulatorConfidence(tr simulatorTraceItem) (float64, error) {
+	if tr.Signal != nil {
+		return confidence.ExtractScore(tr.Signal)
+	}
+	if tr.Confidence != nil {
+		return *tr.Confidence, nil
+	}
+	return 0, fmt.Errorf("agent trace requires confidence or confidence_signal")
+}
+
+func simulatorOutcome(allowed, requiresReview bool) string {
+	if requiresReview {
+		return "review"
+	}
+	if allowed {
+		return "allow"
+	}
+	return "deny"
+}
+
+func (h *Handler) incrementTransitionCounter(summary *simulatorReplaySummary, before, after string) {
+	transition := before + "->" + after
+	switch transition {
+	case "allow->deny":
+		summary.AllowToDeny++
+	case "allow->review":
+		summary.AllowToReview++
+	case "review->deny":
+		summary.ReviewToDeny++
+	case "deny->allow":
+		summary.DenyToAllow++
+	case "review->allow":
+		summary.ReviewToAllow++
+	case "deny->review":
+		summary.DenyToReview++
+	default:
+		summary.OtherChanges++
+	}
 }
 
 // ─── Mint Token ───────────────────────────────────────────────────────────────
@@ -437,4 +1223,57 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 
 func ms(start time.Time) float64 {
 	return float64(time.Since(start).Microseconds()) / 1000
+}
+
+func boolPtr(v bool) *bool {
+	return &v
+}
+
+func (h *Handler) notifyIncident(_ context.Context, evt incident.Event, allowed, requiresReview bool) {
+	if h.mode == EnforcementModeShadow {
+		return
+	}
+	if h.incident == nil || !h.incident.Enabled() {
+		return
+	}
+	if allowed && !requiresReview {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if err := h.incident.Notify(ctx, evt); err != nil {
+			log.Printf("incident webhook notify failed: %v", err)
+		}
+	}()
+}
+
+func eventTypeFrom(allowed, requiresReview bool) string {
+	if requiresReview {
+		return "authorization.review_required"
+	}
+	if !allowed {
+		return "authorization.denied"
+	}
+	return "authorization.allowed"
+}
+
+func severityFrom(allowed, requiresReview bool) string {
+	if !allowed {
+		return "high"
+	}
+	if requiresReview {
+		return "medium"
+	}
+	return "low"
+}
+
+func decisionString(allowed, requiresReview bool) string {
+	if requiresReview {
+		return "human_review"
+	}
+	if allowed {
+		return "allowed"
+	}
+	return "denied"
 }

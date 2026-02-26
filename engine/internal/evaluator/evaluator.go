@@ -58,9 +58,30 @@ type Role struct {
 
 // AgentScope defines agent-specific rules, inheriting from a Role.
 type AgentScope struct {
-	Inherits    string       `yaml:"inherits"`
-	Constraints []Constraint `yaml:"constraints"`
-	Deny        []string     `yaml:"deny"`
+	Inherits    string           `yaml:"inherits"`
+	Constraints []Constraint     `yaml:"constraints"`
+	Deny        []string         `yaml:"deny"`
+	CanDelegate []DelegationRule `yaml:"can_delegate"` // agent-to-agent delegation rules
+}
+
+// DelegationRule defines what scope an agent can delegate to another agent.
+type DelegationRule struct {
+	// To is the delegatee agent scope name.
+	To string `yaml:"to"`
+	// ScopedTo is the list of actions the delegatee is allowed to perform.
+	ScopedTo []string `yaml:"scoped_to"`
+	// MaxTTLSeconds caps the lifetime of the delegated child token.
+	MaxTTLSeconds int64 `yaml:"max_ttl_seconds"`
+	// RequireConfidenceAbove mandates a minimum confidence score for delegation.
+	RequireConfidenceAbove float64 `yaml:"require_confidence_above"`
+}
+
+// DelegationDecision is the result of a delegation authorization check.
+type DelegationDecision struct {
+	Allowed       bool    `json:"allowed"`
+	Reason        string  `json:"reason"`
+	GrantedScopes []string `json:"granted_scopes,omitempty"`
+	MaxTTL        int64   `json:"max_ttl_seconds,omitempty"`
 }
 
 // Constraint is a single named constraint value pair.
@@ -202,6 +223,71 @@ func (e *Evaluator) EvaluateAgent(_ context.Context, req AgentAuthRequest) (*Dec
 		dec.Reason = "action authorized"
 	}
 	return dec, nil
+}
+
+// CheckDelegation validates whether delegator can delegate scopedTo actions
+// to delegatee at the given confidence. Returns the matching DelegationRule
+// details on success.
+func (e *Evaluator) CheckDelegation(_ context.Context, delegator, delegatee string, scopedTo []string, confidence float64) (*DelegationDecision, error) {
+	e.mu.RLock()
+	p := e.policy
+	e.mu.RUnlock()
+
+	scope, ok := p.AgentScopes[delegator]
+	if !ok {
+		return &DelegationDecision{
+			Allowed: false,
+			Reason:  fmt.Sprintf("unknown delegator agent scope %q", delegator),
+		}, nil
+	}
+
+	for _, rule := range scope.CanDelegate {
+		if rule.To != delegatee {
+			continue
+		}
+
+		// Confidence check.
+		if rule.RequireConfidenceAbove > 0 && confidence < rule.RequireConfidenceAbove {
+			return &DelegationDecision{
+				Allowed: false,
+				Reason: fmt.Sprintf(
+					"delegation requires confidence ≥ %.0f%% (got %.0f%%)",
+					rule.RequireConfidenceAbove*100, confidence*100,
+				),
+			}, nil
+		}
+
+		// Validate requested scopes are a subset of the rule's scoped_to.
+		allowed := make(map[string]struct{}, len(rule.ScopedTo))
+		for _, s := range rule.ScopedTo {
+			allowed[s] = struct{}{}
+		}
+		for _, req := range scopedTo {
+			if _, ok := allowed[req]; !ok {
+				return &DelegationDecision{
+					Allowed: false,
+					Reason:  fmt.Sprintf("scope %q is not permitted in delegation rule from %q to %q", req, delegator, delegatee),
+				}, nil
+			}
+		}
+
+		grantedScopes := scopedTo
+		if len(grantedScopes) == 0 {
+			grantedScopes = rule.ScopedTo
+		}
+
+		return &DelegationDecision{
+			Allowed:       true,
+			Reason:        fmt.Sprintf("delegation from %q to %q authorized", delegator, delegatee),
+			GrantedScopes: grantedScopes,
+			MaxTTL:        rule.MaxTTLSeconds,
+		}, nil
+	}
+
+	return &DelegationDecision{
+		Allowed: false,
+		Reason:  fmt.Sprintf("no delegation rule from %q to %q", delegator, delegatee),
+	}, nil
 }
 
 // LoadRegoPolicy enables OPA/Rego evaluation mode.

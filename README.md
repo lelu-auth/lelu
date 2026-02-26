@@ -35,6 +35,13 @@ The easiest way to get started is using Docker Compose, which spins up the Engin
 docker compose up -d
 ```
 
+Optional (observe-before-enforce onboarding):
+
+```bash
+# Compute/log decisions but do not enforce denies/reviews
+PRISM_MODE=shadow docker compose up -d
+```
+
 ### 2. Verify the Engine is Running
 
 ```bash
@@ -233,6 +240,15 @@ export REGO_POLICY_PATH=./config/plugins/
 export REGO_POLICY_QUERY=data.prism.authz
 ```
 
+### Incident Webhook (MVP)
+
+Send high-risk authorization outcomes (deny / human review) to incident systems:
+
+```bash
+export INCIDENT_WEBHOOK_URL=https://your-webhook-endpoint
+export INCIDENT_WEBHOOK_TIMEOUT_MS=2000
+```
+
 ---
 
 ## 🔌 Integrations Registry
@@ -275,6 +291,58 @@ Mint a JIT-scoped token.
 Standard human authorization check.
 ```json
 { "user_id": "user_123", "action": "approve_refunds" }
+```
+
+### `POST /v1/simulator/replay`
+Replay historical traces against a proposed YAML policy and return decision deltas + blast radius summary.
+```json
+{
+  "proposed_policy_yaml": "version: \"1.0\"\nroles:\n  finance_manager:\n    allow: [view_invoices]\n",
+  "traces": [
+    { "id": "h-1", "kind": "human", "user_id": "user_123", "action": "approve_refunds" },
+    {
+      "id": "a-1",
+      "kind": "agent",
+      "actor": "invoice_bot",
+      "action": "approve_refunds",
+      "confidence_signal": {
+        "provider": "openai",
+        "token_logprobs": [-0.04, -0.05, -0.03]
+      }
+    }
+  ]
+}
+```
+
+Returns per-trace `before`/`after` outcomes (`allow` | `review` | `deny`) and summary counters such as `changed`, `allow_to_deny`, and `allow_to_review`.
+
+### `GET /v1/shadow/summary`
+Return shadow-mode *would-have* outcome counts over a recent time window.
+
+Query params:
+- `window_minutes` (optional, default `60`, range `1-1440`)
+
+Response includes:
+- `mode` (`shadow` or `enforce`)
+- `totals` (`allow`, `review`, `deny`)
+- `buckets` (per-minute counts for charting/dashboard views)
+
+### `GET /api/v1/compliance/export` (Platform)
+Export auditor-ready control evidence summaries mapped to OWASP GenAI or NIST AI RMF.
+
+Query params:
+- `framework`: `owasp_genai` | `nist_ai_rmf` | `all` (default: `all`)
+- `from` / `to` (optional RFC3339 window)
+
+Response includes:
+- `total_events`
+- `controls[]` with `id`, `title`, `event_count`, and `sample_trace_ids`
+- `evidence` metadata with `checksum_sha256` and optional `signature` when signing is enabled
+
+To enable signed evidence metadata:
+
+```bash
+export EVIDENCE_SIGNING_KEY=replace-with-strong-secret
 ```
 
 ---
