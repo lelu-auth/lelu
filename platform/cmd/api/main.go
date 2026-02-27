@@ -28,7 +28,7 @@ import (
 
 func main() {
 	addr := envOr("LISTEN_ADDR", ":9090")
-	dsn := envOr("DATABASE_URL", "postgres://prism:prism@localhost:5432/prism?sslmode=disable")
+	dsn := envOr("DATABASE_URL", "postgres://lelu:lelu@localhost:5432/lelu?sslmode=disable")
 	apiKey := envOr("PLATFORM_API_KEY", "change-me-in-production")
 	oidcIssuer := envOr("OIDC_ISSUER_URL", "")
 	oidcAudience := envOr("OIDC_AUDIENCE", "")

@@ -24,10 +24,13 @@ import (
 	"github.com/lelu/engine/internal/injection"
 	"github.com/lelu/engine/internal/queue"
 	"github.com/lelu/engine/internal/ratelimit"
+	"github.com/lelu/engine/internal/telemetry"
 	"github.com/lelu/engine/internal/tokens"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ─── Metrics ──────────────────────────────────────────────────────────────────
@@ -77,6 +80,7 @@ type Handler struct {
 	anomaly   *anomalyTracker
 	rateLimit *ratelimit.Limiter
 	fallback  *fallback.Strategy
+	tracer    trace.Tracer
 }
 
 // ─── Anomaly Tracker ──────────────────────────────────────────────────────────
@@ -191,9 +195,14 @@ func New(
 	incidentNotifier *incident.Notifier,
 	rl *ratelimit.Limiter,
 	fb *fallback.Strategy,
+	tp *telemetry.Provider,
 ) *Handler {
 	if mode == "" {
 		mode = EnforcementModeEnforce
+	}
+	var tracer trace.Tracer
+	if tp != nil {
+		tracer = tp.Tracer()
 	}
 	return &Handler{
 		eval:      eval,
@@ -209,6 +218,7 @@ func New(
 		anomaly:   newAnomalyTracker(5, 60*time.Second),
 		rateLimit: rl,
 		fallback:  fb,
+		tracer:    tracer,
 	}
 }
 
@@ -342,10 +352,28 @@ type agentAuthorizeResponse struct {
 
 func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	
+	// Start OpenTelemetry span
+	var span trace.Span
+	ctx := r.Context()
+	if h.tracer != nil {
+		ctx, span = h.tracer.Start(ctx, "agent.authorize")
+		defer span.End()
+	}
+	
 	var req agentAuthorizeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+
+	// Add span attributes
+	if span != nil {
+		span.SetAttributes(
+			attribute.String("actor", req.Actor),
+			attribute.String("action", req.Action),
+			attribute.String("tenant_id", req.TenantID),
+		)
 	}
 
 	if h.rateLimit != nil && !h.rateLimit.AllowAuth(req.TenantID) {
@@ -460,7 +488,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Policy evaluator.
-	evalDec, err := h.eval.EvaluateAgent(r.Context(), evaluator.AgentAuthRequest{
+	evalDec, err := h.eval.EvaluateAgent(ctx, evaluator.AgentAuthRequest{
 		TenantID:   req.TenantID,
 		Actor:      req.Actor,
 		Action:     req.Action,
@@ -472,6 +500,16 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	// Record evaluation latency in span
+	if span != nil {
+		span.SetAttributes(
+			attribute.Float64("confidence_score", confidenceScore),
+			attribute.Bool("allowed", evalDec.Allowed),
+			attribute.Bool("requires_review", evalDec.RequiresHumanReview),
+			attribute.Float64("latency_ms", ms(start)),
+		)
 	}
 
 	traceID := audit.NewTraceID()

@@ -5,9 +5,9 @@
 // Import via: import { secureTool } from 'lelu/vercel'
 // (tree-shakeable — does not add weight to non-Vercel users)
 export { secureTool } from "./vercel/index.js";
-export type { SecureToolOptions, PrismDeniedResult, VercelTool } from "./vercel/index.js";
+export type { SecureToolOptions, LeluDeniedResult, VercelTool } from "./vercel/index.js";
 
-export { LeluClient, PrismClient } from "./client.js";
+export { LeluClient, LeluClient } from "./client.js";
 
 export type {
   AuthRequest,

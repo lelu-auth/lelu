@@ -16,13 +16,13 @@ npm install lelu
 import { createClient } from "lelu";
 
 // Initialize the client
-const prism = createClient({ 
+const lelu = createClient({ 
   baseUrl: "http://localhost:8082" 
 });
 
 // Authorize an agent action
 async function runAgent() {
-  const { allowed, reason } = await prism.agentAuthorize({
+  const { allowed, reason } = await lelu.agentAuthorize({
     agentId: "agent-123",
     action: "read_database",
     resource: "users_table",
@@ -48,7 +48,7 @@ async function runAgent() {
 
 ## Documentation
 
-For full documentation, visit [https://github.com/Abenezer0923/Prism](https://github.com/Abenezer0923/Prism).
+For full documentation, visit [https://github.com/Abenezer0923/Lelu](https://github.com/Abenezer0923/Lelu).
 
 ## License
 

@@ -1,5 +1,5 @@
 """
-FastAPI integration for Prism Auth Permission Engine.
+FastAPI integration for Lelu Auth Permission Engine.
 
 Usage::
 
@@ -33,8 +33,8 @@ _DEFAULT_CLIENT: Optional[LeluClient] = None
 def _get_default_client() -> LeluClient:
     global _DEFAULT_CLIENT
     if _DEFAULT_CLIENT is None:
-        base_url = os.environ.get("PRISM_BASE_URL", "http://localhost:8080")
-        api_key = os.environ.get("PRISM_API_KEY")
+        base_url = os.environ.get("LELU_BASE_URL", "http://localhost:8080")
+        api_key = os.environ.get("LELU_API_KEY")
         _DEFAULT_CLIENT = LeluClient(base_url=base_url, api_key=api_key)
     return _DEFAULT_CLIENT
 
@@ -47,7 +47,7 @@ def Authorize(
     client: Optional[LeluClient] = None,
 ) -> Callable:
     """
-    FastAPI dependency factory that calls the Prism engine's ``/v1/agent/authorize``
+    FastAPI dependency factory that calls the Lelu engine's ``/v1/agent/authorize``
     endpoint and raises ``HTTP 403`` when the decision is not *allowed*.
 
     Parameters
@@ -60,7 +60,7 @@ def Authorize(
         HTTP header that carries the actor identifier (default: ``X-Actor``).
     client:
         Explicit ``LeluClient`` instance. Falls back to one built from
-        ``PRISM_BASE_URL`` / ``PRISM_API_KEY`` environment variables.
+        ``LELU_BASE_URL`` / ``LELU_API_KEY`` environment variables.
 
     Returns
     -------
@@ -69,10 +69,10 @@ def Authorize(
     """
 
     async def _dependency(request: Request) -> AgentAuthDecision:
-        prism = client or _get_default_client()
+        lelu = client or _get_default_client()
         actor = request.headers.get(actor_header, "anonymous")
         try:
-            decision = await prism.agent_authorize(
+            decision = await lelu.agent_authorize(
                 actor=actor,
                 action=action,
                 confidence=confidence,
@@ -80,7 +80,7 @@ def Authorize(
         except AuthEngineError as exc:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Prism engine error: {exc}",
+                detail=f"Lelu engine error: {exc}",
             ) from exc
 
         if not decision.allowed:

@@ -2,16 +2,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prism-platform
+  name: lelu-platform
 spec:
   replicas: {{ .Values.platform.replicaCount }}
   selector:
     matchLabels:
-      app: prism-platform
+      app: lelu-platform
   template:
     metadata:
       labels:
-        app: prism-platform
+        app: lelu-platform
     spec:
       containers:
         - name: platform
@@ -25,12 +25,12 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: prism-secrets
+                  name: lelu-secrets
                   key: platformDatabaseUrl
             - name: PLATFORM_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: prism-secrets
+                  name: lelu-secrets
                   key: platformApiKey
             - name: OIDC_ISSUER_URL
               value: {{ .Values.platform.env.OIDC_ISSUER_URL | quote }}
@@ -60,10 +60,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prism-platform
+  name: lelu-platform
 spec:
   selector:
-    app: prism-platform
+    app: lelu-platform
   ports:
     - port: {{ .Values.platform.servicePort }}
       targetPort: {{ .Values.platform.port }}

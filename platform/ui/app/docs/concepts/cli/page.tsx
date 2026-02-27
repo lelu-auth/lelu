@@ -7,33 +7,33 @@ export default function DocsConceptCli() {
   const [configTab, setConfigTab] = useState<"SSE (Docker)" | "stdio (npx)" | "Claude Code">("SSE (Docker)");
 
   const quickAddCommands: Record<typeof quickTab, string> = {
-    Cursor: "npx @prism/mcp add --cursor",
-    "Claude Code": "npx @prism/mcp add --claude",
-    "Open Code": "npx @prism/mcp add --open-code",
-    Manual: "npx @prism/mcp start --transport stdio --engine-url http://localhost:8080 --api-key YOUR_API_KEY",
+    Cursor: "npx @lelu/mcp add --cursor",
+    "Claude Code": "npx @lelu/mcp add --claude",
+    "Open Code": "npx @lelu/mcp add --open-code",
+    Manual: "npx @lelu/mcp start --transport stdio --engine-url http://localhost:8080 --api-key YOUR_API_KEY",
   };
 
   const configSnippets: Record<typeof configTab, string> = {
     "SSE (Docker)": `{
   "mcpServers": {
-    "prism": {
+    "lelu": {
       "url": "http://localhost:3001/sse"
     }
   }
 }`,
     "stdio (npx)": `{
   "mcpServers": {
-    "prism": {
+    "lelu": {
       "command": "npx",
-      "args": ["@prism/mcp", "start", "--transport", "stdio"],
+      "args": ["@lelu/mcp", "start", "--transport", "stdio"],
       "env": {
-        "PRISM_ENGINE_URL": "http://localhost:8080",
-        "PRISM_API_KEY": "YOUR_API_KEY"
+        "LELU_ENGINE_URL": "http://localhost:8080",
+        "LELU_API_KEY": "YOUR_API_KEY"
       }
     }
   }
 }`,
-    "Claude Code": "claude mcp add --transport http prism http://localhost:3001/sse",
+    "Claude Code": "claude mcp add --transport http lelu http://localhost:3001/sse",
   };
 
   return (
@@ -45,7 +45,7 @@ export default function DocsConceptCli() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">CLI &amp; MCP</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          The Prism CLI provides tools for local development, policy testing, and running the Model Context Protocol (MCP) server for seamless integration with AI assistants like Cursor and Claude.
+          The Lelu CLI provides tools for local development, policy testing, and running the Model Context Protocol (MCP) server for seamless integration with AI assistants like Cursor and Claude.
         </p>
       </div>
 
@@ -61,7 +61,7 @@ export default function DocsConceptCli() {
               <span className="text-xs text-zinc-500 font-mono">terminal</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300">
-              {`npm install -g @prism/cli`}
+              {`npm install -g @lelu/cli`}
             </pre>
           </div>
         </section>
@@ -69,13 +69,13 @@ export default function DocsConceptCli() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Model Context Protocol (MCP)</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Prism ships a standalone MCP server (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">@prism/mcp</code>) that exposes policy-aware authorization tools over both stdio (for local AI clients) and HTTP/SSE (for networked or Docker deployments). When an AI assistant calls a tool, Prism evaluates your Rego policy and can pause execution to request human approval.
+            Lelu ships a standalone MCP server (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">@lelu/mcp</code>) that exposes policy-aware authorization tools over both stdio (for local AI clients) and HTTP/SSE (for networked or Docker deployments). When an AI assistant calls a tool, Lelu evaluates your Rego policy and can pause execution to request human approval.
           </p>
 
           {/* Docker (recommended) */}
           <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Docker (recommended)</h3>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-            The MCP server is included in the Prism <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">docker-compose.yml</code>. Start it alongside the engine:
+            The MCP server is included in the Lelu <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">docker-compose.yml</code>. Start it alongside the engine:
           </p>
 
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-4">
@@ -87,7 +87,7 @@ export default function DocsConceptCli() {
 
 # Health check
 curl http://localhost:3001/healthz
-# {"status":"ok","service":"prism-mcp"}
+# {"status":"ok","service":"lelu-mcp"}
 
 # SSE endpoint for AI clients
 # http://localhost:3001/sse`}
@@ -95,7 +95,7 @@ curl http://localhost:3001/healthz
           </div>
 
           <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-sm">
-            The container connects to the engine over the internal Docker network (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">http://engine:8080</code>) and listens on port <strong>3001</strong>. Configure your API key via the <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">PRISM_API_KEY</code> environment variable.
+            The container connects to the engine over the internal Docker network (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">http://engine:8080</code>) and listens on port <strong>3001</strong>. Configure your API key via the <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">LELU_API_KEY</code> environment variable.
           </p>
 
           {/* npx / local */}
@@ -109,7 +109,7 @@ curl http://localhost:3001/healthz
               <span className="text-xs text-zinc-500 font-mono">terminal</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`npx @prism/mcp start --transport stdio \\
+              {`npx @lelu/mcp start --transport stdio \\
   --engine-url http://localhost:8080 \\
   --api-key YOUR_API_KEY`}
             </pre>
@@ -178,11 +178,11 @@ curl http://localhost:3001/healthz
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
                 {[
-                  ["prism_agent_authorize", "Confidence-aware authorization for an AI agent action"],
-                  ["prism_authorize", "Authorize a human user action against the active policy"],
-                  ["prism_mint_token", "Issue a short-lived JIT token for a specific action"],
-                  ["prism_revoke_token", "Revoke a previously issued token"],
-                  ["prism_health", "Check that the Prism engine is reachable"],
+                  ["lelu_agent_authorize", "Confidence-aware authorization for an AI agent action"],
+                  ["lelu_authorize", "Authorize a human user action against the active policy"],
+                  ["lelu_mint_token", "Issue a short-lived JIT token for a specific action"],
+                  ["lelu_revoke_token", "Revoke a previously issued token"],
+                  ["lelu_health", "Check that the Lelu engine is reachable"],
                 ].map(([tool, desc]) => (
                   <tr key={tool}>
                     <td className="px-4 py-3 font-mono text-blue-600 dark:text-blue-400 whitespace-nowrap">{tool}</td>
@@ -206,7 +206,7 @@ curl http://localhost:3001/healthz
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
               {`# Evaluate a policy against a mock request
-prism policy eval ./policy.rego \\
+lelu policy eval ./policy.rego \\
   --action "delete_db" \\
   --confidence 0.85
 

@@ -40,7 +40,7 @@ async def test_secure_node_allowed():
 
     result = await my_node({"confidence": 0.95})
     assert result["result"] == "done"
-    assert result.get("prism_denied") is False
+    assert result.get("lelu_denied") is False
 
 
 @pytest.mark.asyncio

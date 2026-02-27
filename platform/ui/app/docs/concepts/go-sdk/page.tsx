@@ -8,7 +8,7 @@ export default function DocsConceptGoSDK() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Go SDK</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          The Go SDK provides a typed client for Prism Engine so backend services and microservices can perform confidence-aware authorization, mint JIT tokens, and run health checks with minimal boilerplate.
+          The Go SDK provides a typed client for Lelu Engine so backend services and microservices can perform confidence-aware authorization, mint JIT tokens, and run health checks with minimal boilerplate.
         </p>
       </div>
 
@@ -20,7 +20,7 @@ export default function DocsConceptGoSDK() {
               <span className="text-xs text-zinc-500 font-mono">terminal</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-{`go get github.com/Abenezer0923/Prism/sdk/go`}
+{`go get github.com/Abenezer0923/Lelu/sdk/go`}
             </pre>
           </div>
         </section>
@@ -38,16 +38,16 @@ import (
   "context"
   "fmt"
 
-  prism "github.com/Abenezer0923/Prism/sdk/go"
+  lelu "github.com/Abenezer0923/Lelu/sdk/go"
 )
 
 func main() {
-  client := prism.NewClient(prism.ClientConfig{
+  client := lelu.NewClient(lelu.ClientConfig{
     BaseURL: "http://localhost:8082",
     APIKey:  "your-api-key",
   })
 
-  decision, err := client.AgentAuthorize(context.Background(), prism.AgentAuthRequest{
+  decision, err := client.AgentAuthorize(context.Background(), lelu.AgentAuthRequest{
     Actor:      "invoice_bot",
     Action:     "approve_refunds",
     Confidence: 0.92,

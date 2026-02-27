@@ -68,7 +68,7 @@ export default function DocsPage() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600 dark:text-purple-400"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           </div>
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-2">Installation</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Get started with Prism in less than 5 minutes.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Get started with Lelu in less than 5 minutes.</p>
         </a>
 
         <a href="/docs/concepts/architecture" className="group p-6 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all">
@@ -76,13 +76,13 @@ export default function DocsPage() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2v10l8.66 5"/></svg>
           </div>
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-2">Architecture</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Learn how Prism works under the hood.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Learn how Lelu works under the hood.</p>
         </a>
       </div>
 
       <div className="h-px w-full bg-zinc-200 dark:bg-white/10 my-10"></div>
 
-      <h2 id="why-prism" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">The Problem with Traditional Auth</h2>
+      <h2 id="why-lelu" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">The Problem with Traditional Auth</h2>
       <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
         Traditional authorization systems (like RBAC or ABAC) are binary: a user either has permission or they don't. But AI agents operate on probabilities. When an AI agent tries to execute a trade, delete a database, or send an email, you don't just want to know <em>if</em> it has permission—you want to know <em>how confident</em> it is.
       </p>
@@ -137,7 +137,7 @@ export default function DocsPage() {
               <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center text-purple-400">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
-              <div className="text-sm text-zinc-300">Prism Engine evaluates Rego policy</div>
+              <div className="text-sm text-zinc-300">Lelu Engine evaluates Rego policy</div>
             </div>
             <div className="flex justify-center">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-600"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>

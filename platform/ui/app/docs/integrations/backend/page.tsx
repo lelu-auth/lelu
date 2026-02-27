@@ -8,7 +8,7 @@ export default function DocsIntegrationsBackend() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Backend Integration</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Integrate Prism into any backend service. The Engine exposes a standard REST API, so it works with any language or framework. This guide covers Express, FastAPI, and raw Go.
+          Integrate Lelu into any backend service. The Engine exposes a standard REST API, so it works with any language or framework. This guide covers Express, FastAPI, and raw Go.
         </p>
       </div>
 
@@ -27,19 +27,19 @@ export default function DocsIntegrationsBackend() {
 
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">middleware/prism.ts</span>
+              <span className="text-xs text-zinc-500 font-mono">middleware/lelu.ts</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismClient } from "lelu";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { LeluClient } from "lelu";
 import type { Request, Response, NextFunction } from "express";
 
-const prism = new PrismClient({
-  baseUrl: process.env.PRISM_URL!,
-  apiKey: process.env.PRISM_API_KEY!,
+const lelu = new LeluClient({
+  baseUrl: process.env.LELU_URL!,
+  apiKey: process.env.LELU_API_KEY!,
 });
 
-export function prismGate(action: string) {
+export function leluGate(action: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const decision = await prism.authorize({
+    const decision = await lelu.authorize({
       action,
       confidence: req.body.confidence ?? 1.0,
     });
@@ -49,7 +49,7 @@ export function prismGate(action: string) {
     }
 
     if (!decision.allowed) {
-      return res.status(403).json({ error: "Action not authorized by Prism" });
+      return res.status(403).json({ error: "Action not authorized by Lelu" });
     }
 
     next();
@@ -57,7 +57,7 @@ export function prismGate(action: string) {
 }
 
 // Usage:
-// app.post("/refund", prismGate("issue_refund"), refundHandler);`}</pre>
+// app.post("/refund", leluGate("issue_refund"), refundHandler);`}</pre>
           </div>
         </section>
 
@@ -74,29 +74,29 @@ export function prismGate(action: string) {
 
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">dependencies/prism.py</span>
+              <span className="text-xs text-zinc-500 font-mono">dependencies/lelu.py</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`from fastapi import HTTPException, Depends
-from auth_pe import PrismClient
+from auth_pe import LeluClient
 import os
 
-prism = PrismClient(
-    base_url=os.environ["PRISM_URL"],
-    api_key=os.environ["PRISM_API_KEY"],
+lelu = LeluClient(
+    base_url=os.environ["LELU_URL"],
+    api_key=os.environ["LELU_API_KEY"],
 )
 
-def require_prism(action: str):
+def require_lelu(action: str):
     async def dependency(confidence: float = 1.0):
-        decision = prism.authorize(action=action, confidence=confidence)
+        decision = lelu.authorize(action=action, confidence=confidence)
         if decision.requires_human_review:
             decision.wait()
         if not decision.allowed:
-            raise HTTPException(status_code=403, detail="Action denied by Prism")
+            raise HTTPException(status_code=403, detail="Action denied by Lelu")
     return Depends(dependency)
 
 # Usage:
 # @app.post("/delete-user")
-# async def delete_user(_=require_prism("delete_user")):
+# async def delete_user(_=require_lelu("delete_user")):
 #     ...`}</pre>
           </div>
         </section>
@@ -107,9 +107,9 @@ def require_prism(action: str):
 
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">prism/client.go</span>
+              <span className="text-xs text-zinc-500 font-mono">lelu/client.go</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`package prism
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`package lelu
 
 import (
     "bytes"

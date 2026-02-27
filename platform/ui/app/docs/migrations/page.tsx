@@ -8,14 +8,14 @@ export default function DocsMigrations() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Database Migrations</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism manages its own schema through idempotent SQL statements that run at Platform startup. This page explains the migration strategy, how to apply manual changes, and how to roll back safely.
+          Lelu manages its own schema through idempotent SQL statements that run at Platform startup. This page explains the migration strategy, how to apply manual changes, and how to roll back safely.
         </p>
       </div>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3 mb-10">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p className="text-sm text-blue-800 dark:text-blue-300">
-          Prism does not use a migration framework like Flyway or golang-migrate. Migrations are idempotent <code className="font-mono">ALTER TABLE ... IF NOT EXISTS</code> statements embedded in the Platform source.
+          Lelu does not use a migration framework like Flyway or golang-migrate. Migrations are idempotent <code className="font-mono">ALTER TABLE ... IF NOT EXISTS</code> statements embedded in the Platform source.
         </p>
       </div>
 
@@ -54,7 +54,7 @@ migrations := []string{
                 },
                 {
                   title: "Verify",
-                  code: `docker compose exec postgres psql -U prism -c\n  "\\d your_table"`,
+                  code: `docker compose exec postgres psql -U lelu -c\n  "\\d your_table"`,
                   lang: "terminal",
                 },
               ].map((step, i) => (
@@ -95,7 +95,7 @@ migrations := []string{
 
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Manual Rollback</h2>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-4">Since Prism auto-migrates forward only, rollbacks must be done manually. Always back up before migrating.</p>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">Since Lelu auto-migrates forward only, rollbacks must be done manually. Always back up before migrating.</p>
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">Restore from backup</span>

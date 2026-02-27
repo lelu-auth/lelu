@@ -8,7 +8,7 @@ export default function DocsConceptClient() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Client SDKs</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism offers official client SDKs for TypeScript, Python, and Go. These SDKs provide a type-safe, ergonomic way to interact with the Prism Engine from agents and backend services.
+          Lelu offers official client SDKs for TypeScript, Python, and Go. These SDKs provide a type-safe, ergonomic way to interact with the Lelu Engine from agents and backend services.
         </p>
       </div>
 
@@ -43,15 +43,15 @@ export default function DocsConceptClient() {
               <span className="text-xs text-zinc-500 font-mono">Usage</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`import { PrismClient } from "lelu";
+              {`import { LeluClient } from "lelu";
 
-const prism = new PrismClient({
+const lelu = new LeluClient({
   baseUrl: "http://localhost:8082",
-  apiKey: process.env.PRISM_API_KEY,
+  apiKey: process.env.LELU_API_KEY,
 });
 
 // This call will block if human approval is required
-const decision = await prism.authorize({
+const decision = await lelu.authorize({
   action: "delete_user",
   confidence: 0.75,
   waitForApproval: true // Default is true
@@ -81,14 +81,14 @@ if (decision.allowed) {
               <span className="text-xs text-zinc-500 font-mono">Usage</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`from lelu import PrismClient
+              {`from lelu import LeluClient
 
-prism = PrismClient(
+lelu = LeluClient(
     base_url="http://localhost:8082",
     api_key="YOUR_API_KEY"
 )
 
-decision = prism.authorize(
+decision = lelu.authorize(
     action="delete_user",
     confidence=0.75
 )
@@ -111,7 +111,7 @@ if decision.allowed:
               <span className="text-xs text-zinc-500 font-mono">Installation</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-{`go get github.com/Abenezer0923/Prism/sdk/go`}
+{`go get github.com/Abenezer0923/Lelu/sdk/go`}
             </pre>
           </div>
 
@@ -126,16 +126,16 @@ import (
   "context"
   "fmt"
 
-  prism "github.com/Abenezer0923/Prism/sdk/go"
+  lelu "github.com/Abenezer0923/Lelu/sdk/go"
 )
 
 func main() {
-  client := prism.NewClient(prism.ClientConfig{
+  client := lelu.NewClient(lelu.ClientConfig{
     BaseURL: "http://localhost:8082",
     APIKey:  "your-api-key",
   })
 
-  decision, err := client.AgentAuthorize(context.Background(), prism.AgentAuthRequest{
+  decision, err := client.AgentAuthorize(context.Background(), lelu.AgentAuthRequest{
     Actor:      "invoice_bot",
     Action:     "approve_refunds",
     Confidence: 0.92,

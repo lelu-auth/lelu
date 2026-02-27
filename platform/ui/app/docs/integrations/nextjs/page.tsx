@@ -8,7 +8,7 @@ export default function DocsIntegrationsNextjs() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Next.js</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Integrate Prism into a Next.js application using Route Handlers (App Router) or API Routes (Pages Router). This guide also covers adding the approval UI widget to your dashboard.
+          Integrate Lelu into a Next.js application using Route Handlers (App Router) or API Routes (Pages Router). This guide also covers adding the approval UI widget to your dashboard.
         </p>
       </div>
 
@@ -32,18 +32,18 @@ export default function DocsIntegrationsNextjs() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">app/api/agent-action/route.ts</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismClient } from "lelu";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { LeluClient } from "lelu";
 import { NextResponse } from "next/server";
 
-const prism = new PrismClient({
-  baseUrl: process.env.PRISM_ENGINE_URL!,
-  apiKey: process.env.PRISM_API_KEY!,
+const lelu = new LeluClient({
+  baseUrl: process.env.LELU_ENGINE_URL!,
+  apiKey: process.env.LELU_API_KEY!,
 });
 
 export async function POST(request: Request) {
   const { action, confidence } = await request.json();
 
-  const decision = await prism.authorize({ action, confidence });
+  const decision = await lelu.authorize({ action, confidence });
 
   if (decision.requiresHumanReview) {
     // Return 202 and let the client poll for approval
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Approval UI Component</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            The Prism React SDK includes a pre-built <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">PrismApprovalUI</code> component you can embed in your admin dashboard. It polls the engine for pending approvals.
+            The Lelu React SDK includes a pre-built <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">LeluApprovalUI</code> component you can embed in your admin dashboard. It polls the engine for pending approvals.
           </p>
 
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
@@ -74,15 +74,15 @@ export async function POST(request: Request) {
               <span className="text-xs text-zinc-500 font-mono">app/admin/approvals/page.tsx</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`"use client";
-import { PrismApprovalUI } from "lelu/react";
+import { LeluApprovalUI } from "lelu/react";
 
 export default function ApprovalsPage() {
   return (
     <main className="p-8">
       <h1 className="text-2xl font-bold mb-6">Pending AI Approvals</h1>
-      <PrismApprovalUI
-        engineUrl={process.env.NEXT_PUBLIC_PRISM_URL!}
-        apiKey={process.env.NEXT_PUBLIC_PRISM_KEY!}
+      <LeluApprovalUI
+        engineUrl={process.env.NEXT_PUBLIC_LELU_URL!}
+        apiKey={process.env.NEXT_PUBLIC_LELU_KEY!}
         onApprove={(id) => console.log("approved", id)}
         onDeny={(id) => console.log("denied", id)}
       />
@@ -99,12 +99,12 @@ export default function ApprovalsPage() {
               <span className="text-xs text-zinc-500 font-mono">.env.local</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose">{`# Server-side (Engine API — keep secret)
-PRISM_ENGINE_URL=http://localhost:8082
-PRISM_API_KEY=your_engine_api_key
+LELU_ENGINE_URL=http://localhost:8082
+LELU_API_KEY=your_engine_api_key
 
 # Client-side (if using the approval UI widget)
-NEXT_PUBLIC_PRISM_URL=http://localhost:8082
-NEXT_PUBLIC_PRISM_KEY=your_public_key`}</pre>
+NEXT_PUBLIC_LELU_URL=http://localhost:8082
+NEXT_PUBLIC_LELU_KEY=your_public_key`}</pre>
           </div>
         </section>
 

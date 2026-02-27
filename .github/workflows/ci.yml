@@ -90,7 +90,7 @@ jobs:
           context: .
           file: engine/Dockerfile
           push: false
-          tags: prism/engine:ci
+          tags: lelu/engine:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -167,11 +167,11 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB:       prism
-          POSTGRES_USER:     prism
-          POSTGRES_PASSWORD: prism-ci-secret
+          POSTGRES_DB:       lelu
+          POSTGRES_USER:     lelu
+          POSTGRES_PASSWORD: lelu-ci-secret
         options: >-
-          --health-cmd "pg_isready -U prism"
+          --health-cmd "pg_isready -U lelu"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -196,7 +196,7 @@ jobs:
       - name: Run tests
         working-directory: platform
         env:
-          DATABASE_URL: "postgres://prism:prism-ci-secret@localhost:5432/prism?sslmode=disable"
+          DATABASE_URL: "postgres://lelu:lelu-ci-secret@localhost:5432/lelu?sslmode=disable"
           PLATFORM_API_KEY: "ci-key"
         run: go test -race -v ./...
 
@@ -244,13 +244,13 @@ jobs:
           version: v3.14.4
 
       - name: Helm lint
-        run: helm lint ./helm/prism
+        run: helm lint ./helm/lelu
 
       - name: Helm template (default values)
-        run: helm template prism ./helm/prism > /tmp/prism-default.yaml
+        run: helm template lelu ./helm/lelu > /tmp/lelu-default.yaml
 
       - name: Helm template (production values)
-        run: helm template prism ./helm/prism -f ./helm/prism/values-production.yaml > /tmp/prism-prod.yaml
+        run: helm template lelu ./helm/lelu -f ./helm/lelu/values-production.yaml > /tmp/lelu-prod.yaml
 
   # ── Security scan ────────────────────────────────────────────────────────────
   security:

@@ -1,0 +1,61 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/release-please-config.json
+          manifest-file: .github/release-please-manifest.json
+
+      # Publish TypeScript SDK to npm
+      - name: Checkout
+        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Build and Publish TypeScript SDK
+        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
+        working-directory: sdk/typescript
+        run: |
+          npm ci
+          npm run build
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Publish Python SDK to PyPI
+      - name: Setup Python
+        if: ${{ steps.release.outputs['sdk/python--release_created'] }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build and Publish Python SDK
+        if: ${{ steps.release.outputs['sdk/python--release_created'] }}
+        working-directory: sdk/python
+        run: |
+          pip install build twine
+          python -m build
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}

@@ -8,7 +8,7 @@ export default function DocsApiAgent() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Agent API</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Endpoints for managing AI agents within Prism. Register new agents and retrieve their reputation scores.
+          Endpoints for managing AI agents within Lelu. Register new agents and retrieve their reputation scores.
         </p>
       </div>
 

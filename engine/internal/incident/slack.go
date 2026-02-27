@@ -6,8 +6,8 @@ import "fmt"
 // The resulting map can be JSON-serialised and posted to a Slack Incoming
 // Webhook URL to produce a rich card with Approve / Deny buttons.
 //
-// engineURL should be the public base URL of the Prism engine sidecar,
-// e.g. "https://prism.yourcompany.com". It is used to build the button
+// engineURL should be the public base URL of the Lelu engine sidecar,
+// e.g. "https://lelu.yourcompany.com". It is used to build the button
 // action URLs that link directly to the HITL queue endpoints.
 func FormatSlack(event Event, engineURL string) map[string]any {
 	severityEmoji := "⚠️"
@@ -20,7 +20,7 @@ func FormatSlack(event Event, engineURL string) map[string]any {
 		severityEmoji = "🟡"
 	}
 
-	headerText := fmt.Sprintf("%s Prism: %s", severityEmoji, humanEventType(event.Type))
+	headerText := fmt.Sprintf("%s Lelu: %s", severityEmoji, humanEventType(event.Type))
 
 	confidenceText := "N/A"
 	if event.ConfidenceUsed > 0 {
@@ -98,7 +98,7 @@ func FormatSlack(event Event, engineURL string) map[string]any {
 		"elements": []map[string]any{
 			{
 				"type": "mrkdwn",
-				"text": fmt.Sprintf("Prism · %s · %s", event.Decision, event.Timestamp),
+				"text": fmt.Sprintf("Lelu · %s · %s", event.Decision, event.Timestamp),
 			},
 		},
 	})

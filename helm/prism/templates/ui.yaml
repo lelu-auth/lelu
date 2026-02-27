@@ -2,16 +2,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prism-ui
+  name: lelu-ui
 spec:
   replicas: {{ .Values.ui.replicaCount }}
   selector:
     matchLabels:
-      app: prism-ui
+      app: lelu-ui
   template:
     metadata:
       labels:
-        app: prism-ui
+        app: lelu-ui
     spec:
       containers:
         - name: ui
@@ -25,7 +25,7 @@ spec:
             - name: PLATFORM_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: prism-secrets
+                  name: lelu-secrets
                   key: uiPlatformApiKey
           readinessProbe:
             httpGet:
@@ -45,10 +45,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prism-ui
+  name: lelu-ui
 spec:
   selector:
-    app: prism-ui
+    app: lelu-ui
   ports:
     - port: {{ .Values.ui.servicePort }}
       targetPort: {{ .Values.ui.port }}

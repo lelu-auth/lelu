@@ -11,13 +11,13 @@ export class SemanticPolicyGenerator {
    * Converts a natural language description into a deterministic Rego policy.
    * 
    * @param description Natural language description of the policy (e.g., "Don't let the bot refund more than $50 unless approved by a finance manager.")
-   * @param packageName The Rego package name (default: "prism.authz")
+   * @param packageName The Rego package name (default: "lelu.authz")
    * @returns The generated Rego policy string
    */
-  async generateRegoPolicy(description: string, packageName: string = "prism.authz"): Promise<string> {
+  async generateRegoPolicy(description: string, packageName: string = "lelu.authz"): Promise<string> {
     const prompt = `
 You are an expert in Open Policy Agent (OPA) Rego policies.
-Your task is to convert the following natural language description into a valid, deterministic Rego policy for the Prism Auth Permission Engine.
+Your task is to convert the following natural language description into a valid, deterministic Rego policy for the Lelu Auth Permission Engine.
 
 The policy must output an object with the following structure:
 {

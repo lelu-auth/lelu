@@ -3,16 +3,16 @@
 //
 // Each flush creates one gzip-compressed NDJSON object with a timestamped key:
 //
-//	prism/audit/2026/02/19/150405-<uuid>.ndjson.gz
+//	lelu/audit/2026/02/19/150405-<uuid>.ndjson.gz
 //
 // The sink is designed to be plugged into audit.New():
 //
-//	import "github.com/prism/engine/internal/audit/s3sink"
+//	import "github.com/lelu/engine/internal/audit/s3sink"
 //
 //	sink, err := s3sink.New(s3sink.Config{
 //	    Bucket:    os.Getenv("AUDIT_S3_BUCKET"),
 //	    Region:    os.Getenv("AWS_REGION"),
-//	    KeyPrefix: "prism/audit",
+//	    KeyPrefix: "lelu/audit",
 //	})
 //	writer := audit.New(audit.Config{Sink: sink})
 package s3sink
@@ -40,7 +40,7 @@ type Config struct {
 	// environment credentials that already specify a region.
 	Region string
 
-	// KeyPrefix is the S3 key prefix. Defaults to "prism/audit".
+	// KeyPrefix is the S3 key prefix. Defaults to "lelu/audit".
 	KeyPrefix string
 
 	// Endpoint overrides the S3 endpoint URL (for MinIO / R2 / localstack).
@@ -59,7 +59,7 @@ type Config struct {
 
 func (c *Config) defaults() {
 	if c.KeyPrefix == "" {
-		c.KeyPrefix = "prism/audit"
+		c.KeyPrefix = "lelu/audit"
 	}
 	if c.FlushInterval <= 0 {
 		c.FlushInterval = 60 * time.Second

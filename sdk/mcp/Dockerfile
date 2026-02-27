@@ -24,7 +24,7 @@ COPY package.json ./
 # Default to HTTP transport when running in Docker
 ENV MCP_TRANSPORT=http
 ENV MCP_PORT=3001
-ENV PRISM_ENGINE_URL=http://engine:8080
+ENV LELU_ENGINE_URL=http://engine:8080
 
 EXPOSE 3001
 

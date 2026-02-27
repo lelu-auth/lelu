@@ -205,4 +205,4 @@ class LeluClient:
 
 
 # Backward compatibility alias.
-PrismClient = LeluClient
+LeluClient = LeluClient

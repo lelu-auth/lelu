@@ -4,7 +4,7 @@
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Active Policies</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          Manage your confidence-aware authorization rules. Policies are written in Rego and evaluated by the Prism Engine.
+          Manage your confidence-aware authorization rules. Policies are written in Rego and evaluated by the Lelu Engine.
         </p>
       </div>
 
@@ -37,7 +37,7 @@
         <div className="p-6 font-mono text-sm overflow-x-auto bg-white dark:bg-black">
           <pre className="text-zinc-800 dark:text-zinc-300 leading-relaxed">
             <code>
-<span className="text-zinc-500 dark:text-zinc-500">package</span> <span className="text-blue-600 dark:text-blue-400">prism.auth</span>
+<span className="text-zinc-500 dark:text-zinc-500">package</span> <span className="text-blue-600 dark:text-blue-400">lelu.auth</span>
 
 <span className="text-zinc-500 dark:text-zinc-500">import</span> <span className="text-blue-600 dark:text-blue-400">future.keywords.in</span>
 

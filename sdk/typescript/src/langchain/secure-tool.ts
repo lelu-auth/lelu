@@ -1,7 +1,7 @@
 /**
  * SecureTool — LangChain tool wrapper with Confidence-Aware Auth
  *
- * Intercepts every tool call and gates it through the Prism engine before
+ * Intercepts every tool call and gates it through the Lelu engine before
  * execution. Returns a structured refusal string when denied so the LLM can
  * self-correct, queue for human review, or escalate.
  *
@@ -14,7 +14,7 @@
  *   description: 'Processes a customer refund',
  *   actor: 'invoice_bot',
  *   requiredPermission: 'invoice:refund',
- *   client: prismClient,
+ *   client: leluClient,
  *   func: async (input) => {
  *     // your tool implementation
  *     return `Refund processed for ${input}`;
@@ -44,7 +44,7 @@ export interface SecureToolOptions {
   name: string;
   /** Human-readable description forwarded to the LLM. */
   description: string;
-  /** The Prism agent scope / actor name. */
+  /** The Lelu agent scope / actor name. */
   actor: string;
   /** The permission string being checked (e.g. "invoice:refund"). */
   requiredPermission: string;
@@ -81,7 +81,7 @@ export interface ToolCallResult {
 // ─── SecureTool ───────────────────────────────────────────────────────────────
 
 /**
- * SecureTool wraps a tool function with Prism's Confidence-Aware Auth gate.
+ * SecureTool wraps a tool function with Lelu's Confidence-Aware Auth gate.
  *
  * Implements the LangChain Tool interface (name + description + invoke)
  * so it can be dropped into any LangChain agent tool array:
@@ -104,7 +104,7 @@ export class SecureTool {
   /**
    * invoke — LangChain StructuredTool / DynamicTool compatible entry point.
    *
-   * 1. Calls Prism `agentAuthorize` with the confidence score
+   * 1. Calls Lelu `agentAuthorize` with the confidence score
    * 2a. Allowed → runs the wrapped tool function
    * 2b. Requires human review → returns structured "pending" message
    * 2c. Denied → returns structured refusal string (LLM can self-correct)
@@ -115,7 +115,7 @@ export class SecureTool {
       return result.output;
     }
     if (this.opts.throwOnDeny) {
-      throw new Error(`[Prism] Tool "${this.name}" denied: ${result.reason}`);
+      throw new Error(`[Lelu] Tool "${this.name}" denied: ${result.reason}`);
     }
     return result.output; // structured refusal or pending message
   }
@@ -149,7 +149,7 @@ export class SecureTool {
         },
       });
     } catch (err) {
-      const msg = `[Prism] Authorization check failed for "${this.name}": ${String(err)}`;
+      const msg = `[Lelu] Authorization check failed for "${this.name}": ${String(err)}`;
       if (throwOnDeny) throw new Error(msg);
       return {
         allowed: false,
@@ -162,7 +162,7 @@ export class SecureTool {
     // Human review required — queue and return pending message.
     if (decision.requiresHumanReview) {
       const msg =
-        `[Prism] Action "${this.name}" is queued for human review. ` +
+        `[Lelu] Action "${this.name}" is queued for human review. ` +
         `Reason: ${decision.reason}. Please wait for approval before proceeding.`;
       return {
         allowed: false,
@@ -175,7 +175,7 @@ export class SecureTool {
     // Hard deny — return structured refusal.
     if (!decision.allowed) {
       const msg =
-        `[Prism] Action "${this.name}" was denied. ` +
+        `[Lelu] Action "${this.name}" was denied. ` +
         `Reason: ${decision.reason}. ` +
         `Downgraded scope: ${decision.downgradedScope ?? "none"}.`;
       return {

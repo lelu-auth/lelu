@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## Prism OSS Release"
+            echo "## Lelu OSS Release"
             echo ""
             echo "### Artifacts"
             echo "- prizm-engine-linux-amd64"

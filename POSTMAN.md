@@ -1,4 +1,4 @@
-# Prism — Postman Testing Guide
+# Lelu — Postman Testing Guide
 
 > **How to test the Auth Permission Engine API and understand what each endpoint does**
 
@@ -20,18 +20,18 @@
    ```
    Expected response:
    ```json
-  { "status": "ok", "service": "prism-engine" }
+  { "status": "ok", "service": "lelu-engine" }
    ```
 
 ---
 
 ## Project Overview in 60 Seconds
 
-Prism is a **policy engine that guards AI agent actions**. Instead of just checking "does this user have permission?", it also asks:
+Lelu is a **policy engine that guards AI agent actions**. Instead of just checking "does this user have permission?", it also asks:
 
 > *"How confident is the AI about what it's doing — and is that confidence high enough to act?"*
 
-### The 3 things Prism does
+### The 3 things Lelu does
 
 | Concept | What it means |
 |---|---|
@@ -88,7 +88,7 @@ GET {{base_url}}/healthz
 ```json
 {
   "status": "ok",
-  "service": "prism-engine"
+  "service": "lelu-engine"
 }
 ```
 
@@ -145,7 +145,7 @@ POST {{base_url}}/v1/authorize
 
 ### 3. Agent Authorization (`/v1/agent/authorize`) ★
 
-**Purpose:** Check if an **AI agent** is allowed to perform an action, gated by its confidence score. This is Prism's core differentiator.
+**Purpose:** Check if an **AI agent** is allowed to perform an action, gated by its confidence score. This is Lelu's core differentiator.
 
 ```
 POST {{base_url}}/v1/agent/authorize
@@ -417,7 +417,7 @@ You can save all requests above as a Postman Collection:
 
 1. In Postman: **File → Import → Raw text**
 2. Paste any of the curl examples from the `README.md`
-3. Or manually create a collection named **"Prism Engine"** with a folder per section above
+3. Or manually create a collection named **"Lelu Engine"** with a folder per section above
 
 ---
 

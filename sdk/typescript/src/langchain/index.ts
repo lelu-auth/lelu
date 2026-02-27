@@ -1,7 +1,7 @@
 /**
  * LangChain middleware for the Auth Permission Engine.
  *
- * SecureTool wraps any LangChain-compatible tool and enforces Prism
+ * SecureTool wraps any LangChain-compatible tool and enforces Lelu
  * authorization *before* the tool function runs. It works with:
  *   - LangChain.js (@langchain/core StructuredTool / DynamicTool)
  *   - Any object that exposes name, description, and an invoke/call method.

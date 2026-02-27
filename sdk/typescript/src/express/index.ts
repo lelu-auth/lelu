@@ -15,12 +15,12 @@ export interface AuthorizeOptions {
 }
 
 /**
- * Express middleware factory that calls the Prism engine and either calls
+ * Express middleware factory that calls the Lelu engine and either calls
  * `next()` (allowed) or returns a 403 JSON response (denied / human_review).
  *
  * ```ts
  * import express from "express";
- * import { authorize } from "@prism/sdk/express";
+ * import { authorize } from "@lelu/sdk/express";
  *
  * const app = express();
  * app.get("/sensitive", authorize("files.read", { confidence: 0.9 }), handler);
@@ -28,9 +28,9 @@ export interface AuthorizeOptions {
  */
 export function authorize(action: string, opts: AuthorizeOptions = {}): RequestHandler {
   const clientConfig: any = {
-    baseUrl: opts.baseUrl ?? process.env["PRISM_BASE_URL"] ?? "http://localhost:8080",
+    baseUrl: opts.baseUrl ?? process.env["LELU_BASE_URL"] ?? "http://localhost:8080",
   };
-  const apiKey = opts.apiKey ?? process.env["PRISM_API_KEY"];
+  const apiKey = opts.apiKey ?? process.env["LELU_API_KEY"];
   if (apiKey !== undefined) {
     clientConfig.apiKey = apiKey;
   }
@@ -39,7 +39,7 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
   const actorHeader = opts.actorHeader ?? "x-actor";
   const confidence = opts.confidence ?? 1.0;
 
-  return async function prismAuthorize(
+  return async function leluAuthorize(
     req: Request,
     res: Response,
     next: NextFunction
@@ -51,7 +51,7 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
 
       if (decision.allowed) {
         // Attach decision to request for downstream handlers
-        (req as Request & { prismDecision: typeof decision }).prismDecision = decision;
+        (req as Request & { leluDecision: typeof decision }).leluDecision = decision;
         next();
         return;
       }
@@ -65,7 +65,7 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
       });
     } catch (err) {
       res.status(503).json({
-        error: "prism_unavailable",
+        error: "lelu_unavailable",
         message: err instanceof Error ? err.message : String(err),
       });
     }

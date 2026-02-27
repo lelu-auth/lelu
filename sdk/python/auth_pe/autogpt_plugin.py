@@ -1,4 +1,4 @@
-"""AutoGPT plugin scaffold for Prism Auth Permission Engine."""
+"""AutoGPT plugin scaffold for Lelu Auth Permission Engine."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from .models import AgentAuthRequest, AgentContext
 
 
 @dataclass(slots=True)
-class PrismAutoGPTPlugin:
+class LeluAutoGPTPlugin:
     """
     Minimal plugin helper for AutoGPT-style tool execution guards.
 

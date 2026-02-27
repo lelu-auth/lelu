@@ -39,7 +39,7 @@ export default function DocsPluginsConfidence() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">policy/auth.rego</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`package prism.authz
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`package lelu.authz
 
 import future.keywords
 

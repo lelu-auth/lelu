@@ -21,7 +21,7 @@ func TestFormatSlack_RequiresHumanReview(t *testing.T) {
 		RequiresHumanReview: true,
 		Timestamp:           "2026-02-25T20:00:00Z",
 	}
-	engineURL := "https://prism.example.com"
+	engineURL := "https://lelu.example.com"
 
 	payload := incident.FormatSlack(evt, engineURL)
 
@@ -73,7 +73,7 @@ func TestFormatSlack_DeniedNoButtons(t *testing.T) {
 		Timestamp:           "2026-02-25T20:00:00Z",
 	}
 
-	payload := incident.FormatSlack(evt, "https://prism.example.com")
+	payload := incident.FormatSlack(evt, "https://lelu.example.com")
 	blocks, _ := payload["blocks"].([]map[string]any)
 
 	for _, b := range blocks {

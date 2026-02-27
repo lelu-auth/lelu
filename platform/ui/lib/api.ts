@@ -2,8 +2,8 @@
 
 const PLATFORM_URL = process.env.PLATFORM_URL ?? "http://localhost:9090";
 const API_KEY = process.env.PLATFORM_API_KEY ?? "change-me-in-production";
-const ENGINE_URL = process.env.PRISM_ENGINE_URL ?? "http://localhost:8082";
-const ENGINE_API_KEY = process.env.PRISM_API_KEY ?? "prism-dev-key";
+const ENGINE_URL = process.env.LELU_ENGINE_URL ?? "http://localhost:8082";
+const ENGINE_API_KEY = process.env.LELU_API_KEY ?? "lelu-dev-key";
 
 const headers = {
   "Content-Type": "application/json",

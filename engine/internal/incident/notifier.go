@@ -86,7 +86,7 @@ func NewFromEnv() *Notifier {
 	pagerDutyMode := envBool("INCIDENT_WEBHOOK_PAGERDUTY_MODE")
 	engineURL := os.Getenv("LELU_ENGINE_PUBLIC_URL")
 	if engineURL == "" {
-		engineURL = os.Getenv("PRISM_ENGINE_PUBLIC_URL") // backward compat
+		engineURL = os.Getenv("LELU_ENGINE_PUBLIC_URL") // backward compat
 	}
 	return New(Config{
 		WebhookURL:          os.Getenv("INCIDENT_WEBHOOK_URL"),

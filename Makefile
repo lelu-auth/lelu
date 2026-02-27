@@ -54,7 +54,7 @@ fmt:
 
 # ── Docker ────────────────────────────────────────────────────────────────────
 docker-build:
-	docker build -t prism/engine:latest -f engine/Dockerfile .
+	docker build -t lelu/engine:latest -f engine/Dockerfile .
 
 docker-up:
 	docker compose up --build -d

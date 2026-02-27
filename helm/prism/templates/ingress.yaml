@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: prism-ui
+  name: lelu-ui
 spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}
@@ -21,7 +21,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: prism-ui
+                name: lelu-ui
                 port:
                   number: {{ .Values.ui.servicePort }}
 {{- end }}

@@ -273,4 +273,4 @@ export class LeluClient {
 }
 
 /** Backward-compatible alias. Prefer {@link LeluClient}. */
-export const PrismClient = LeluClient;
+export const LeluClient = LeluClient;

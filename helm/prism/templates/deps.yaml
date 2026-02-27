@@ -2,16 +2,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prism-redis
+  name: lelu-redis
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prism-redis
+      app: lelu-redis
   template:
     metadata:
       labels:
-        app: prism-redis
+        app: lelu-redis
     spec:
       containers:
         - name: redis
@@ -24,10 +24,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prism-redis
+  name: lelu-redis
 spec:
   selector:
-    app: prism-redis
+    app: lelu-redis
   ports:
     - port: {{ .Values.redis.port }}
       targetPort: {{ .Values.redis.port }}
@@ -38,16 +38,16 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prism-postgres
+  name: lelu-postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prism-postgres
+      app: lelu-postgres
   template:
     metadata:
       labels:
-        app: prism-postgres
+        app: lelu-postgres
     spec:
       containers:
         - name: postgres
@@ -63,16 +63,16 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: prism-secrets
+                  name: lelu-secrets
                   key: postgresPassword
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prism-postgres
+  name: lelu-postgres
 spec:
   selector:
-    app: prism-postgres
+    app: lelu-postgres
   ports:
     - port: {{ .Values.postgres.port }}
       targetPort: {{ .Values.postgres.port }}

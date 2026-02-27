@@ -3,7 +3,7 @@ version: "1.0"
 # ─────────────────────────────────────────────────────────────────────────────
 # auth.yaml — Auth Permission Engine sample policy
 #
-# Mount this file at /etc/prism/auth.yaml inside the engine container, or
+# Mount this file at /etc/lelu/auth.yaml inside the engine container, or
 # point POLICY_PATH to its location.
 # ─────────────────────────────────────────────────────────────────────────────
 

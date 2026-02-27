@@ -55,7 +55,7 @@ describe("secureTool()", () => {
         expect(fakeTool.execute).toHaveBeenCalledWith({ invoiceId: "inv-001" }, undefined);
     });
 
-    it("returns PrismDeniedResult when denied", async () => {
+    it("returns LeluDeniedResult when denied", async () => {
         mockAgentAuthorize({
             allowed: false,
             reason: "hard deny — confidence too low",
@@ -81,7 +81,7 @@ describe("secureTool()", () => {
         expect(fakeTool.execute).not.toHaveBeenCalled();
     });
 
-    it("returns PrismDeniedResult with requiresHumanReview when review needed", async () => {
+    it("returns LeluDeniedResult with requiresHumanReview when review needed", async () => {
         mockAgentAuthorize({
             allowed: false,
             reason: "requires human approval",

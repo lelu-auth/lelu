@@ -5,10 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/lelu/engine/internal/fallback"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -29,16 +31,19 @@ type AgentClaims struct {
 
 // Service mints and validates agent-scoped JIT tokens.
 type Service struct {
-	signingKey []byte
-	rdb        *redis.Client
-	defaultTTL time.Duration
+	signingKey  []byte
+	rdb         *redis.Client
+	defaultTTL  time.Duration
+	memCache    *inMemoryCache
+	fallbackSvc *fallback.Strategy
 }
 
 // Config holds Service constructor options.
 type Config struct {
-	SigningKey string
-	RedisAddr  string
-	DefaultTTL time.Duration
+	SigningKey      string
+	RedisAddr       string
+	DefaultTTL      time.Duration
+	FallbackService *fallback.Strategy
 }
 
 // New creates a Service. If RedisAddr is empty, token revocation is in-memory
@@ -47,6 +52,7 @@ func New(cfg ...Config) *Service {
 	s := &Service{
 		signingKey: []byte("change-me-in-production"),
 		defaultTTL: defaultTTL,
+		memCache:   newInMemoryCache(),
 	}
 	if len(cfg) > 0 {
 		c := cfg[0]
@@ -59,6 +65,7 @@ func New(cfg ...Config) *Service {
 		if c.RedisAddr != "" {
 			s.rdb = redis.NewClient(&redis.Options{Addr: c.RedisAddr})
 		}
+		s.fallbackSvc = c.FallbackService
 	}
 	return s
 }
@@ -101,7 +108,27 @@ func (s *Service) MintAgentToken(ctx context.Context, scope, actingFor string, t
 	// Record token ID in Redis so we can revoke it.
 	if s.rdb != nil {
 		if err := s.rdb.Set(ctx, redisKey(tokenID), "1", ttl).Err(); err != nil {
-			return nil, fmt.Errorf("tokens: redis: %w", err)
+			// Check fallback strategy
+			if s.fallbackSvc != nil {
+				s.fallbackSvc.RecordFailure(fallback.DepRedis)
+				if allowed, _ := s.fallbackSvc.ShouldAllow(fallback.DepRedis); allowed {
+					log.Printf("tokens: redis unavailable, using in-memory fallback for token %s", tokenID)
+					if err := s.memCache.Set(ctx, tokenID, ttl); err != nil {
+						return nil, fmt.Errorf("tokens: fallback cache: %w", err)
+					}
+				} else {
+					return nil, fmt.Errorf("tokens: redis: %w", err)
+				}
+			} else {
+				return nil, fmt.Errorf("tokens: redis: %w", err)
+			}
+		} else if s.fallbackSvc != nil {
+			s.fallbackSvc.RecordSuccess(fallback.DepRedis)
+		}
+	} else {
+		// No Redis configured, use in-memory cache
+		if err := s.memCache.Set(ctx, tokenID, ttl); err != nil {
+			return nil, fmt.Errorf("tokens: cache: %w", err)
 		}
 	}
 
@@ -127,10 +154,40 @@ func (s *Service) ValidateToken(ctx context.Context, raw string) (*AgentClaims, 
 	if s.rdb != nil {
 		exists, err := s.rdb.Exists(ctx, redisKey(claims.ID)).Result()
 		if err != nil {
-			return nil, fmt.Errorf("tokens: redis check: %w", err)
+			// Check fallback strategy
+			if s.fallbackSvc != nil {
+				s.fallbackSvc.RecordFailure(fallback.DepRedis)
+				if allowed, _ := s.fallbackSvc.ShouldAllow(fallback.DepRedis); allowed {
+					log.Printf("tokens: redis unavailable, checking in-memory fallback for token %s", claims.ID)
+					exists, err := s.memCache.Exists(ctx, claims.ID)
+					if err != nil {
+						return nil, fmt.Errorf("tokens: fallback cache check: %w", err)
+					}
+					if !exists {
+						return nil, errors.New("tokens: token has been revoked or not found in fallback cache")
+					}
+				} else {
+					return nil, fmt.Errorf("tokens: redis check: %w", err)
+				}
+			} else {
+				return nil, fmt.Errorf("tokens: redis check: %w", err)
+			}
+		} else {
+			if s.fallbackSvc != nil {
+				s.fallbackSvc.RecordSuccess(fallback.DepRedis)
+			}
+			if exists == 0 {
+				return nil, errors.New("tokens: token has been revoked")
+			}
 		}
-		if exists == 0 {
-			return nil, errors.New("tokens: token has been revoked")
+	} else {
+		// No Redis configured, check in-memory cache
+		exists, err := s.memCache.Exists(ctx, claims.ID)
+		if err != nil {
+			return nil, fmt.Errorf("tokens: cache check: %w", err)
+		}
+		if !exists {
+			return nil, errors.New("tokens: token has been revoked or not found")
 		}
 	}
 
@@ -142,15 +199,29 @@ func (s *Service) ValidateToken(ctx context.Context, raw string) (*AgentClaims, 
 // RevokeToken removes a token ID from the Redis allowlist, immediately
 // invalidating it.
 func (s *Service) RevokeToken(ctx context.Context, tokenID string) error {
-	if s.rdb == nil {
-		return nil // no-op without Redis
+	if s.rdb != nil {
+		if err := s.rdb.Del(ctx, redisKey(tokenID)).Err(); err != nil {
+			// Check fallback strategy
+			if s.fallbackSvc != nil {
+				s.fallbackSvc.RecordFailure(fallback.DepRedis)
+				if allowed, _ := s.fallbackSvc.ShouldAllow(fallback.DepRedis); allowed {
+					log.Printf("tokens: redis unavailable, revoking from in-memory fallback for token %s", tokenID)
+					if err := s.memCache.Delete(ctx, tokenID); err != nil {
+						return fmt.Errorf("tokens: fallback cache delete: %w", err)
+					}
+					return nil
+				}
+			}
+			return fmt.Errorf("tokens: revoke: %w", err)
+		}
+		if s.fallbackSvc != nil {
+			s.fallbackSvc.RecordSuccess(fallback.DepRedis)
+		}
 	}
-	if err := s.rdb.Del(ctx, redisKey(tokenID)).Err(); err != nil {
-		return fmt.Errorf("tokens: revoke: %w", err)
-	}
-	return nil
+	// Also remove from in-memory cache
+	return s.memCache.Delete(ctx, tokenID)
 }
 
 func redisKey(tokenID string) string {
-	return "prism:token:" + tokenID
+	return "lelu:token:" + tokenID
 }

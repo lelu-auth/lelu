@@ -1,6 +1,6 @@
-# Prism LLMs.txt
+# Lelu LLMs.txt
 
-Prism is an authorization engine for AI agents with confidence-aware policy enforcement.
+Lelu is an authorization engine for AI agents with confidence-aware policy enforcement.
 
 ## Canonical URLs
 - Docs: /docs
@@ -18,8 +18,8 @@ Prism is an authorization engine for AI agents with confidence-aware policy enfo
 - Audit trail and token lifecycle controls.
 
 ## MCP Tools
-- prism_agent_authorize
-- prism_authorize
-- prism_mint_token
-- prism_revoke_token
-- prism_health
+- lelu_agent_authorize
+- lelu_authorize
+- lelu_mint_token
+- lelu_revoke_token
+- lelu_health

@@ -8,7 +8,7 @@ export default function DocsIntegrationsMobile() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Mobile (React Native)</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Use Prism in React Native apps to authorize AI agent actions on-device. Because mobile clients cannot safely store API keys, all Prism calls must be proxied through your backend.
+          Use Lelu in React Native apps to authorize AI agent actions on-device. Because mobile clients cannot safely store API keys, all Lelu calls must be proxied through your backend.
         </p>
       </div>
 
@@ -19,8 +19,8 @@ export default function DocsIntegrationsMobile() {
           <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 mb-6">
             <ol className="relative border-l-2 border-zinc-300 dark:border-zinc-700 ml-3 space-y-5">
               {[
-                { title: "Mobile app proposes action", desc: "The React Native app sends the action + confidence score to your backend API (not to Prism directly)." },
-                { title: "Backend calls Prism Engine", desc: "Your server receives the request and calls the Prism Engine /authorize with the API key stored server-side." },
+                { title: "Mobile app proposes action", desc: "The React Native app sends the action + confidence score to your backend API (not to Lelu directly)." },
+                { title: "Backend calls Lelu Engine", desc: "Your server receives the request and calls the Lelu Engine /authorize with the API key stored server-side." },
                 { title: "Poll for approval (if needed)", desc: "Backend returns a requestId. The mobile app polls your backend endpoint until the human approves or denies." },
                 { title: "Result returned to app", desc: "The backend returns the final allow/deny to the mobile app. The app proceeds or shows an error." },
               ].map((s, i) => (
@@ -38,19 +38,19 @@ export default function DocsIntegrationsMobile() {
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">React Native Client</h2>
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">hooks/usePrismAction.ts</span>
+              <span className="text-xs text-zinc-500 font-mono">hooks/useLeluAction.ts</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { useState } from "react";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
-export function usePrismAction() {
+export function useLeluAction() {
   const [status, setStatus] = useState<"idle" | "pending" | "approved" | "denied">("idle");
 
   async function authorize(action: string, confidence: number) {
     setStatus("pending");
 
-    // Call your own backend (which calls Prism internally)
+    // Call your own backend (which calls Lelu internally)
     const res = await fetch(\`\${API_BASE}/authorize\`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

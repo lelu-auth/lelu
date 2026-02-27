@@ -21,6 +21,9 @@ RUN go mod download
 # Copy source
 COPY engine/ .
 
+# Ensure all dependencies are properly tracked
+RUN go mod tidy
+
 # Build a fully static binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -ldflags="-s -w -extldflags '-static'" \

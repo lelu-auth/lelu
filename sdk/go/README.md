@@ -1,6 +1,6 @@
 # Lelu Go SDK
 
-Go client for [Lelu](https://github.com/Abenezer0923/Prism) — confidence-aware authorization for AI agents.
+Go client for [Lelu](https://github.com/Abenezer0923/Lelu) — confidence-aware authorization for AI agents.
 
 ## Install
 

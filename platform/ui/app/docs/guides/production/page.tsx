@@ -8,7 +8,7 @@ export default function DocsGuidesProduction() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Production Deployment</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          A checklist and deep-dive for running Prism reliably in production — covering HTTPS, secrets management, Engine scaling, and observability.
+          A checklist and deep-dive for running Lelu reliably in production — covering HTTPS, secrets management, Engine scaling, and observability.
         </p>
       </div>
 
@@ -19,7 +19,7 @@ export default function DocsGuidesProduction() {
           <div className="space-y-3">
             {[
               { done: false, text: "TLS terminated at load balancer or ingress for all services (ops)" },
-              { done: false, text: "PRISM_API_KEY rotated from default and stored in a secret manager (ops)" },
+              { done: false, text: "LELU_API_KEY rotated from default and stored in a secret manager (ops)" },
               { done: false, text: "DATABASE_URL uses sslmode=require in production" },
               { done: false, text: "Redis uses TLS (rediss://) or a private network" },
               { done: false, text: "Engine replicas ≥ 2 for high availability" },
@@ -85,13 +85,13 @@ export default function DocsGuidesProduction() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">Key metrics to alert on</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose">{`prism_http_requests_total{method="POST",path="/v1/agent/authorize",status="200"}
+            <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose">{`lelu_http_requests_total{method="POST",path="/v1/agent/authorize",status="200"}
   # Request volume and status-code anomalies
 
-prism_http_request_duration_seconds{method="POST",path="/v1/agent/authorize"}
+lelu_http_request_duration_seconds{method="POST",path="/v1/agent/authorize"}
   # Latency SLO / p95 / p99
 
-prism_auth_decisions_total{type="agent",allowed="false"}
+lelu_auth_decisions_total{type="agent",allowed="false"}
   # Deny-rate spikes and confidence policy pressure`}</pre>
           </div>
         </section>

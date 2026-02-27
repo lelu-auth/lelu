@@ -8,7 +8,7 @@ export default function DocsAdaptersPostgres() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">PostgreSQL</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          PostgreSQL is the primary data store for the Prism Platform. It persists policies, audit trails, API tokens, and tenant records. The Platform connects via a standard <code className="font-mono text-base px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">DATABASE_URL</code> connection string.
+          PostgreSQL is the primary data store for the Lelu Platform. It persists policies, audit trails, API tokens, and tenant records. The Platform connects via a standard <code className="font-mono text-base px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">DATABASE_URL</code> connection string.
         </p>
       </div>
 
@@ -24,7 +24,7 @@ export default function DocsAdaptersPostgres() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
               <span className="text-xs text-zinc-500 font-mono">.env</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`DATABASE_URL=postgres://prism:password@localhost:5432/prism?sslmode=disable`}</pre>
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`DATABASE_URL=postgres://lelu:password@localhost:5432/lelu?sslmode=disable`}</pre>
           </div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-3">
             For production use <code className="font-mono text-xs px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">sslmode=require</code> and provision the database user with minimal permissions.
@@ -35,7 +35,7 @@ export default function DocsAdaptersPostgres() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Schema &amp; Migration</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Prism manages its own schema through idempotent SQL that runs automatically on Platform startup. No external migration tool is required.
+            Lelu manages its own schema through idempotent SQL that runs automatically on Platform startup. No external migration tool is required.
           </p>
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 mb-6">
             <table className="w-full text-sm">
@@ -118,20 +118,20 @@ export default function DocsAdaptersPostgres() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Use a Non-Default Schema</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-            By default Prism uses the <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">public</code> schema. To isolate Prism tables in a dedicated schema (e.g. <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">prism</code>), use the <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">search_path</code> option.
+            By default Lelu uses the <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">public</code> schema. To isolate Lelu tables in a dedicated schema (e.g. <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">lelu</code>), use the <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">search_path</code> option.
           </p>
 
           <div className="space-y-4">
             <div>
               <h3 className="text-base font-semibold text-zinc-900 dark:text-white mb-2">Option 1 — Connection string (recommended)</h3>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
-                <pre className="p-4 font-mono text-sm text-zinc-300">{`DATABASE_URL=postgres://prism:password@localhost:5432/prism?options=-c%20search_path%3Dprism`}</pre>
+                <pre className="p-4 font-mono text-sm text-zinc-300">{`DATABASE_URL=postgres://lelu:password@localhost:5432/lelu?options=-c%20search_path%3Dlelu`}</pre>
               </div>
             </div>
             <div>
               <h3 className="text-base font-semibold text-zinc-900 dark:text-white mb-2">Option 2 — Set default schema for the DB user</h3>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
-                <pre className="p-4 font-mono text-sm text-zinc-300">{`ALTER USER prism SET search_path TO prism;`}</pre>
+                <pre className="p-4 font-mono text-sm text-zinc-300">{`ALTER USER lelu SET search_path TO lelu;`}</pre>
               </div>
             </div>
           </div>
@@ -139,10 +139,10 @@ export default function DocsAdaptersPostgres() {
           <div className="mt-6 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
             <h4 className="font-semibold text-zinc-900 dark:text-white text-sm mb-3">Prerequisites</h4>
             <div className="bg-zinc-900 dark:bg-black rounded-lg overflow-hidden">
-              <pre className="p-4 font-mono text-xs text-zinc-300">{`CREATE SCHEMA IF NOT EXISTS prism;
-GRANT ALL PRIVILEGES ON SCHEMA prism TO prism;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA prism TO prism;
-ALTER DEFAULT PRIVILEGES IN SCHEMA prism GRANT ALL ON TABLES TO prism;`}</pre>
+              <pre className="p-4 font-mono text-xs text-zinc-300">{`CREATE SCHEMA IF NOT EXISTS lelu;
+GRANT ALL PRIVILEGES ON SCHEMA lelu TO lelu;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA lelu TO lelu;
+ALTER DEFAULT PRIVILEGES IN SCHEMA lelu GRANT ALL ON TABLES TO lelu;`}</pre>
             </div>
           </div>
         </section>

@@ -8,7 +8,7 @@ export default function DocsConceptArchitecture() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Architecture</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism is designed with a strict separation between the data plane (Engine) and the control plane (Platform). This ensures high availability, low latency, and secure policy evaluation.
+          Lelu is designed with a strict separation between the data plane (Engine) and the control plane (Platform). This ensures high availability, low latency, and secure policy evaluation.
         </p>
       </div>
 
@@ -16,7 +16,7 @@ export default function DocsConceptArchitecture() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">The Split Architecture</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            To ensure that authorization checks never block your AI agents, Prism splits its responsibilities into two distinct services:
+            To ensure that authorization checks never block your AI agents, Lelu splits its responsibilities into two distinct services:
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">

@@ -8,7 +8,7 @@ export default function DocsGuidesTesting() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Testing Policies</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Learn how to unit-test your OPA policies with the built-in Rego test runner, write integration tests against a local Engine, and mock Prism in application tests.
+          Learn how to unit-test your OPA policies with the built-in Rego test runner, write integration tests against a local Engine, and mock Lelu in application tests.
         </p>
       </div>
 
@@ -21,9 +21,9 @@ export default function DocsGuidesTesting() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">policy/auth_test.rego</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`package prism.authz_test
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`package lelu.authz_test
 
-import data.prism.authz
+import data.lelu.authz
 
 # High confidence → auto-allow
 test_high_confidence_allow {
@@ -64,16 +64,16 @@ test_medium_review {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">tests/integration.test.ts</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismClient } from "lelu";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { LeluClient } from "lelu";
 
-const prism = new PrismClient({
+const lelu = new LeluClient({
   baseUrl: "http://localhost:8082",
   apiKey: "test-key",
 });
 
-describe("Prism Engine", () => {
+describe("Lelu Engine", () => {
   it("allows high-confidence actions", async () => {
-    const decision = await prism.authorize({
+    const decision = await lelu.authorize({
       action: "send_email",
       confidence: 0.95,
     });
@@ -81,7 +81,7 @@ describe("Prism Engine", () => {
   });
 
   it("routes low-confidence to queue", async () => {
-    const decision = await prism.authorize({
+    const decision = await lelu.authorize({
       action: "delete_records",
       confidence: 0.3,
     });
@@ -92,7 +92,7 @@ describe("Prism Engine", () => {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">3. Mocking Prism in Application Tests</h2>
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">3. Mocking Lelu in Application Tests</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">For unit tests that don&apos;t need the Engine running, mock the SDK client.</p>
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
@@ -101,7 +101,7 @@ describe("Prism Engine", () => {
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { vi } from "vitest";
 
 vi.mock("lelu", () => ({
-  PrismClient: vi.fn().mockImplementation(() => ({
+  LeluClient: vi.fn().mockImplementation(() => ({
     authorize: vi.fn().mockResolvedValue({
       status: "allow",
       requestId: "mock-id",

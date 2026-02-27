@@ -8,7 +8,7 @@ export default function DocsDatabases() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Databases</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism uses two data stores: <strong>PostgreSQL</strong> for durable state (policies, audit trails, users) and <strong>Redis</strong> as a high-speed queue for the Engine. This page covers configuration, connection strings, and performance tuning.
+          Lelu uses two data stores: <strong>PostgreSQL</strong> for durable state (policies, audit trails, users) and <strong>Redis</strong> as a high-speed queue for the Engine. This page covers configuration, connection strings, and performance tuning.
         </p>
       </div>
 
@@ -22,7 +22,7 @@ export default function DocsDatabases() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">Environment variable</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300">{`DATABASE_URL=postgres://prism:password@localhost:5432/prism?sslmode=disable`}</pre>
+            <pre className="p-4 font-mono text-sm text-zinc-300">{`DATABASE_URL=postgres://lelu:password@localhost:5432/lelu?sslmode=disable`}</pre>
           </div>
 
           <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Tables</h3>
@@ -73,9 +73,9 @@ export default function DocsDatabases() {
               </thead>
               <tbody>
                 {[
-                  ["prism:queue:{requestId}", "Fan-out queue for pending requests — TTL 24 h"],
-                  ["prism:decision:{requestId}", "Cached allow/deny result — TTL 5 min"],
-                  ["prism:confidence:{agentId}", "Rolling confidence score per agent — TTL 1 h"],
+                  ["lelu:queue:{requestId}", "Fan-out queue for pending requests — TTL 24 h"],
+                  ["lelu:decision:{requestId}", "Cached allow/deny result — TTL 5 min"],
+                  ["lelu:confidence:{agentId}", "Rolling confidence score per agent — TTL 1 h"],
                 ].map(([pattern, desc]) => (
                   <tr key={pattern} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0">
                     <td className="px-4 py-3 font-mono text-xs text-zinc-800 dark:text-zinc-200">{pattern}</td>

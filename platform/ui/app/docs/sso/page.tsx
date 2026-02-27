@@ -23,7 +23,7 @@ export default function DocsSso() {
           SSO &amp; Authentication
         </h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism supports three authentication modes for accessing the Platform
+          Lelu supports three authentication modes for accessing the Platform
           API and UI: static API keys for machine-to-machine calls, enterprise
           OIDC SSO for your team, and trusted-header SSO for deployments behind
           a reverse proxy.
@@ -85,7 +85,7 @@ export default function DocsSso() {
             Mode 1 — API Key (Default)
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Every Prism deployment has a{" "}
+            Every Lelu deployment has a{" "}
             <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">
               PLATFORM_API_KEY
             </code>
@@ -155,7 +155,7 @@ export default function DocsSso() {
           </p>
           <p className="text-zinc-600 dark:text-zinc-400 mb-8">
             Enable OIDC SSO to let your team log in using your existing identity
-            provider. Prism acts as an OIDC relying party — it validates access
+            provider. Lelu acts as an OIDC relying party — it validates access
             tokens on every request using the provider&apos;s JWKS endpoint.
           </p>
 
@@ -170,11 +170,11 @@ export default function DocsSso() {
                 desc: "Your frontend redirects to the IdP's authorization endpoint. The IdP returns an access token (JWT).",
               },
               {
-                title: "Token passed to Prism API",
+                title: "Token passed to Lelu API",
                 desc: "The client forwards the JWT in the Authorization: Bearer header on every Platform API request.",
               },
               {
-                title: "Prism verifies the token",
+                title: "Lelu verifies the token",
                 desc: "The platform fetches the IdP's JWKS, verifies the token's signature, expiry, and audience claim.",
               },
               {
@@ -222,7 +222,7 @@ export default function DocsSso() {
               .
             </li>
             <li>
-              No redirect URI is needed — Prism validates tokens, it does not
+              No redirect URI is needed — Lelu validates tokens, it does not
               initiate the OAuth flow.
             </li>
           </ol>
@@ -270,7 +270,7 @@ export default function DocsSso() {
               <code className="bg-blue-100 dark:bg-blue-800/50 px-1 rounded font-mono">
                 OIDC_ISSUER_URL
               </code>{" "}
-              is set, Prism still accepts the{" "}
+              is set, Lelu still accepts the{" "}
               <code className="bg-blue-100 dark:bg-blue-800/50 px-1 rounded font-mono">
                 PLATFORM_API_KEY
               </code>{" "}
@@ -287,7 +287,7 @@ export default function DocsSso() {
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             If your infrastructure runs an authenticating reverse proxy (Nginx +
-            LDAP, Cloudflare Access, Tailscale&hellip;) you can configure Prism
+            LDAP, Cloudflare Access, Tailscale&hellip;) you can configure Lelu
             to trust the email header that proxy injects — no OIDC configuration
             needed.
           </p>
@@ -307,7 +307,7 @@ export default function DocsSso() {
             </svg>
             <p className="text-sm text-amber-800 dark:text-amber-300">
               <strong>Security notice:</strong> Only use this mode when the
-              Prism Platform API is <strong>not</strong> directly reachable from
+              Lelu Platform API is <strong>not</strong> directly reachable from
               the internet. The trusted header must only be injectable by your
               proxy, never by end users.
             </p>

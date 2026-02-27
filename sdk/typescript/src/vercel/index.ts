@@ -1,22 +1,22 @@
 /**
- * Vercel AI SDK integration for Prism — Confidence-Aware Auth.
+ * Vercel AI SDK integration for Lelu — Confidence-Aware Auth.
  *
- * Wraps a Vercel AI SDK `tool()` definition with a Prism authorization
+ * Wraps a Vercel AI SDK `tool()` definition with a Lelu authorization
  * gate. The wrapped tool runs the original `execute` function only when
- * Prism allows it; otherwise it returns a structured refusal object that
+ * Lelu allows it; otherwise it returns a structured refusal object that
  * the model can inspect and self-correct on.
  *
  * @example
  * ```ts
  * import { tool } from 'ai';
  * import { z } from 'zod';
- * import { PrismClient } from 'lelu';
+ * import { LeluClient } from 'lelu';
  * import { secureTool } from 'lelu/vercel';
  *
- * const prism = new PrismClient({ baseUrl: 'http://localhost:8082' });
+ * const lelu = new LeluClient({ baseUrl: 'http://localhost:8082' });
  *
  * const refundTool = secureTool({
- *   client: prism,
+ *   client: lelu,
  *   actor: 'invoice_bot',
  *   action: 'invoice:refund',
  *   confidence: 0.92,
@@ -51,7 +51,7 @@ export interface VercelTool<TArgs = unknown, TResult = unknown> {
 
 // ─── Denied / Review result shape ─────────────────────────────────────────────
 
-export interface PrismDeniedResult {
+export interface LeluDeniedResult {
   /** Always `false` when the tool was blocked. */
   allowed: false;
   /** Human/LLM-readable denial reason. */
@@ -67,7 +67,7 @@ export interface PrismDeniedResult {
 export interface SecureToolOptions<TArgs = unknown, TResult = unknown> {
   /** Configured Lelu client. */
   client: LeluClient;
-  /** The agent actor / scope registered in Prism policy. */
+  /** The agent actor / scope registered in Lelu policy. */
   actor: string;
   /** The permission string being checked. */
   action: string;
@@ -86,26 +86,26 @@ export interface SecureToolOptions<TArgs = unknown, TResult = unknown> {
 // ─── secureTool ───────────────────────────────────────────────────────────────
 
 /**
- * Wraps a Vercel AI SDK `tool()` with Prism Confidence-Aware Auth.
+ * Wraps a Vercel AI SDK `tool()` with Lelu Confidence-Aware Auth.
  *
  * Returns a new tool object with the same `description` and `parameters`
- * but with an `execute` function that gates through Prism first.
+ * but with an `execute` function that gates through Lelu first.
  *
- * On denial the tool returns a `PrismDeniedResult` object (not a throw) so
+ * On denial the tool returns a `LeluDeniedResult` object (not a throw) so
  * the model sees a structured response it can reason about.
  */
 export function secureTool<TArgs = unknown, TResult = unknown>(
   opts: SecureToolOptions<TArgs, TResult>
-): VercelTool<TArgs, TResult | PrismDeniedResult> {
+): VercelTool<TArgs, TResult | LeluDeniedResult> {
   const { client, actor, action, actingFor } = opts;
 
-  const wrapped: VercelTool<TArgs, TResult | PrismDeniedResult> = {
+  const wrapped: VercelTool<TArgs, TResult | LeluDeniedResult> = {
     parameters: opts.tool.parameters,
 
     async execute(
       args: TArgs,
       options?: unknown
-    ): Promise<TResult | PrismDeniedResult> {
+    ): Promise<TResult | LeluDeniedResult> {
       // Resolve confidence — static number or dynamic function.
       const confidence =
         typeof opts.confidence === "function"
@@ -123,7 +123,7 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
         // Fail open with a structured denial so the model can handle it.
         return {
           allowed: false,
-          reason: `Prism authorization check failed: ${String(err)}`,
+          reason: `Lelu authorization check failed: ${String(err)}`,
           requiresHumanReview: false,
         };
       }
@@ -141,7 +141,7 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
 
       // ── Hard deny ─────────────────────────────────────────────────────
       if (!decision.allowed) {
-        const denied: PrismDeniedResult = {
+        const denied: LeluDeniedResult = {
           allowed: false,
           reason:
             `Action '${action}' was denied for agent '${actor}'. ` +
@@ -159,7 +159,7 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
       // ── Authorized — run original execute ─────────────────────────────
       if (!opts.tool.execute) {
         throw new Error(
-          `[Prism] secureTool: the wrapped tool '${action}' has no execute function.`
+          `[Lelu] secureTool: the wrapped tool '${action}' has no execute function.`
         );
       }
       return opts.tool.execute(args, options);

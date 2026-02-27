@@ -6,7 +6,7 @@ export default function DocsQuickStart() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           Quickstart
         </div>
-        <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Get Started with Prism</h1>
+        <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Get Started with Lelu</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
           Send your first confidence-aware authorization request and see the decision in seconds. This guide will walk you through starting the engine, making an API call, and using the SDK.
         </p>
@@ -21,7 +21,7 @@ export default function DocsQuickStart() {
             <div className="flex-1 pb-8">
               <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Start the engine</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-                The easiest way to run Prism locally is using Docker Compose. This will spin up the Prism Engine, the Platform API, and a PostgreSQL database.
+                The easiest way to run Lelu locally is using Docker Compose. This will spin up the Lelu Engine, the Platform API, and a PostgreSQL database.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
@@ -101,16 +101,16 @@ export default function DocsQuickStart() {
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Use the SDK</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-                For production applications, use our official SDKs to integrate Prism directly into your codebase.
+                For production applications, use our official SDKs to integrate Lelu directly into your codebase.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
                   <span className="text-xs text-zinc-500 font-mono">typescript</span>
                 </div>
                 <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                  <pre><code>{`import { PrismClient } from "lelu";
+                  <pre><code>{`import { LeluClient } from "lelu";
 
-const client = new PrismClient({
+const client = new LeluClient({
   endpoint: "http://localhost:8080",
 });
 

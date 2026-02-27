@@ -1,10 +1,10 @@
-# Contributing to Prism (Auth Permission Engine)
+# Contributing to Lelu (Auth Permission Engine)
 
-First off, thank you for considering contributing to Prism! It's people like you that make Prism such a great tool for securing the Agentic Web.
+First off, thank you for considering contributing to Lelu! It's people like you that make Lelu such a great tool for securing the Agentic Web.
 
 ## 🚀 Getting Started
 
-Prism is built with a Go-based evaluation engine, a Next.js platform UI, and SDKs for Python and TypeScript.
+Lelu is built with a Go-based evaluation engine, a Next.js platform UI, and SDKs for Python and TypeScript.
 
 ### Prerequisites
 
@@ -34,7 +34,7 @@ The services will be available at:
 We welcome contributions of all kinds! Here are some areas where we'd love your help:
 
 ### 1. SDK Integrations (High Priority)
-We want Prism to work seamlessly with every major AI agent framework. If you use a framework that isn't supported yet, consider building an integration!
+We want Lelu to work seamlessly with every major AI agent framework. If you use a framework that isn't supported yet, consider building an integration!
 
 **Python SDK (`sdk/python/auth_pe/`)**
 - Subclass the `AgentMiddleware` base class to intercept tool calls and extract confidence scores.
@@ -44,7 +44,7 @@ We want Prism to work seamlessly with every major AI agent framework. If you use
 - **Help Wanted:** Vercel AI SDK, LangChain.js (expand existing), Model Context Protocol (MCP).
 
 ### 2. Custom Rego Evaluators (Plugins)
-Prism's Go engine supports loading custom Rego policies from a directory. You can write custom Rego modules to extend the evaluation logic without modifying the core engine.
+Lelu's Go engine supports loading custom Rego policies from a directory. You can write custom Rego modules to extend the evaluation logic without modifying the core engine.
 - Drop your `.rego` files into a directory and set `REGO_POLICY_PATH=/path/to/dir`.
 - We'd love to see community-contributed Rego templates for common compliance standards (SOC2, HIPAA, GDPR).
 

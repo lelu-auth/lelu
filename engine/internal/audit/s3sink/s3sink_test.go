@@ -57,7 +57,7 @@ func TestSink_FlushOnClose(t *testing.T) {
 	up := &fakeUploader{}
 	sink := s3sink.New(s3sink.Config{
 		Bucket:        "test-bucket",
-		KeyPrefix:     "prism/audit",
+		KeyPrefix:     "lelu/audit",
 		FlushInterval: time.Hour, // disable auto-flush
 	}, up)
 
@@ -70,7 +70,7 @@ func TestSink_FlushOnClose(t *testing.T) {
 
 	upload := up.last()
 	assert.Equal(t, "test-bucket", upload.bucket)
-	assert.Contains(t, upload.key, "prism/audit/")
+	assert.Contains(t, upload.key, "lelu/audit/")
 	assert.Contains(t, upload.key, ".ndjson.gz")
 }
 

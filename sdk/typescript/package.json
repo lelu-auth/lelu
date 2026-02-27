@@ -1,11 +1,11 @@
 {
   "name": "lelu",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "TypeScript SDK for Lelu — the authorization engine for autonomous AI agents",
   "author": "Abenezer",
-  "homepage": "https://github.com/Abenezer0923/Prism#readme",
+  "homepage": "https://github.com/Abenezer0923/Lelu#readme",
   "bugs": {
-    "url": "https://github.com/Abenezer0923/Prism/issues"
+    "url": "https://github.com/Abenezer0923/Lelu/issues"
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -89,7 +89,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Abenezer0923/Prism.git",
+    "url": "https://github.com/Abenezer0923/Lelu.git",
     "directory": "sdk/typescript"
   }
 }

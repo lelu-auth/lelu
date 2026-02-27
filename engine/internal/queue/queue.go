@@ -19,9 +19,9 @@ import (
 // ─── Stream / key names ───────────────────────────────────────────────────────
 
 const (
-	StreamKey  = "prism:review:stream"   // Redis Stream for incoming requests
-	PendingKey = "prism:review:pending:" // HASH per item: prism:review:pending:<id>
-	GroupName  = "prism-reviewers"       // Consumer group name
+	StreamKey  = "lelu:review:stream"   // Redis Stream for incoming requests
+	PendingKey = "lelu:review:pending:" // HASH per item: lelu:review:pending:<id>
+	GroupName  = "lelu-reviewers"       // Consumer group name
 )
 
 // ─── Domain types ─────────────────────────────────────────────────────────────

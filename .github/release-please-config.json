@@ -1,0 +1,32 @@
+{
+  "packages": {
+    "engine": {
+      "component": "engine",
+      "package-name": "lelu-engine",
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "go"
+    },
+    "sdk/typescript": {
+      "component": "typescript-sdk",
+      "package-name": "lelu",
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "node"
+    },
+    "sdk/python": {
+      "component": "python-sdk",
+      "package-name": "lelu",
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "python"
+    }
+  },
+  "release-type": "simple",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "chore", "section": "Miscellaneous", "hidden": false }
+  ]
+}

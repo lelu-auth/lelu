@@ -24,7 +24,7 @@ type PolicyLoader interface {
 
 // Config holds worker configuration.
 type Config struct {
-	ControlPlaneURL string        // e.g. https://api.prism.dev/policies/current
+	ControlPlaneURL string        // e.g. https://api.lelu.dev/policies/current
 	HMACSecret      string        // shared secret for signature verification
 	PollInterval    time.Duration // default 30 s
 	TenantID        string        // tenant ID to fetch policy for
@@ -116,7 +116,7 @@ func (w *Worker) poll(ctx context.Context) error {
 
 	// Verify HMAC-SHA256 signature if secret configured.
 	if w.cfg.HMACSecret != "" {
-		sig := resp.Header.Get("X-Prism-Signature")
+		sig := resp.Header.Get("X-Lelu-Signature")
 		if !verifyHMAC(body, w.cfg.HMACSecret, sig) {
 			return fmt.Errorf("sync: signature mismatch — policy rejected")
 		}

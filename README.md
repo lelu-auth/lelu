@@ -35,11 +35,17 @@ The easiest way to get started is using Docker Compose, which spins up the Engin
 docker compose up -d
 ```
 
-Optional (observe-before-enforce onboarding):
+Optional configurations:
 
 ```bash
-# Compute/log decisions but do not enforce denies/reviews
+# Observe-before-enforce onboarding (shadow mode)
 LELU_MODE=shadow docker compose up -d
+
+# Enable OpenTelemetry tracing
+OTEL_ENABLED=true OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317 docker compose up -d
+
+# Enable Redis fallback (fail-open on Redis outage)
+FALLBACK_REDIS_MODE=open docker compose up -d
 ```
 
 ### 2. Verify the Engine is Running
@@ -357,3 +363,89 @@ MIT License
 
 ---
 *Lelu: The Authorization Engine for AI Agents · Go · TypeScript · Python · 2026*
+
+
+---
+
+## 🧪 Policy Dry-Run CLI
+
+Test your `auth.yaml` policies locally without spinning up the full infrastructure:
+
+```bash
+# Build the CLI
+cd engine
+go build -o lelu-cli ./cmd/cli
+
+# Test agent authorization
+./lelu-cli -policy ../config/auth.yaml -input ../examples/test-agent-request.json -type agent
+
+# Test human authorization
+./lelu-cli -policy ../config/auth.yaml -input ../examples/test-human-request.json -type human
+
+# Test with Rego policy
+./lelu-cli -policy ../config/auth.yaml -rego ../config/auth.rego -input ../examples/test-agent-request.json
+```
+
+Example output:
+```
+✓ Policy loaded from config/auth.yaml
+
+─── Agent Authorization Request ───
+Actor:      invoice_bot
+Action:     approve_refunds
+Confidence: 0.92
+
+─── Confidence Gate ───
+Level:  high_confidence
+Reason: confidence score 0.92 meets threshold
+
+─── Policy Evaluation ───
+Allowed:             true
+Requires Review:     false
+
+─── Final Decision ───
+✅ ALLOWED
+Reason: allowed by agent scope
+```
+
+---
+
+## 📊 Observability
+
+### OpenTelemetry Integration
+
+Lelu supports OpenTelemetry for distributed tracing and performance monitoring:
+
+```bash
+# Enable OpenTelemetry
+export OTEL_ENABLED=true
+export OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
+export OTEL_SAMPLE_RATE=0.1  # 10% sampling
+
+docker compose up -d
+```
+
+Traces include:
+- Authorization request spans with actor, action, and confidence attributes
+- Policy evaluation latency (p50, p95, p99)
+- Confidence gate decisions
+- End-to-end request tracing
+
+Compatible with: Jaeger, Honeycomb, Datadog, New Relic, and any OTLP-compatible backend.
+
+### Redis Fallback Mode
+
+Lelu can operate with degraded Redis availability using an in-memory token cache:
+
+```bash
+# Enable fail-open mode (use in-memory cache when Redis is down)
+export FALLBACK_REDIS_MODE=open
+
+# Default fail-closed mode (deny requests when Redis is down)
+export FALLBACK_REDIS_MODE=closed
+```
+
+When Redis becomes unavailable:
+- **Fail-open mode:** JIT tokens are stored in-memory with TTL expiration
+- **Fail-closed mode:** Token operations are denied
+- Automatic recovery when Redis connection is restored

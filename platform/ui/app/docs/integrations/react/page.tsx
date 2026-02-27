@@ -8,7 +8,7 @@ export default function DocsIntegrationsReact() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">React / Frontend</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Add Prism&apos;s approval UI and reputation dashboard to any React application. The frontend SDK provides hooks and components for managing pending AI actions from the browser.
+          Add Lelu&apos;s approval UI and reputation dashboard to any React application. The frontend SDK provides hooks and components for managing pending AI actions from the browser.
         </p>
       </div>
 
@@ -34,19 +34,19 @@ export default function DocsIntegrationsReact() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Approval UI</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Drop the <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">PrismApprovalUI</code> component into your admin dashboard. It shows all pending agent requests and lets reviewers approve or deny them in one click.
+            Drop the <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">LeluApprovalUI</code> component into your admin dashboard. It shows all pending agent requests and lets reviewers approve or deny them in one click.
           </p>
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">ApprovalDashboard.tsx</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismApprovalUI } from "lelu/react";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { LeluApprovalUI } from "lelu/react";
 
 export function ApprovalDashboard() {
   return (
-    <PrismApprovalUI
+    <LeluApprovalUI
       engineUrl="http://localhost:8082"
-      apiKey={import.meta.env.VITE_PRISM_KEY}
+      apiKey={import.meta.env.VITE_LELU_KEY}
       onApprove={(requestId) => console.log("Approved:", requestId)}
       onDeny={(requestId) => console.log("Denied:", requestId)}
       pollInterval={3000} // Check every 3 seconds

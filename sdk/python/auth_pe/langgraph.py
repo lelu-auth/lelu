@@ -2,7 +2,7 @@
 LangGraph node wrappers for the Auth Permission Engine.
 
 Provides ``secure_node`` — a decorator that gates any LangGraph node through
-Prism's Confidence-Aware Auth before execution.
+Lelu's Confidence-Aware Auth before execution.
 
 Usage
 -----
@@ -21,7 +21,7 @@ Usage
         acting_for_key="user_id",      # optional: user the agent acts for
     )
     async def approve_invoice(state: dict) -> dict:
-        # Only runs when Prism returns allowed=True
+        # Only runs when Lelu returns allowed=True
         return {**state, "approved": True}
 
 Integration with LangGraph
@@ -52,10 +52,10 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
-_DENIED_KEY = "prism_denied"
-_REVIEW_KEY = "prism_pending_review"
-_REASON_KEY = "prism_reason"
-_REVIEW_ID_KEY = "prism_review_id"
+_DENIED_KEY = "lelu_denied"
+_REVIEW_KEY = "lelu_pending_review"
+_REASON_KEY = "lelu_reason"
+_REVIEW_ID_KEY = "lelu_review_id"
 
 
 # ─── Decorator ────────────────────────────────────────────────────────────────
@@ -71,14 +71,14 @@ def secure_node(
     default_confidence: float = 1.0,
     throw_on_deny: bool = False,
 ) -> Callable[[F], F]:
-    """Wrap a LangGraph node with Prism Confidence-Aware Auth.
+    """Wrap a LangGraph node with Lelu Confidence-Aware Auth.
 
     Parameters
     ----------
     client:
         Configured :class:`~lelu.LeluClient`.
     actor:
-        Agent scope / actor name registered in Prism policy.
+        Agent scope / actor name registered in Lelu policy.
     action:
         The permission string being checked (e.g. ``"invoice:approve"``).
     confidence_key:
@@ -92,7 +92,7 @@ def secure_node(
     throw_on_deny:
         If ``True``, raise :class:`PermissionDeniedError` on denial.
         If ``False`` (default) the node returns augmented state with
-        ``prism_denied=True`` and ``prism_reason=<reason>`` for the graph to
+        ``lelu_denied=True`` and ``lelu_reason=<reason>`` for the graph to
         route on.
 
     Returns
@@ -122,7 +122,7 @@ def secure_node(
             # ── Human review required ──────────────────────────────────────────
             if decision.requires_human_review:
                 logger.info(
-                    "prism: node=%s queued for human review reason=%r",
+                    "lelu: node=%s queued for human review reason=%r",
                     fn.__name__,
                     decision.reason,
                 )
@@ -137,10 +137,10 @@ def secure_node(
             # ── Hard deny ─────────────────────────────────────────────────────
             if not decision.allowed:
                 msg = (
-                    f"Prism denied action '{action}' for actor '{actor}': "
+                    f"Lelu denied action '{action}' for actor '{actor}': "
                     f"{decision.reason}"
                 )
-                logger.warning("prism: %s", msg)
+                logger.warning("lelu: %s", msg)
                 if throw_on_deny:
                     raise PermissionDeniedError(msg, decision.reason)
                 return {
@@ -166,7 +166,7 @@ def secure_node(
 
 
 class PermissionDeniedError(Exception):
-    """Raised by a ``secure_node`` when ``throw_on_deny=True`` and Prism denies."""
+    """Raised by a ``secure_node`` when ``throw_on_deny=True`` and Lelu denies."""
 
     def __init__(self, message: str, reason: str) -> None:
         super().__init__(message)

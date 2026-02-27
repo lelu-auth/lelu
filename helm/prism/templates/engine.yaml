@@ -29,14 +29,14 @@ spec:
             - name: JWT_SIGNING_KEY
               valueFrom:
                 secretKeyRef:
-                  name: prism-secrets
+                  name: lelu-secrets
                   key: engineJwtSigningKey
             - name: CONTROL_PLANE_URL
               value: {{ .Values.engine.env.CONTROL_PLANE_URL | quote }}
             - name: CP_HMAC_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: prism-secrets
+                  name: lelu-secrets
                   key: engineCpHmacSecret
             - name: REGO_POLICY_PATH
               value: {{ .Values.engine.env.REGO_POLICY_PATH | quote }}
@@ -62,11 +62,11 @@ spec:
 {{ toYaml .Values.engine.resources | indent 12 }}
           volumeMounts:
             - name: policy
-              mountPath: /etc/prism
+              mountPath: /etc/lelu
       volumes:
         - name: policy
           configMap:
-            name: prism-policy
+            name: lelu-policy
 ---
 apiVersion: v1
 kind: Service

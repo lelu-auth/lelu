@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { LeluClient } from "../client";
 
-export * from './PrismApprovalUI';
+export * from './LeluApprovalUI';
 export * from './AgentReputationDashboard';
 
 export interface UseAgentPermissionOptions {
-  /** Base URL of the Prism engine.  Defaults to http://localhost:8080 */
+  /** Base URL of the Lelu engine.  Defaults to http://localhost:8080 */
   baseUrl?: string;
   /** API key forwarded to the engine */
   apiKey?: string;
@@ -28,7 +28,7 @@ export interface AgentPermissionState {
  * ```tsx
  * const { canExecute, loading, reason } = useAgentPermission(
  *   "agent-007", "files.read", 0.95,
- *   { baseUrl: "http://localhost:8080", apiKey: process.env.NEXT_PUBLIC_PRISM_KEY }
+ *   { baseUrl: "http://localhost:8080", apiKey: process.env.NEXT_PUBLIC_LELU_KEY }
  * );
  * ```
  */

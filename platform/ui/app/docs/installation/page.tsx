@@ -8,7 +8,7 @@ export default function DocsInstallation() {
   const steps = [
     { num: 1, title: "Install the Package" },
     { num: 2, title: "Set Environment Variables" },
-    { num: 3, title: "Configure Prism Client" },
+    { num: 3, title: "Configure Lelu Client" },
     { num: 4, title: "That's it!" },
   ];
 
@@ -261,7 +261,7 @@ if (decision.requiresHumanReview) {
             </p>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-                <span className="text-xs text-zinc-500 font-mono">prism_client.py</span>
+                <span className="text-xs text-zinc-500 font-mono">lelu_client.py</span>
               </div>
               <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose overflow-x-auto">
                 {`from lelu import LeluClient

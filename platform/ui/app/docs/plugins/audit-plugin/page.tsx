@@ -46,7 +46,7 @@ export default function DocsPluginsAudit() {
 AUDIT_S3_ENABLED=true
 AUDIT_S3_BUCKET=my-audit-bucket
 AUDIT_S3_REGION=us-east-1
-AUDIT_S3_PREFIX=prism/audit/
+AUDIT_S3_PREFIX=lelu/audit/
 
 # Credentials (or use IAM roles in AWS)
 AWS_ACCESS_KEY_ID=...
@@ -65,11 +65,11 @@ AUDIT_S3_ENDPOINT=https://my-minio:9000`}</pre>
               <span className="text-xs text-zinc-500 font-mono">curl</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`# Get by trace ID
-curl -H "Authorization: Bearer $PRISM_API_KEY" \\
+curl -H "Authorization: Bearer $LELU_API_KEY" \\
   http://localhost:9090/api/v1/audit?trace_id=01HZJ4P7K2G
 
 # Get last 100 records
-curl -H "Authorization: Bearer $PRISM_API_KEY" \\
+curl -H "Authorization: Bearer $LELU_API_KEY" \\
   "http://localhost:9090/api/v1/audit?limit=100&order=desc"`}</pre>
           </div>
         </section>

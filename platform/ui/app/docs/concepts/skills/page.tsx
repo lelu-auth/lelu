@@ -57,9 +57,9 @@ export default function DocsConceptSkills() {
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`# Use a skill as your active policy
 export REGO_POLICY_PATH=./config/skills/ticket-triage.rego
-export REGO_POLICY_QUERY=data.prism.authz
+export REGO_POLICY_QUERY=data.lelu.authz
 
-# Start Prism
+# Start Lelu
 make run-engine`}</pre>
           </div>
         </section>

@@ -8,7 +8,7 @@ export default function DocsConceptApi() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">API</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism exposes two HTTP APIs: the Engine API for runtime authorization and tokens, and the Platform API for policies and audit operations.
+          Lelu exposes two HTTP APIs: the Engine API for runtime authorization and tokens, and the Platform API for policies and audit operations.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export default function DocsConceptApi() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Standard Response Format</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Prism APIs return JSON responses. Successful requests return 2xx. Errors return 4xx/5xx with an error payload.
+            Lelu APIs return JSON responses. Successful requests return 2xx. Errors return 4xx/5xx with an error payload.
           </p>
           
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">

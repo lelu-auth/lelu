@@ -14,7 +14,7 @@ type regoPolicy struct {
 
 func loadRegoPolicy(path, query string) (*regoPolicy, error) {
 	if query == "" {
-		query = "data.prism.authz"
+		query = "data.lelu.authz"
 	}
 
 	info, err := os.Stat(path)

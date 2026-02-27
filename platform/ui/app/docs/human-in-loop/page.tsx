@@ -8,7 +8,7 @@ export default function DocsHumanInLoop() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Human-in-the-Loop</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          When an AI agent attempts an action with a confidence score that falls into the "requires approval" range, Prism automatically pauses the execution and queues the request for human review.
+          When an AI agent attempts an action with a confidence score that falls into the "requires approval" range, Lelu automatically pauses the execution and queues the request for human review.
         </p>
       </div>
 
@@ -23,7 +23,7 @@ export default function DocsHumanInLoop() {
               </div>
               <h3 className="text-lg font-medium text-zinc-900 dark:text-white mb-2">1. Agent Requests Authorization</h3>
               <p className="text-zinc-600 dark:text-zinc-400 text-sm">
-                The AI agent calls the Prism Engine with its intended action, resource, and confidence score.
+                The AI agent calls the Lelu Engine with its intended action, resource, and confidence score.
               </p>
             </div>
             
@@ -33,7 +33,7 @@ export default function DocsHumanInLoop() {
               </div>
               <h3 className="text-lg font-medium text-zinc-900 dark:text-white mb-2">2. Policy Evaluation</h3>
               <p className="text-zinc-600 dark:text-zinc-400 text-sm">
-                Prism evaluates the request against your Rego policies. If the confidence score is too low for automatic approval, the request is flagged as <code>requires_approval</code>.
+                Lelu evaluates the request against your Rego policies. If the confidence score is too low for automatic approval, the request is flagged as <code>requires_approval</code>.
               </p>
             </div>
             
@@ -53,7 +53,7 @@ export default function DocsHumanInLoop() {
               </div>
               <h3 className="text-lg font-medium text-zinc-900 dark:text-white mb-2">4. Human Review</h3>
               <p className="text-zinc-600 dark:text-zinc-400 text-sm">
-                A human operator reviews the request in the Prism UI (or via API) and either approves or denies it.
+                A human operator reviews the request in the Lelu UI (or via API) and either approves or denies it.
               </p>
             </div>
             
@@ -72,14 +72,14 @@ export default function DocsHumanInLoop() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Reviewing Requests in the UI</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            The Prism Platform provides a built-in UI for reviewing pending requests. Operators can see the agent's reasoning, the requested action, and the confidence score before making a decision.
+            The Lelu Platform provides a built-in UI for reviewing pending requests. Operators can see the agent's reasoning, the requested action, and the confidence score before making a decision.
           </p>
           
           <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col items-center justify-center text-center">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-400 dark:text-zinc-500 mb-4"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
             <h3 className="text-lg font-medium text-zinc-900 dark:text-white mb-2">Built-in Approval Dashboard</h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md">
-              Navigate to the "Policies" or "Queue" section in the Prism UI to view and manage pending authorization requests.
+              Navigate to the "Policies" or "Queue" section in the Lelu UI to view and manage pending authorization requests.
             </p>
           </div>
         </section>
@@ -87,7 +87,7 @@ export default function DocsHumanInLoop() {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Handling Approvals via API</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            You can also build custom approval workflows (e.g., Slack integrations) using the Prism API.
+            You can also build custom approval workflows (e.g., Slack integrations) using the Lelu API.
           </p>
           
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">

@@ -1,5 +1,5 @@
 """
-Prism Python SDK.
+Lelu Python SDK.
 
 Quick start::
 
@@ -18,7 +18,7 @@ Quick start::
 """
 
 from .client import LeluClient
-from .autogpt_plugin import PrismAutoGPTPlugin
+from .autogpt_plugin import LeluAutoGPTPlugin
 from .middleware import AgentMiddleware
 from .models import (
     AgentAuthDecision,
@@ -36,16 +36,16 @@ from .models import (
 
 # CrewAI integration — requires `pip install crewai`
 try:
-    from .crewai import PrismTool, PermissionDeniedError as CrewAIPermissionDeniedError  # noqa: F401
+    from .crewai import LeluTool, PermissionDeniedError as CrewAIPermissionDeniedError  # noqa: F401
 except ImportError:
-    pass  # crewai not installed; PrismTool not available
+    pass  # crewai not installed; LeluTool not available
 
 __all__ = [
     "LeluClient",
-    "PrismAutoGPTPlugin",
+    "LeluAutoGPTPlugin",
     "AgentMiddleware",
     # CrewAI
-    "PrismTool",
+    "LeluTool",
     "CrewAIPermissionDeniedError",
     # Requests
     "AuthRequest",

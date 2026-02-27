@@ -1,4 +1,4 @@
-package prism
+package lelu
 
 default authz = {
   "allowed": false,

@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -19,6 +19,7 @@ import (
 	"github.com/lelu/engine/internal/ratelimit"
 	"github.com/lelu/engine/internal/server"
 	syncer "github.com/lelu/engine/internal/sync"
+	"github.com/lelu/engine/internal/telemetry"
 	"github.com/lelu/engine/internal/tokens"
 	"github.com/redis/go-redis/v9"
 )
@@ -26,20 +27,24 @@ import (
 func main() {
 	// ── Config from environment ──────────────────────────────────────────────
 	addr := envOr("LISTEN_ADDR", ":8080")
-	policyPath := envOr("POLICY_PATH", "/etc/prism/auth.yaml")
+	policyPath := envOr("POLICY_PATH", "/etc/lelu/auth.yaml")
 	redisAddr := envOr("REDIS_ADDR", "")
 	signingKey := envOr("JWT_SIGNING_KEY", "change-me-in-production")
 	cpURL := envOr("CONTROL_PLANE_URL", "")
 	cpHMACSecret := envOr("CP_HMAC_SECRET", "")
 	regoPolicyPath := envOr("REGO_POLICY_PATH", "")
-	regoPolicyQuery := envOr("REGO_POLICY_QUERY", "data.prism.authz")
+	regoPolicyQuery := envOr("REGO_POLICY_QUERY", "data.lelu.authz")
 	apiKey := envOr("API_KEY", "")
 	tenantID := envOr("TENANT_ID", "default")
 	allowUnverifiedConfidence := envOr("CONFIDENCE_ALLOW_UNVERIFIED", "false") == "true"
 	missingConfidenceMode := server.ParseMissingConfidenceMode(envOr("CONFIDENCE_MISSING_MODE", "deny"))
-	enforcementMode := server.ParseEnforcementMode(envOr("PRISM_MODE", "enforce"))
+	enforcementMode := server.ParseEnforcementMode(envOr("LELU_MODE", "enforce"))
 	incidentWebhookURL := envOr("INCIDENT_WEBHOOK_URL", "")
 	incidentTimeoutMS := parseIntOr(envOr("INCIDENT_WEBHOOK_TIMEOUT_MS", "2000"), 2000)
+	otelEnabled := envOr("OTEL_ENABLED", "false") == "true"
+	otelEndpoint := envOr("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317")
+	otelSampleRate := parseFloatOr(envOr("OTEL_SAMPLE_RATE", "1.0"), 1.0)
+	
 	if isProductionEnv() {
 		if signingKey == "" || signingKey == "change-me-in-production" {
 			log.Fatal("JWT_SIGNING_KEY must be explicitly set to a strong secret in production")
@@ -67,9 +72,35 @@ func main() {
 		log.Printf("rego policy loaded from %s (query: %s)", regoPolicyPath, regoPolicyQuery)
 	}
 
+	// ── Operational fallback modes (Phase 2) ─────────────────────────────────
+	fb := fallback.New(fallback.Config{
+		RedisMode:        fallback.ParseMode(envOr("FALLBACK_REDIS_MODE", "closed")),
+		ControlPlaneMode: fallback.ParseMode(envOr("FALLBACK_CP_MODE", "closed")),
+	})
+	log.Printf("fallback modes: redis=%s, control_plane=%s",
+		envOr("FALLBACK_REDIS_MODE", "closed"), envOr("FALLBACK_CP_MODE", "closed"))
+
+	// ── OpenTelemetry (Phase 2) ──────────────────────────────────────────────
+	tp, err := telemetry.InitProvider(telemetry.Config{
+		Enabled:      otelEnabled,
+		OTLPEndpoint: otelEndpoint,
+		SampleRate:   otelSampleRate,
+	})
+	if err != nil {
+		log.Fatalf("failed to initialize telemetry: %v", err)
+	}
+	defer func() {
+		shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := tp.Shutdown(shutCtx); err != nil {
+			log.Printf("telemetry shutdown error: %v", err)
+		}
+	}()
+
 	tokenSvc := tokens.New(tokens.Config{
-		SigningKey: signingKey,
-		RedisAddr:  redisAddr,
+		SigningKey:      signingKey,
+		RedisAddr:       redisAddr,
+		FallbackService: fb,
 	})
 	confGate := confidence.New()
 	auditWriter := audit.New()
@@ -106,19 +137,11 @@ func main() {
 			envOr("TENANT_AUTH_RATE_LIMIT", "0"), envOr("TENANT_MINT_RATE_LIMIT", "0"))
 	}
 
-	// ── Operational fallback modes (Phase 2) ─────────────────────────────────
-	fb := fallback.New(fallback.Config{
-		RedisMode:        fallback.ParseMode(envOr("FALLBACK_REDIS_MODE", "closed")),
-		ControlPlaneMode: fallback.ParseMode(envOr("FALLBACK_CP_MODE", "closed")),
-	})
-	log.Printf("fallback modes: redis=%s, control_plane=%s",
-		envOr("FALLBACK_REDIS_MODE", "closed"), envOr("FALLBACK_CP_MODE", "closed"))
-
 	// ── HTTP server ───────────────────────────────────────────────────────────
 	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue, apiKey, server.ConfidenceConfig{
 		AllowUnverifiedConfidence: allowUnverifiedConfidence,
 		MissingSignalMode:         missingConfidenceMode,
-	}, enforcementMode, incidentNotifier, rl, fb)
+	}, enforcementMode, incidentNotifier, rl, fb, tp)
 	srv := server.NewHTTPServer(addr, h)
 
 	// ── Policy sync worker (optional) ─────────────────────────────────────────
@@ -171,6 +194,14 @@ func envOr(key, fallback string) string {
 
 func parseIntOr(value string, fallback int) int {
 	v, err := strconv.Atoi(value)
+	if err != nil || v <= 0 {
+		return fallback
+	}
+	return v
+}
+
+func parseFloatOr(value string, fallback float64) float64 {
+	v, err := strconv.ParseFloat(value, 64)
 	if err != nil || v <= 0 {
 		return fallback
 	}

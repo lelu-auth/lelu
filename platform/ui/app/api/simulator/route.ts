@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ENGINE_URL = process.env.LELU_ENGINE_URL ?? process.env.PRISM_ENGINE_URL ?? "http://localhost:8082";
-const ENGINE_API_KEY = process.env.LELU_API_KEY ?? process.env.PRISM_API_KEY ?? "prism-dev-key";
+const ENGINE_URL = process.env.LELU_ENGINE_URL ?? process.env.LELU_ENGINE_URL ?? "http://localhost:8082";
+const ENGINE_API_KEY = process.env.LELU_API_KEY ?? process.env.LELU_API_KEY ?? "lelu-dev-key";
 
 export async function POST(req: NextRequest) {
   try {

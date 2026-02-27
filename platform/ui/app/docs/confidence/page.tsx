@@ -8,7 +8,7 @@ export default function DocsConfidence() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Confidence Scores</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Confidence scores are the heart of Prism's dynamic authorization model. They allow you to quantify the risk of an action and require human approval when the AI's confidence is too low.
+          Confidence scores are the heart of Lelu's dynamic authorization model. They allow you to quantify the risk of an action and require human approval when the AI's confidence is too low.
         </p>
       </div>
 
@@ -49,7 +49,7 @@ export default function DocsConfidence() {
               <span className="text-xs text-zinc-500 font-mono">auth.rego</span>
             </div>
             <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              <pre><code>{`package prism.authz
+              <pre><code>{`package lelu.authz
 
 default allow = false
 default requires_approval = false
@@ -79,7 +79,7 @@ requires_approval {
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Providing Confidence via SDK</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            When using the Prism SDK, your AI agent must provide its confidence score when requesting authorization.
+            When using the Lelu SDK, your AI agent must provide its confidence score when requesting authorization.
           </p>
           
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden mb-6">
@@ -87,12 +87,12 @@ requires_approval {
               <span className="text-xs text-zinc-500 font-mono">typescript</span>
             </div>
             <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              <pre><code>{`import { PrismClient } from '@prism/sdk';
+              <pre><code>{`import { LeluClient } from '@lelu/sdk';
 
-const prism = new PrismClient({ apiKey: 'your-api-key' });
+const lelu = new LeluClient({ apiKey: 'your-api-key' });
 
 // The AI agent determines it is 85% confident in this action
-const response = await prism.authorize({
+const response = await lelu.authorize({
   agentId: 'agent-123',
   action: 'delete_user',
   resource: 'user:456',

@@ -8,7 +8,7 @@ export default function DocsAdaptersRedis() {
         </div>
         <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Redis</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Redis is used by the Prism Engine as a high-speed queue and cache for in-flight authorization requests, confidence scores, and human-in-the-loop state. It is not used for durable storage — all long-lived data lives in PostgreSQL.
+          Redis is used by the Lelu Engine as a high-speed queue and cache for in-flight authorization requests, confidence scores, and human-in-the-loop state. It is not used for durable storage — all long-lived data lives in PostgreSQL.
         </p>
       </div>
 
@@ -42,7 +42,7 @@ REDIS_URL=rediss://localhost:6380`}</pre>
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Key Space</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-            All Prism keys are namespaced under <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">prism:</code> to avoid collisions with other applications sharing the same Redis instance.
+            All Lelu keys are namespaced under <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">lelu:</code> to avoid collisions with other applications sharing the same Redis instance.
           </p>
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
             <table className="w-full text-sm">
@@ -55,10 +55,10 @@ REDIS_URL=rediss://localhost:6380`}</pre>
               </thead>
               <tbody>
                 {[
-                  ["prism:queue:{requestId}",      "Fan-out queue for pending human-review requests",     "24 h"],
-                  ["prism:decision:{requestId}",   "Cached allow/deny result for polling clients",        "5 min"],
-                  ["prism:confidence:{agentId}",   "Rolling EMA confidence score per agent",              "1 h"],
-                  ["prism:ratelimit:{agentId}",    "Sliding-window request counter per agent",            "1 min"],
+                  ["lelu:queue:{requestId}",      "Fan-out queue for pending human-review requests",     "24 h"],
+                  ["lelu:decision:{requestId}",   "Cached allow/deny result for polling clients",        "5 min"],
+                  ["lelu:confidence:{agentId}",   "Rolling EMA confidence score per agent",              "1 h"],
+                  ["lelu:ratelimit:{agentId}",    "Sliding-window request counter per agent",            "1 min"],
                 ].map(([key, purpose, ttl]) => (
                   <tr key={key} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0">
                     <td className="px-4 py-3 font-mono text-xs text-zinc-800 dark:text-zinc-200">{key}</td>
@@ -122,7 +122,7 @@ appendfsync everysec`}</pre>
               },
               {
                 name: "Redis Cluster",
-                desc: "Horizontal sharding. All prism:* keys must map to the same hash slot — prefix keys with {prism} to force this.",
+                desc: "Horizontal sharding. All lelu:* keys must map to the same hash slot — prefix keys with {lelu} to force this.",
                 badge: "Supported",
                 badgeColor: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
               },
@@ -154,7 +154,7 @@ appendfsync everysec`}</pre>
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Additional Information</h2>
           <p className="text-zinc-600 dark:text-zinc-400">
-            Redis is the only required infrastructure dependency for the Engine. If Redis is unavailable, the Engine will reject all requests with a <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">503 Service Unavailable</code> until connectivity is restored. Monitor queue depth with the <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">prism_engine_queue_depth</code> Prometheus metric.
+            Redis is the only required infrastructure dependency for the Engine. If Redis is unavailable, the Engine will reject all requests with a <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">503 Service Unavailable</code> until connectivity is restored. Monitor queue depth with the <code className="font-mono text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">lelu_engine_queue_depth</code> Prometheus metric.
           </p>
         </section>
 

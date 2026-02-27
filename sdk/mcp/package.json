@@ -1,12 +1,12 @@
 {
-  "name": "@prism/mcp",
+  "name": "@lelu/mcp",
   "version": "1.0.0",
-  "description": "Model Context Protocol (MCP) server for Prism — gives AI agents secure, policy-gated access to your infrastructure",
+  "description": "Model Context Protocol (MCP) server for Lelu — gives AI agents secure, policy-gated access to your infrastructure",
   "author": "Abenezer",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "prism-mcp": "./dist/cli.js"
+    "lelu-mcp": "./dist/cli.js"
   },
   "main": "./dist/server.js",
   "types": "./dist/server.d.ts",

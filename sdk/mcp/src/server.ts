@@ -6,10 +6,10 @@ import { z } from "zod";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-export interface PrismMcpConfig {
-  /** Prism Engine base URL. Default: http://localhost:8082 */
+export interface LeluMcpConfig {
+  /** Lelu Engine base URL. Default: http://localhost:8082 */
   engineUrl?: string;
-  /** Prism Engine API key */
+  /** Lelu Engine API key */
   apiKey?: string;
   /** Request timeout in ms. Default: 10_000 */
   timeoutMs?: number;
@@ -39,7 +39,7 @@ async function call<T>(
     const json = (await res.json()) as Record<string, unknown>;
     if (!res.ok) {
       throw new Error(
-        `Prism Engine error ${res.status}: ${(json["error"] as string) ?? JSON.stringify(json)}`
+        `Lelu Engine error ${res.status}: ${(json["error"] as string) ?? JSON.stringify(json)}`
       );
     }
     return json as T;
@@ -50,9 +50,9 @@ async function call<T>(
 
 // ─── Server factory ───────────────────────────────────────────────────────────
 
-export function createPrismMcpServer(cfg: PrismMcpConfig = {}): McpServer {
-  const baseUrl  = (cfg.engineUrl  ?? process.env["PRISM_ENGINE_URL"] ?? "http://localhost:8082").replace(/\/$/, "");
-  const apiKey   = cfg.apiKey      ?? process.env["PRISM_API_KEY"];
+export function createLeluMcpServer(cfg: LeluMcpConfig = {}): McpServer {
+  const baseUrl  = (cfg.engineUrl  ?? process.env["LELU_ENGINE_URL"] ?? "http://localhost:8082").replace(/\/$/, "");
+  const apiKey   = cfg.apiKey      ?? process.env["LELU_API_KEY"];
   const timeout  = cfg.timeoutMs   ?? 10_000;
 
   const post = <T>(path: string, body: unknown) =>
@@ -67,15 +67,15 @@ export function createPrismMcpServer(cfg: PrismMcpConfig = {}): McpServer {
   // ── MCP Server ──────────────────────────────────────────────────────────────
 
   const server = new McpServer({
-    name:    "prism",
+    name:    "lelu",
     version: "1.0.0",
   });
 
   // ── Tool: agent_authorize ──────────────────────────────────────────────────
   server.tool(
-    "prism_agent_authorize",
-    "Ask the Prism Engine whether an AI agent is allowed to perform an action. " +
-    "Prism evaluates the action against your OPA policy using the agent's live confidence score. " +
+    "lelu_agent_authorize",
+    "Ask the Lelu Engine whether an AI agent is allowed to perform an action. " +
+    "Lelu evaluates the action against your OPA policy using the agent's live confidence score. " +
     "Returns allowed/denied/requires_human_review along with a trace ID for auditing.",
     {
       actor:      z.string().describe("The agent or bot performing the action, e.g. 'invoice_bot'"),
@@ -133,9 +133,9 @@ export function createPrismMcpServer(cfg: PrismMcpConfig = {}): McpServer {
 
   // ── Tool: authorize (human) ────────────────────────────────────────────────
   server.tool(
-    "prism_authorize",
+    "lelu_authorize",
     "Check whether a human user is permitted to perform an action. " +
-    "Use prism_agent_authorize instead when the actor is an AI agent.",
+    "Use lelu_agent_authorize instead when the actor is an AI agent.",
     {
       userId:   z.string().describe("The user performing the action"),
       action:   z.string().describe("The action being requested"),
@@ -169,7 +169,7 @@ export function createPrismMcpServer(cfg: PrismMcpConfig = {}): McpServer {
 
   // ── Tool: mint_token ───────────────────────────────────────────────────────
   server.tool(
-    "prism_mint_token",
+    "lelu_mint_token",
     "Mint a short-lived scoped JWT for an AI agent. The token expires after ttlSeconds (default 60 s). " +
     "Use this when you need to grant an agent temporary credentials for a specific scope rather than calling authorize on every action.",
     {
@@ -209,10 +209,10 @@ export function createPrismMcpServer(cfg: PrismMcpConfig = {}): McpServer {
 
   // ── Tool: revoke_token ─────────────────────────────────────────────────────
   server.tool(
-    "prism_revoke_token",
+    "lelu_revoke_token",
     "Immediately revoke a JIT token by its ID. Use this when a task is complete or when suspicious activity is detected.",
     {
-      tokenId: z.string().describe("The token ID returned by prism_mint_token"),
+      tokenId: z.string().describe("The token ID returned by lelu_mint_token"),
     },
     async ({ tokenId }) => {
       const data = await del<{ success: boolean }>(`/v1/tokens/${encodeURIComponent(tokenId)}`);
@@ -230,8 +230,8 @@ export function createPrismMcpServer(cfg: PrismMcpConfig = {}): McpServer {
 
   // ── Tool: health ───────────────────────────────────────────────────────────
   server.tool(
-    "prism_health",
-    "Check whether the Prism Engine is reachable and healthy. Returns the engine status and version.",
+    "lelu_health",
+    "Check whether the Lelu Engine is reachable and healthy. Returns the engine status and version.",
     {},
     async () => {
       const data = await get<{ status: string; version?: string }>("/healthz");
@@ -256,15 +256,15 @@ export function createPrismMcpServer(cfg: PrismMcpConfig = {}): McpServer {
 
 // ─── Stdio runner ─────────────────────────────────────────────────────────────
 
-export async function runStdio(cfg?: PrismMcpConfig): Promise<void> {
-  const server    = createPrismMcpServer(cfg);
+export async function runStdio(cfg?: LeluMcpConfig): Promise<void> {
+  const server    = createLeluMcpServer(cfg);
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 
 // ─── HTTP/SSE runner ──────────────────────────────────────────────────────────
 
-export async function runHttp(cfg?: PrismMcpConfig, port = 3001): Promise<void> {
+export async function runHttp(cfg?: LeluMcpConfig, port = 3001): Promise<void> {
   const transports: Record<string, SSEServerTransport> = {};
 
   const httpServer = http.createServer(async (req, res) => {
@@ -277,13 +277,13 @@ export async function runHttp(cfg?: PrismMcpConfig, port = 3001): Promise<void> 
     // Health probe (used by Docker healthcheck)
     if (req.url === "/healthz" && req.method === "GET") {
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ status: "ok", service: "prism-mcp" }));
+      res.end(JSON.stringify({ status: "ok", service: "lelu-mcp" }));
       return;
     }
 
     // SSE endpoint — agent opens GET /sse to establish a session
     if (req.url === "/sse" && req.method === "GET") {
-      const server    = createPrismMcpServer(cfg);
+      const server    = createLeluMcpServer(cfg);
       const transport = new SSEServerTransport("/messages", res);
       transports[transport.sessionId] = transport;
       res.on("close", () => { delete transports[transport.sessionId]; });
@@ -309,10 +309,10 @@ export async function runHttp(cfg?: PrismMcpConfig, port = 3001): Promise<void> 
   });
 
   await new Promise<void>((resolve) => httpServer.listen(port, "0.0.0.0", resolve));
-  console.error(`[prism-mcp] HTTP/SSE server listening on http://0.0.0.0:${port}`);
-  console.error(`[prism-mcp]   SSE endpoint  : GET  /sse`);
-  console.error(`[prism-mcp]   Post endpoint : POST /messages?sessionId=<id>`);
-  console.error(`[prism-mcp]   Health check  : GET  /healthz`);
+  console.error(`[lelu-mcp] HTTP/SSE server listening on http://0.0.0.0:${port}`);
+  console.error(`[lelu-mcp]   SSE endpoint  : GET  /sse`);
+  console.error(`[lelu-mcp]   Post endpoint : POST /messages?sessionId=<id>`);
+  console.error(`[lelu-mcp]   Health check  : GET  /healthz`);
 
   // Keep alive
   await new Promise<void>((_, reject) => httpServer.on("error", reject));

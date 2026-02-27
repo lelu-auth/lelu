@@ -7,7 +7,7 @@ secrets:
     cpHmacSecret: "REPLACE_ME"
   platform:
     apiKey: "REPLACE_ME"
-    databaseUrl: "postgres://prism:REPLACE_ME@managed-postgres:5432/prism?sslmode=require"
+    databaseUrl: "postgres://lelu:REPLACE_ME@managed-postgres:5432/lelu?sslmode=require"
   ui:
     platformApiKey: "REPLACE_ME"
   postgres:
@@ -25,18 +25,18 @@ engine:
       cpu: 500m
       memory: 512Mi
   env:
-    POLICY_PATH: /etc/prism/auth.yaml
+    POLICY_PATH: /etc/lelu/auth.yaml
     REDIS_ADDR: managed-redis:6379
-    CONTROL_PLANE_URL: https://platform.prism.example.com
+    CONTROL_PLANE_URL: https://platform.lelu.example.com
     REGO_POLICY_PATH: ""
-    REGO_POLICY_QUERY: data.prism.authz
+    REGO_POLICY_QUERY: data.lelu.authz
     INCIDENT_WEBHOOK_URL: ""
     INCIDENT_WEBHOOK_TIMEOUT_MS: "2000"
 
 platform:
   enabled: true
   replicaCount: 2
-  image: ghcr.io/abenezer0923/prism-platform:latest
+  image: ghcr.io/abenezer0923/lelu-platform:latest
   resources:
     requests:
       cpu: 150m
@@ -46,7 +46,7 @@ platform:
       memory: 1Gi
   env:
     OIDC_ISSUER_URL: https://login.example.com
-    OIDC_AUDIENCE: prism-platform
+    OIDC_AUDIENCE: lelu-platform
     SSO_TRUSTED_HEADER: X-Forwarded-Email
     SSO_TRUSTED_EMAIL_DOMAIN: example.com
     EVIDENCE_SIGNING_KEY: "REPLACE_ME"
@@ -54,7 +54,7 @@ platform:
 ui:
   enabled: true
   replicaCount: 2
-  image: ghcr.io/abenezer0923/prism-ui:latest
+  image: ghcr.io/abenezer0923/lelu-ui:latest
   resources:
     requests:
       cpu: 100m
@@ -63,7 +63,7 @@ ui:
       cpu: 500m
       memory: 512Mi
   env:
-    PLATFORM_URL: http://prism-platform:9090
+    PLATFORM_URL: http://lelu-platform:9090
 
 redis:
   enabled: false
@@ -74,7 +74,7 @@ postgres:
 ingress:
   enabled: true
   className: nginx
-  host: prism.example.com
+  host: lelu.example.com
   tls:
     enabled: true
-    secretName: prism-example-tls
+    secretName: lelu-example-tls
