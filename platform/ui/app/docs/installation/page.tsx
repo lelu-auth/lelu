@@ -13,10 +13,10 @@ export default function DocsInstallation() {
   ];
 
   const packageCommands: Record<typeof packageTab, string> = {
-    npm: "npm install prizm-engine",
-    pnpm: "pnpm add prizm-engine",
-    yarn: "yarn add prizm-engine",
-    bun: "bun add prizm-engine",
+    npm: "npm install lelu",
+    pnpm: "pnpm add lelu",
+    yarn: "yarn add lelu",
+    bun: "bun add lelu",
   };
 
   return (
@@ -27,7 +27,7 @@ export default function DocsInstallation() {
           Installation
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-2xl">
-          Install an official Prism SDK, configure environment variables, and initialize the client in your app.
+          Install an official Lelu SDK, configure environment variables, and initialize the client in your app.
         </p>
       </div>
 
@@ -61,7 +61,7 @@ export default function DocsInstallation() {
             Install the Package
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Let&apos;s start by adding Prism to your project:
+            Let&apos;s start by adding Lelu to your project:
           </p>
           
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
@@ -115,7 +115,7 @@ export default function DocsInstallation() {
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              If your frontend and backend are in separate repositories, install the Prism SDK in each service that calls the Prism Engine.
+              If your frontend and backend are in separate repositories, install the Lelu SDK in each service that calls the Lelu Engine.
             </p>
           </div>
         </section>
@@ -139,10 +139,10 @@ export default function DocsInstallation() {
                 <span className="flex items-center justify-center w-6 h-6 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">
                   1
                 </span>
-                Prism Engine URL
+                Lelu Engine URL
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                The URL where your Prism Engine is running. This should point to your deployed Prism Engine instance.
+                The URL where your Lelu Engine is running. This should point to your deployed Lelu Engine instance.
               </p>
               
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
@@ -150,7 +150,7 @@ export default function DocsInstallation() {
                   <span className="text-xs text-zinc-500 font-mono">.env</span>
                 </div>
                 <pre className="p-4 font-mono text-sm text-zinc-300">
-                  PRISM_ENGINE_URL=https://your-prism-engine.example.com
+                  LELU_ENGINE_URL=https://your-lelu-engine.example.com
                 </pre>
                 <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
@@ -170,7 +170,7 @@ export default function DocsInstallation() {
                 API Key
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Your Prism API key for authenticating requests to the engine. Generate a secure key using <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">openssl rand -base64 32</code>.
+                Your Lelu API key for authenticating requests to the engine. Generate a secure key using <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">openssl rand -base64 32</code>.
               </p>
               
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
@@ -178,7 +178,7 @@ export default function DocsInstallation() {
                   <span className="text-xs text-zinc-500 font-mono">.env</span>
                 </div>
                 <pre className="p-4 font-mono text-sm text-zinc-300">
-                  PRISM_API_KEY=your_secure_api_key_here
+                  LELU_API_KEY=your_secure_api_key_here
                 </pre>
                 <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
@@ -216,26 +216,26 @@ export default function DocsInstallation() {
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               3
             </span>
-            Configure Prism Client
+            Configure Lelu Client
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Initialize the Prism client in your application to start authorizing agent actions:
+            Initialize the Lelu client in your application to start authorizing agent actions:
           </p>
           
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">lib/prism.ts</span>
+              <span className="text-xs text-zinc-500 font-mono">lib/lelu.ts</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose overflow-x-auto">
-              {`import { PrismClient } from "prizm-engine";
+              {`import { LeluClient } from "lelu";
 
-export const prism = new PrismClient({
-  baseUrl: process.env.PRISM_ENGINE_URL!,
-  apiKey: process.env.PRISM_API_KEY!,
+export const lelu = new LeluClient({
+  baseUrl: process.env.LELU_ENGINE_URL!,
+  apiKey: process.env.LELU_API_KEY!,
 });
 
 // Example: Authorize an agent action
-const decision = await prism.agentAuthorize({
+const decision = await lelu.agentAuthorize({
   actor: "support_agent",
   action: "issue_refund",
   context: { confidence: 0.85 }
@@ -264,16 +264,16 @@ if (decision.requiresHumanReview) {
                 <span className="text-xs text-zinc-500 font-mono">prism_client.py</span>
               </div>
               <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose overflow-x-auto">
-                {`from auth_pe import PrismClient
+                {`from lelu import LeluClient
 import os
 
-prism = PrismClient(
-    base_url=os.environ["PRISM_ENGINE_URL"],
-    api_key=os.environ["PRISM_API_KEY"]
+lelu = LeluClient(
+    base_url=os.environ["LELU_ENGINE_URL"],
+    api_key=os.environ["LELU_API_KEY"]
 )
 
 # Example: Authorize an agent action
-decision = prism.agent_authorize(
+decision = lelu.agent_authorize(
     actor="support_agent",
     action="issue_refund",
     confidence=0.85
@@ -305,7 +305,7 @@ elif decision.allowed:
           
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-6">
             <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-              You&apos;re all set! Prism is now configured and ready to use. Check out the following resources to learn more:
+              You&apos;re all set! Lelu is now configured and ready to use. Check out the following resources to learn more:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a href="/docs/concepts/architecture" className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group">
@@ -317,7 +317,7 @@ elif decision.allowed:
                 </div>
                 <div>
                   <div className="font-medium text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Architecture</div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-500">Learn how Prism works</div>
+                  <div className="text-xs text-zinc-500 dark:text-zinc-500">Learn how Lelu works</div>
                 </div>
               </a>
               <a href="/docs/integrations/nextjs" className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group">

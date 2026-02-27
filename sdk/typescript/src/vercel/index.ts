@@ -10,8 +10,8 @@
  * ```ts
  * import { tool } from 'ai';
  * import { z } from 'zod';
- * import { PrismClient } from 'prizm-engine';
- * import { secureTool } from 'prizm-engine/vercel';
+ * import { PrismClient } from 'lelu';
+ * import { secureTool } from 'lelu/vercel';
  *
  * const prism = new PrismClient({ baseUrl: 'http://localhost:8082' });
  *
@@ -35,7 +35,7 @@
  * ```
  */
 
-import { PrismClient } from "../client.js";
+import { LeluClient } from "../client.js";
 
 // ─── Minimal Vercel AI SDK tool type ──────────────────────────────────────────
 
@@ -65,8 +65,8 @@ export interface PrismDeniedResult {
 // ─── Options ──────────────────────────────────────────────────────────────────
 
 export interface SecureToolOptions<TArgs = unknown, TResult = unknown> {
-  /** Configured Prism client. */
-  client: PrismClient;
+  /** Configured Lelu client. */
+  client: LeluClient;
   /** The agent actor / scope registered in Prism policy. */
   actor: string;
   /** The permission string being checked. */
@@ -99,8 +99,7 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
 ): VercelTool<TArgs, TResult | PrismDeniedResult> {
   const { client, actor, action, actingFor } = opts;
 
-  return {
-    description: opts.tool.description,
+  const wrapped: VercelTool<TArgs, TResult | PrismDeniedResult> = {
     parameters: opts.tool.parameters,
 
     async execute(
@@ -142,13 +141,18 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
 
       // ── Hard deny ─────────────────────────────────────────────────────
       if (!decision.allowed) {
-        return {
+        const denied: PrismDeniedResult = {
           allowed: false,
           reason:
             `Action '${action}' was denied for agent '${actor}'. ` +
             `Reason: ${decision.reason}.`,
           requiresHumanReview: false,
-          downgradedScope: decision.downgradedScope,
+        };
+        if (decision.downgradedScope !== undefined) {
+          denied.downgradedScope = decision.downgradedScope;
+        }
+        return {
+          ...denied,
         };
       }
 
@@ -161,4 +165,10 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
       return opts.tool.execute(args, options);
     },
   };
+
+  if (opts.tool.description !== undefined) {
+    wrapped.description = opts.tool.description;
+  }
+
+  return wrapped;
 }

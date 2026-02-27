@@ -2,21 +2,23 @@
 // Public API surface
 
 // ─── Vercel AI SDK integration ────────────────────────────────────────────────
-// Import via: import { secureTool } from 'prizm-engine/vercel'
+// Import via: import { secureTool } from 'lelu/vercel'
 // (tree-shakeable — does not add weight to non-Vercel users)
 export { secureTool } from "./vercel/index.js";
 export type { SecureToolOptions, PrismDeniedResult, VercelTool } from "./vercel/index.js";
 
-export { PrismClient } from "./client.js";
+export { LeluClient, PrismClient } from "./client.js";
 
 export type {
   AuthRequest,
   AgentAuthRequest,
   AgentContext,
   MintTokenRequest,
+  DelegateScopeRequest,
   AuthDecision,
   AgentAuthDecision,
   MintTokenResult,
+  DelegateScopeResult,
   RevokeTokenResult,
   ClientConfig,
 } from "./types.js";
@@ -27,25 +29,26 @@ export {
   AgentAuthRequestSchema,
   AgentContextSchema,
   MintTokenRequestSchema,
+  DelegateScopeRequestSchema,
 } from "./types.js";
 
 // ─── Convenience factory ──────────────────────────────────────────────────────
 
-import { PrismClient } from "./client.js";
+import { LeluClient } from "./client.js";
 import type { ClientConfig } from "./types.js";
 
 /**
- * Creates a PrismClient with the given configuration.
- * Equivalent to `new PrismClient(config)`.
+ * Creates a LeluClient with the given configuration.
+ * Equivalent to `new LeluClient(config)`.
  *
  * @example
  * ```ts
- * import { createClient } from "prizm-engine";
+ * import { createClient } from "lelu";
  *
- * const prism = createClient({ baseUrl: "http://localhost:8080" });
- * const { allowed } = await prism.agentAuthorize({ ... });
+ * const lelu = createClient({ baseUrl: "http://localhost:8080" });
+ * const { allowed } = await lelu.agentAuthorize({ ... });
  * ```
  */
-export function createClient(config?: ClientConfig): PrismClient {
-  return new PrismClient(config);
+export function createClient(config?: ClientConfig): LeluClient {
+  return new LeluClient(config);
 }

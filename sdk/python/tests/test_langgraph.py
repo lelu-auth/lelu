@@ -13,7 +13,7 @@ from auth_pe.models import AgentAuthDecision
 
 
 def _mock_client(*, allowed: bool, requires_review: bool = False, reason: str = "ok") -> MagicMock:
-    """Return a mock PrismClient whose agent_authorize returns the given decision."""
+    """Return a mock LeluClient whose agent_authorize returns the given decision."""
     decision = AgentAuthDecision(
         allowed=allowed,
         reason=reason,
@@ -102,4 +102,4 @@ async def test_secure_node_default_confidence():
     assert not was_denied(result)
     # Verify the call used 0.99
     call_args = client.agent_authorize.call_args[0][0]
-    assert call_args.confidence == 0.99
+    assert call_args.context.confidence == 0.99

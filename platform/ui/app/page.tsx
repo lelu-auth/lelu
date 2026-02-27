@@ -19,16 +19,16 @@
             </h1>
             
             <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl">
-              Prism enforces policy at tool-call time using confidence-aware decisions, human review queues, and audit-grade traces mapped to every action.
+              Lelu enforces policy at tool-call time using confidence-aware decisions, human review queues, and audit-grade traces mapped to every action.
             </p>
 
             <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-500">
               <code className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono">
-                npm i prizm-engine
+                npm i lelu
               </code>
               <span>or</span>
               <code className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono">
-                go get github.com/Abenezer0923/Prism/sdk/go
+                go get github.com/Abenezer0923/Lelu/sdk/go
               </code>
             </div>
 
@@ -40,7 +40,7 @@
                 GET STARTED
               </a>
               <a 
-                href="https://github.com/Abenezer0923/Prism" 
+                href="https://github.com/Abenezer0923/Lelu" 
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all border border-zinc-200 dark:border-zinc-800"
@@ -79,6 +79,8 @@
               <div className="p-6 font-mono text-sm overflow-x-auto">
                 <pre className="text-zinc-300">
                   <code>
+<span className="text-purple-400">import</span> {"{"} <span className="text-blue-300">LeluClient</span> {"}"} <span className="text-purple-400">from</span> <span className="text-orange-300">"lelu"</span>;
+
 <span className="text-purple-400">const</span> <span className="text-blue-300">decision</span> = <span className="text-purple-400">await</span> <span className="text-yellow-300">client</span>.<span className="text-blue-300">agentAuthorize</span>({"{"}
   <span className="text-blue-300">actor</span>: <span className="text-orange-300">"invoice_bot"</span>,
   <span className="text-blue-300">action</span>: <span className="text-orange-300">"approve_refunds"</span>,
@@ -114,10 +116,10 @@
       <div className="max-w-7xl w-full mt-32 space-y-12">
         <div className="text-center space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">
-            Why Teams Choose Prism
+            Why Teams Choose Lelu
           </h2>
           <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-            Prism combines enforcement, human oversight, and evidence generation in one runtime control plane for agentic workflows.
+            Lelu combines enforcement, human oversight, and evidence generation in one runtime control plane for agentic workflows.
           </p>
         </div>
 

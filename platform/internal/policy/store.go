@@ -100,12 +100,14 @@ func (s *Store) GetByID(tenantID, id string) (*Policy, error) {
 	return &p, nil
 }
 
-// List returns all policies ordered by name.
-func (s *Store) List() ([]Policy, error) {
+// List returns all policies for a tenant ordered by name.
+func (s *Store) List(tenantID string) ([]Policy, error) {
 	rows, err := s.db.Query(`
-		SELECT id, name, content, version, hmac_sha256, created_at, updated_at
-		FROM policies ORDER BY name
-	`)
+		SELECT id, tenant_id, name, content, version, hmac_sha256, created_at, updated_at
+		FROM policies
+		WHERE tenant_id = $1
+		ORDER BY name
+	`, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("policy: list: %w", err)
 	}
@@ -114,7 +116,7 @@ func (s *Store) List() ([]Policy, error) {
 	var policies []Policy
 	for rows.Next() {
 		var p Policy
-		if err := rows.Scan(&p.ID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.TenantID, &p.Name, &p.Content, &p.Version, &p.HMACSha256, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("policy: scan: %w", err)
 		}
 		policies = append(policies, p)
@@ -122,9 +124,9 @@ func (s *Store) List() ([]Policy, error) {
 	return policies, rows.Err()
 }
 
-// Delete removes a policy by name.
-func (s *Store) Delete(name string) error {
-	res, err := s.db.Exec(`DELETE FROM policies WHERE name = $1`, name)
+// Delete removes a policy by name for a tenant.
+func (s *Store) Delete(tenantID, name string) error {
+	res, err := s.db.Exec(`DELETE FROM policies WHERE tenant_id = $1 AND name = $2`, tenantID, name)
 	if err != nil {
 		return fmt.Errorf("policy: delete: %w", err)
 	}

@@ -20,7 +20,7 @@
    ```
    Expected response:
    ```json
-  { "status": "ok", "service": "prizm-engine" }
+  { "status": "ok", "service": "prism-engine" }
    ```
 
 ---
@@ -88,7 +88,7 @@ GET {{base_url}}/healthz
 ```json
 {
   "status": "ok",
-  "service": "prizm-engine"
+  "service": "prism-engine"
 }
 ```
 

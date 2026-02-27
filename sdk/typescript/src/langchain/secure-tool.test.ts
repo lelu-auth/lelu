@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SecureTool } from "./secure-tool.js";
-import type { PrismClient } from "../client.js";
+import type { LeluClient } from "../client.js";
 import type { AgentAuthDecision } from "../types.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function mockClient(decision: Partial<AgentAuthDecision>): PrismClient {
+function mockClient(decision: Partial<AgentAuthDecision>): LeluClient {
   const full: AgentAuthDecision = {
     allowed: true,
     reason: "ok",
@@ -17,7 +17,7 @@ function mockClient(decision: Partial<AgentAuthDecision>): PrismClient {
   };
   return {
     agentAuthorize: vi.fn().mockResolvedValue(full),
-  } as unknown as PrismClient;
+  } as unknown as LeluClient;
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

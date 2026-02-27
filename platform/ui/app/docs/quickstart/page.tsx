@@ -108,7 +108,7 @@ export default function DocsQuickStart() {
                   <span className="text-xs text-zinc-500 font-mono">typescript</span>
                 </div>
                 <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                  <pre><code>{`import { PrismClient } from "prizm-engine";
+                  <pre><code>{`import { PrismClient } from "lelu";
 
 const client = new PrismClient({
   endpoint: "http://localhost:8080",

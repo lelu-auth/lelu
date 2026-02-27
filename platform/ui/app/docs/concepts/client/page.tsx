@@ -34,7 +34,7 @@ export default function DocsConceptClient() {
               <span className="text-xs text-zinc-500 font-mono">Installation</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300">
-              {`npm install prizm-engine`}
+              {`npm install lelu`}
             </pre>
           </div>
 
@@ -43,7 +43,7 @@ export default function DocsConceptClient() {
               <span className="text-xs text-zinc-500 font-mono">Usage</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`import { PrismClient } from "prizm-engine";
+              {`import { PrismClient } from "lelu";
 
 const prism = new PrismClient({
   baseUrl: "http://localhost:8082",
@@ -72,7 +72,7 @@ if (decision.allowed) {
               <span className="text-xs text-zinc-500 font-mono">Installation</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300">
-              {`pip install auth-pe`}
+              {`pip install lelu`}
             </pre>
           </div>
 
@@ -81,7 +81,7 @@ if (decision.allowed) {
               <span className="text-xs text-zinc-500 font-mono">Usage</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`from auth_pe import PrismClient
+              {`from lelu import PrismClient
 
 prism = PrismClient(
     base_url="http://localhost:8082",

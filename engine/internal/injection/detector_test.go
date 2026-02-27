@@ -3,7 +3,7 @@ package injection_test
 import (
 	"testing"
 
-	"github.com/prism/engine/internal/injection"
+	"github.com/lelu/engine/internal/injection"
 )
 
 func TestDetect_KnownPatterns(t *testing.T) {

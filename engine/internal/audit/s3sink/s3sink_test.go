@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/prism/engine/internal/audit/s3sink"
+	"github.com/lelu/engine/internal/audit/s3sink"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

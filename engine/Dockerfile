@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Multi-stage Dockerfile — Auth Permission Engine
+# Multi-stage Dockerfile — Lelu Authorization Engine
 # Stage 1: build a static binary
 # Stage 2: minimal distroless runtime image
 # ─────────────────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ USER nonroot:nonroot
 COPY --from=builder /engine /engine
 
 # Default policy mount point
-VOLUME ["/etc/prism"]
+VOLUME ["/etc/lelu"]
 
 EXPOSE 8080
 

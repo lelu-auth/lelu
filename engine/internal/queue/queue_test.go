@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/prism/engine/internal/queue"
+	"github.com/lelu/engine/internal/queue"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -13,7 +13,7 @@ import (
 
 func TestEnqueue_NoRedis(t *testing.T) {
 	q := queue.NewInMemory()
-	id, err := q.Enqueue(context.Background(), "invoice_bot", "approve_refund", nil, 0.75, "low confidence", "user_1")
+	id, err := q.Enqueue(context.Background(), "default", "invoice_bot", "approve_refund", nil, 0.75, "low confidence", "user_1")
 	require.NoError(t, err)
 	assert.Empty(t, id, "no-op without Redis returns empty id")
 }

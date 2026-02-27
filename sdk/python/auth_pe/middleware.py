@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
-from .client import PrismClient
+from .client import LeluClient
 from .models import AgentAuthRequest, AgentContext
 
 class AgentMiddleware(ABC):
@@ -9,7 +9,7 @@ class AgentMiddleware(ABC):
     Developers should subclass this to intercept tool calls and extract confidence scores.
     """
 
-    def __init__(self, client: PrismClient, agent_id: str, acting_for: Optional[str] = None):
+    def __init__(self, client: LeluClient, agent_id: str, acting_for: Optional[str] = None):
         self.client = client
         self.agent_id = agent_id
         self.acting_for = acting_for
@@ -32,7 +32,7 @@ class AgentMiddleware(ABC):
 
     async def authorize_action(self, action: str, resource: Dict[str, str], confidence: float) -> bool:
         """
-        Helper method to authorize an action using the PrismClient.
+        Helper method to authorize an action using the LeluClient.
         """
         request = AgentAuthRequest(
             actor=self.agent_id,

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/prism/engine/internal/incident"
+	"github.com/lelu/engine/internal/incident"
 )
 
 func TestFormatSlack_RequiresHumanReview(t *testing.T) {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { PrismClient, AuthEngineError } from "../src/index.js";
+import { LeluClient, AuthEngineError } from "../src/index.js";
 
 // ── Mock fetch globally ────────────────────────────────────────────────────────
 
@@ -24,12 +24,12 @@ function mockError(status: number, errorMsg: string) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("PrismClient", () => {
-  let client: PrismClient;
+describe("LeluClient", () => {
+  let client: LeluClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    client = new PrismClient({ baseUrl: "http://localhost:8080" });
+    client = new LeluClient({ baseUrl: "http://localhost:8080" });
   });
 
   // ── authorize ──────────────────────────────────────────────────────────────
@@ -152,11 +152,51 @@ describe("PrismClient", () => {
     });
   });
 
+  // ── delegateScope ────────────────────────────────────────────────────────
+
+  describe("delegateScope()", () => {
+    it("returns delegated token payload", async () => {
+      const expiresAt = Math.floor(Date.now() / 1000) + 120;
+      mockOK({
+        token: "child.jwt.token",
+        token_id: "dtid1",
+        expires_at: expiresAt,
+        delegator: "orchestrator_agent",
+        delegatee: "research_agent",
+        granted_scopes: ["research"],
+        trace_id: "td1",
+      });
+
+      const result = await client.delegateScope({
+        delegator: "orchestrator_agent",
+        delegatee: "research_agent",
+        scopedTo: ["research"],
+        confidence: 0.92,
+      });
+
+      expect(result.token).toBe("child.jwt.token");
+      expect(result.tokenId).toBe("dtid1");
+      expect(result.grantedScopes).toEqual(["research"]);
+      expect(result.traceId).toBe("td1");
+      expect(result.expiresAt).toBeInstanceOf(Date);
+    });
+
+    it("validates confidence is between 0 and 1", async () => {
+      await expect(
+        client.delegateScope({
+          delegator: "orchestrator_agent",
+          delegatee: "research_agent",
+          confidence: 1.1,
+        })
+      ).rejects.toThrow();
+    });
+  });
+
   // ── isHealthy ─────────────────────────────────────────────────────────────
 
   describe("isHealthy()", () => {
     it("returns true on ok status", async () => {
-      mockOK({ status: "ok", service: "prizm-engine" });
+      mockOK({ status: "ok", service: "lelu-engine" });
       expect(await client.isHealthy()).toBe(true);
     });
 

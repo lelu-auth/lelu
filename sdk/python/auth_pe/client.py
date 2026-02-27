@@ -21,14 +21,14 @@ from .models import (
 )
 
 
-class PrismClient:
+class LeluClient:
     """
     Async client for the Auth Permission Engine HTTP API.
 
     Usage::
 
-        async with PrismClient(base_url="http://localhost:8080") as prism:
-            decision = await prism.agent_authorize(
+        async with LeluClient(base_url="http://localhost:8080") as lelu:
+            decision = await lelu.agent_authorize(
                 AgentAuthRequest(
                     actor="invoice_bot",
                     action="approve_refunds",
@@ -40,9 +40,9 @@ class PrismClient:
 
     Or without a context manager::
 
-        prism = PrismClient()
-        decision = await prism.authorize(AuthRequest(user_id="u1", action="view_invoices"))
-        await prism.aclose()
+        lelu = LeluClient()
+        decision = await lelu.authorize(AuthRequest(user_id="u1", action="view_invoices"))
+        await lelu.aclose()
     """
 
     def __init__(
@@ -63,7 +63,7 @@ class PrismClient:
 
     # ── Context manager ───────────────────────────────────────────────────────
 
-    async def __aenter__(self) -> "PrismClient":
+    async def __aenter__(self) -> "LeluClient":
         return self
 
     async def __aexit__(self, *_: Any) -> None:
@@ -202,3 +202,7 @@ class PrismClient:
             status=resp.status_code,
             details=resp.text,
         )
+
+
+# Backward compatibility alias.
+PrismClient = LeluClient

@@ -1,3 +1,3 @@
-module github.com/Abenezer0923/Prism/sdk/go
+module github.com/lelu/sdk/go
 
 go 1.22

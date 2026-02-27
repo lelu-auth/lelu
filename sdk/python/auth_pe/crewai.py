@@ -9,10 +9,10 @@ Usage
 .. code-block:: python
 
     from crewai.tools import BaseTool
-    from auth_pe.crewai import PrismTool
-    from auth_pe import PrismClient
+    from lelu.crewai import PrismTool
+    from lelu import LeluClient
 
-    client = PrismClient(base_url="http://localhost:8080")
+    client = LeluClient(base_url="http://localhost:8080")
 
     class RefundTool(PrismTool):
         name: str = "process_refund"
@@ -49,7 +49,7 @@ from typing import Any
 
 from pydantic import Field
 
-from .client import PrismClient
+from .client import LeluClient
 from .models import AgentAuthRequest, AgentContext
 
 logger = logging.getLogger(__name__)
@@ -109,11 +109,11 @@ class PrismTool(CrewAIBaseTool):  # type: ignore[misc]
     throw_on_deny: bool = Field(default=False, description="Raise on deny instead of returning refusal")
     acting_for: str | None = Field(default=None, description="User the agent acts on behalf of")
 
-    # PrismClient is injected at construction time.
+    # LeluClient is injected at construction time.
     model_config = {"arbitrary_types_allowed": True}
-    _prism: PrismClient
+    _prism: LeluClient
 
-    def __init__(self, prism_client: PrismClient, **data: Any) -> None:
+    def __init__(self, prism_client: LeluClient, **data: Any) -> None:
         if not _CREWAI_AVAILABLE:
             raise ImportError(
                 "crewai is not installed. Install it with: pip install crewai"

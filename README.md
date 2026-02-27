@@ -1,23 +1,23 @@
-# Prism: The Authorization Engine for AI Agents 🔐
+# Lelu: The Authorization Engine for AI Agents 🔐
 
 > **Confidence-aware access control, human-in-the-loop approvals, and SOC 2-ready audit trails for your autonomous agents.**
 
-Prism is a developer-first authorization layer built specifically for the Agentic Web. It grants ephemeral, context-aware, and scoped permissions to AI agents, ensuring they act autonomously without hallucinating security breaches. 
+Lelu is a developer-first authorization layer built specifically for the Agentic Web. It grants ephemeral, context-aware, and scoped permissions to AI agents, ensuring they act autonomously without hallucinating security breaches. 
 
-Unlike legacy IAM, Prism treats AI agents as first-class actors with their own distinct constraint model, tying authorization decisions directly to **LLM confidence scores**.
+Unlike legacy IAM, Lelu treats AI agents as first-class actors with their own distinct constraint model, tying authorization decisions directly to **LLM confidence scores**.
 
-[![CI](https://github.com/Abenezer0923/Prism/actions/workflows/ci.yml/badge.svg)](https://github.com/Abenezer0923/Prism/actions/workflows/ci.yml)
+[![CI](https://github.com/Abenezer0923/Lelu/actions/workflows/ci.yml/badge.svg)](https://github.com/Abenezer0923/Lelu/actions/workflows/ci.yml)
 
 ---
 
-## 🌟 Why Prism?
+## 🌟 Why Lelu?
 
 Traditional authorization systems (like OAuth or RBAC) were built for humans and deterministic software. AI agents are non-deterministic. They hallucinate, they get confused, and they make mistakes. 
 
-Prism bridges this gap by introducing **Confidence-Aware Auth**.
+Lelu bridges this gap by introducing **Confidence-Aware Auth**.
 
 *   **Confidence-Aware Auth:** Automatically downgrade permissions or require human approval if an LLM's confidence score drops below a defined threshold.
-*   **Ephemeral Agent Tokens (JIT):** Never give an AI agent a permanent API key. Prism mints Just-In-Time tokens that expire the moment a task completes.
+*   **Ephemeral Agent Tokens (JIT):** Never give an AI agent a permanent API key. Lelu mints Just-In-Time tokens that expire the moment a task completes.
 *   **Local Evaluation (Sidecar):** Policies are evaluated in-memory with sub-2ms latency. Zero added latency to your agent's decision loop.
 *   **Human-in-the-Loop (HITL):** Seamlessly route uncertain agent actions to a human manager for 1-click approval.
 *   **The Black Box Audit:** A Trace Explorer that links the exact LLM prompt to the resulting authorization decision.
@@ -39,7 +39,7 @@ Optional (observe-before-enforce onboarding):
 
 ```bash
 # Compute/log decisions but do not enforce denies/reviews
-PRISM_MODE=shadow docker compose up -d
+LELU_MODE=shadow docker compose up -d
 ```
 
 ### 2. Verify the Engine is Running
@@ -51,12 +51,12 @@ curl http://localhost:8082/healthz
 
 ### 3. Authorize an Agent Action
 
-Prism evaluates the request against your defined policies (YAML or Rego) and the agent's current confidence score.
+Lelu evaluates the request against your defined policies (YAML or Rego) and the agent's current confidence score.
 
 ```bash
 curl -s -X POST http://localhost:8082/v1/agent/authorize \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer prism-dev-key" \
+  -H "Authorization: Bearer lelu-dev-key" \
   -d '{
     "actor": "invoice_bot",
     "action": "approve_refunds",
@@ -79,12 +79,12 @@ curl -s -X POST http://localhost:8082/v1/agent/authorize \
 
 ## 💻 SDK Installation
 
-Prism provides official SDKs for seamless integration into your agent workflows.
+Lelu provides official SDKs for seamless integration into your agent workflows.
 
 ### Go
 
 ```bash
-go get github.com/Abenezer0923/Prism/sdk/go
+go get github.com/Abenezer0923/Lelu/sdk/go
 ```
 
 ```go
@@ -94,16 +94,16 @@ import (
   "context"
   "fmt"
 
-  prism "github.com/Abenezer0923/Prism/sdk/go"
+  lelu "github.com/Abenezer0923/Lelu/sdk/go"
 )
 
 func main() {
-  client := prism.NewClient(prism.ClientConfig{
+  client := lelu.NewClient(lelu.ClientConfig{
     BaseURL: "http://localhost:8082",
     APIKey:  "your-api-key",
   })
 
-  decision, err := client.AgentAuthorize(context.Background(), prism.AgentAuthRequest{
+  decision, err := client.AgentAuthorize(context.Background(), lelu.AgentAuthRequest{
     Actor:      "support_agent",
     Action:     "issue_refund",
     Confidence: 0.85,
@@ -119,15 +119,15 @@ func main() {
 ### TypeScript / Node.js
 
 ```bash
-npm install prizm-engine
+npm install lelu
 ```
 
 ```typescript
-import { PrismClient } from "prizm-engine";
+import { LeluClient } from "lelu";
 
-const client = new PrismClient({
+const client = new LeluClient({
   baseUrl: "http://localhost:8082",
-  apiKey: process.env.PRISM_API_KEY
+  apiKey: process.env.LELU_API_KEY
 });
 
 const decision = await client.agentAuthorize({
@@ -146,13 +146,13 @@ if (decision.requiresHumanReview) {
 ### Python
 
 ```bash
-pip install prizm-engine
+pip install lelu
 ```
 
 ```python
-from auth_pe.client import PrismClient
+from lelu.client import LeluClient
 
-client = PrismClient(
+client = LeluClient(
     base_url="http://localhost:8082",
     api_key="your-api-key"
 )
@@ -173,7 +173,7 @@ elif decision.allowed:
 
 ## 🧠 How it Works
 
-Modern agentic applications have three distinct actor types: Users, Resources, and Agents. Prism separates Human Roles from Agent Scopes—a fundamental split that traditional IAM tools miss.
+Modern agentic applications have three distinct actor types: Users, Resources, and Agents. Lelu separates Human Roles from Agent Scopes—a fundamental split that traditional IAM tools miss.
 
 ### The Architecture
 
@@ -193,7 +193,7 @@ Cloud Control Plane  ──push──►  Local Sidecar Engine (Go)  ◄──�
 
 LLMs are non-deterministic. Your auth layer shouldn't pretend otherwise. Configure thresholds per-agent in your `auth.yaml`:
 
-| Confidence | Prism's Automated Behaviour |
+| Confidence | Lelu's Automated Behaviour |
 |---|---|
 | **≥ 90%** | Agent acts autonomously (Full Scope) |
 | **70–89%** | Action queued for human review |
@@ -206,7 +206,7 @@ LLMs are non-deterministic. Your auth layer shouldn't pretend otherwise. Configu
 
 ### Policy Definition (auth.yaml)
 
-Prism uses a simple, declarative YAML format to define roles and agent scopes.
+Lelu uses a simple, declarative YAML format to define roles and agent scopes.
 
 ```yaml
 version: "1.0"
@@ -228,16 +228,16 @@ agent_scopes:
 
 ### OPA / Rego Compatibility
 
-Prism also supports Open Policy Agent (OPA) Rego files for advanced, programmatic authorization logic.
+Lelu also supports Open Policy Agent (OPA) Rego files for advanced, programmatic authorization logic.
 
 ```bash
 # Load a single file
 export REGO_POLICY_PATH=./config/auth.rego
-export REGO_POLICY_QUERY=data.prism.authz
+export REGO_POLICY_QUERY=data.lelu.authz
 
 # Or load a directory of plugins
 export REGO_POLICY_PATH=./config/plugins/
-export REGO_POLICY_QUERY=data.prism.authz
+export REGO_POLICY_QUERY=data.lelu.authz
 ```
 
 ### Incident Webhook (MVP)
@@ -257,11 +257,11 @@ We are actively building integrations for the most popular AI agent frameworks. 
 
 | Framework | Language | Status |
 |---|---|---|
-| **LangChain** | TypeScript | ✅ Supported (`prism/langchain`) |
-| **AutoGPT** | Python | ✅ Supported (`auth_pe.autogpt_plugin`) |
+| **LangChain** | TypeScript | ✅ Supported (`lelu/langchain`) |
+| **AutoGPT** | Python | ✅ Supported (`lelu.autogpt_plugin`) |
 | **LlamaIndex** | Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |
-| **CrewAI** | Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |
-| **Vercel AI SDK** | TypeScript | 🛠️ [Help Wanted](CONTRIBUTING.md) |
+| **CrewAI** | Python | ✅ Supported (`lelu.LeluTool`) |
+| **Vercel AI SDK** | TypeScript | ✅ Supported (`@lelu/sdk/vercel`) |
 | **Semantic Kernel** | C# / Python | 🛠️ [Help Wanted](CONTRIBUTING.md) |
 
 ---
@@ -356,4 +356,4 @@ We welcome contributions! Whether it's adding a new SDK integration, writing cus
 MIT License
 
 ---
-*Prism: The Authorization Engine for AI Agents · Go · TypeScript · Python · 2026*
+*Lelu: The Authorization Engine for AI Agents · Go · TypeScript · Python · 2026*

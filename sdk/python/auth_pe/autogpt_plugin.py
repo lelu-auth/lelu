@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .client import PrismClient
+from .client import LeluClient
 from .models import AgentAuthRequest, AgentContext
 
 
@@ -18,7 +18,7 @@ class PrismAutoGPTPlugin:
     runtimes without requiring a hard dependency.
     """
 
-    client: PrismClient
+    client: LeluClient
     actor: str
 
     async def can_execute(

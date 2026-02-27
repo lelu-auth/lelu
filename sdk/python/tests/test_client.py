@@ -1,4 +1,4 @@
-"""Tests for the Python SDK — PrismClient."""
+"""Tests for the Python SDK — LeluClient."""
 
 from __future__ import annotations
 
@@ -6,13 +6,14 @@ import pytest
 import httpx
 from pytest_httpx import HTTPXMock
 
-from auth_pe import (
+from lelu import (
     AgentAuthRequest,
     AgentContext,
     AuthEngineError,
     AuthRequest,
+    DelegateScopeRequest,
+    LeluClient,
     MintTokenRequest,
-    PrismClient,
 )
 
 
@@ -20,15 +21,15 @@ from auth_pe import (
 
 
 @pytest.fixture
-def client() -> PrismClient:
-    return PrismClient(base_url="http://localhost:8080")
+def client() -> LeluClient:
+    return LeluClient(base_url="http://localhost:8080")
 
 
 # ─── /v1/authorize ────────────────────────────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_authorize_allowed(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_authorize_allowed(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url="http://localhost:8080/v1/authorize",
@@ -40,7 +41,7 @@ async def test_authorize_allowed(client: PrismClient, httpx_mock: HTTPXMock) -> 
 
 
 @pytest.mark.asyncio
-async def test_authorize_denied(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_authorize_denied(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url="http://localhost:8080/v1/authorize",
@@ -51,7 +52,7 @@ async def test_authorize_denied(client: PrismClient, httpx_mock: HTTPXMock) -> N
 
 
 @pytest.mark.asyncio
-async def test_authorize_http_error(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_authorize_http_error(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(status_code=500, json={"error": "internal server error"})
     with pytest.raises(AuthEngineError) as exc_info:
         await client.authorize(AuthRequest(user_id="u", action="a"))
@@ -62,7 +63,7 @@ async def test_authorize_http_error(client: PrismClient, httpx_mock: HTTPXMock) 
 
 
 @pytest.mark.asyncio
-async def test_agent_authorize_full_confidence(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_agent_authorize_full_confidence(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url="http://localhost:8080/v1/agent/authorize",
@@ -87,7 +88,7 @@ async def test_agent_authorize_full_confidence(client: PrismClient, httpx_mock: 
 
 
 @pytest.mark.asyncio
-async def test_agent_authorize_human_review(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_agent_authorize_human_review(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url="http://localhost:8080/v1/agent/authorize",
@@ -110,7 +111,7 @@ async def test_agent_authorize_human_review(client: PrismClient, httpx_mock: HTT
 
 
 @pytest.mark.asyncio
-async def test_agent_authorize_read_only_downgrade(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_agent_authorize_read_only_downgrade(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
         url="http://localhost:8080/v1/agent/authorize",
@@ -142,7 +143,7 @@ def test_agent_context_validates_confidence_range() -> None:
 
 
 @pytest.mark.asyncio
-async def test_mint_token(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_mint_token(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     import time
     expires_at = int(time.time()) + 60
     httpx_mock.add_response(
@@ -159,7 +160,7 @@ async def test_mint_token(client: PrismClient, httpx_mock: HTTPXMock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_revoke_token(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_revoke_token(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="DELETE",
         url="http://localhost:8080/v1/tokens/tid1",
@@ -173,16 +174,16 @@ async def test_revoke_token(client: PrismClient, httpx_mock: HTTPXMock) -> None:
 
 
 @pytest.mark.asyncio
-async def test_is_healthy_true(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_is_healthy_true(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         url="http://localhost:8080/healthz",
-        json={"status": "ok", "service": "prizm-engine"},
+        json={"status": "ok", "service": "prism-engine"},
     )
     assert await client.is_healthy() is True
 
 
 @pytest.mark.asyncio
-async def test_is_healthy_false_on_error(client: PrismClient, httpx_mock: HTTPXMock) -> None:
+async def test_is_healthy_false_on_error(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_exception(httpx.ConnectError("refused"))
     assert await client.is_healthy() is False
 
@@ -196,5 +197,69 @@ async def test_context_manager(httpx_mock: HTTPXMock) -> None:
         url="http://localhost:8080/healthz",
         json={"status": "ok"},
     )
-    async with PrismClient() as prism:
-        assert await prism.is_healthy() is True
+    async with LeluClient() as lelu:
+        assert await lelu.is_healthy() is True
+
+
+# ─── /v1/agent/delegate ──────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_delegate_scope(client: LeluClient, httpx_mock: HTTPXMock) -> None:
+    import time
+
+    expires_at = int(time.time()) + 120
+    httpx_mock.add_response(
+        method="POST",
+        url="http://localhost:8080/v1/agent/delegate",
+        json={
+            "token": "child.jwt.token",
+            "token_id": "dtid1",
+            "expires_at": expires_at,
+            "delegator": "orchestrator_agent",
+            "delegatee": "research_agent",
+            "granted_scopes": ["research"],
+            "trace_id": "td1",
+        },
+    )
+    result = await client.delegate_scope(
+        DelegateScopeRequest(
+            delegator="orchestrator_agent",
+            delegatee="research_agent",
+            scoped_to=["research"],
+            confidence=0.92,
+        )
+    )
+    assert result.token == "child.jwt.token"
+    assert result.token_id == "dtid1"
+    assert result.delegator == "orchestrator_agent"
+    assert result.delegatee == "research_agent"
+    assert result.granted_scopes == ["research"]
+    assert result.trace_id == "td1"
+
+
+@pytest.mark.asyncio
+async def test_delegate_scope_http_error(client: LeluClient, httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        method="POST",
+        url="http://localhost:8080/v1/agent/delegate",
+        status_code=403,
+        json={"error": "delegation denied by policy"},
+    )
+    with pytest.raises(AuthEngineError) as exc_info:
+        await client.delegate_scope(
+            DelegateScopeRequest(
+                delegator="orchestrator_agent",
+                delegatee="research_agent",
+            )
+        )
+    assert exc_info.value.status == 403
+
+
+def test_delegate_scope_validates_confidence_range() -> None:
+    with pytest.raises(Exception):
+        DelegateScopeRequest(
+            delegator="orch",
+            delegatee="bot",
+            confidence=1.5,
+        )

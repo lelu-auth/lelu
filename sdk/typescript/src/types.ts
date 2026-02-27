@@ -30,6 +30,16 @@ export const MintTokenRequestSchema = z.object({
   ttlSeconds: z.number().int().positive().optional(),
 });
 
+export const DelegateScopeRequestSchema = z.object({
+  delegator: z.string().min(1, "delegator is required"),
+  delegatee: z.string().min(1, "delegatee is required"),
+  scopedTo: z.array(z.string().min(1)).optional(),
+  ttlSeconds: z.number().int().positive().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  actingFor: z.string().optional(),
+  tenantId: z.string().optional(),
+});
+
 // ─── Decision types ───────────────────────────────────────────────────────────
 
 export interface AuthDecision {

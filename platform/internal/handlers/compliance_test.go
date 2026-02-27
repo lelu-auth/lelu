@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	auditstore "github.com/prism/platform/internal/audit"
+	auditstore "github.com/lelu/platform/internal/audit"
 )
 
 func TestParseComplianceFramework(t *testing.T) {

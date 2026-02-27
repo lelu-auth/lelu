@@ -1,4 +1,4 @@
-name: prism
+name: lelu
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Services
@@ -6,29 +6,38 @@ name: prism
 
 services:
 
-  # ── Auth Permission Engine ──────────────────────────────────────────────────
+  # ── Lelu Authorization Engine ──────────────────────────────────────────────────
   engine:
     build:
       context: .
       dockerfile: engine/Dockerfile
-    image: prism/engine:local
-    container_name: prizm-engine
+    image: lelu/engine:local
+    container_name: lelu-engine
     restart: unless-stopped
     ports:
-      - "8082:8080"
+      - "8083:8080"
     environment:
       LISTEN_ADDR:       ":8080"
-      POLICY_PATH:       "/etc/prism/auth.yaml"
+      POLICY_PATH:       "/etc/lelu/auth.yaml"
       REDIS_ADDR:        "redis:6379"
       JWT_SIGNING_KEY:   "${JWT_SIGNING_KEY:-change-me-in-dev}"
       CONTROL_PLANE_URL: "${CONTROL_PLANE_URL:-}"
       CP_HMAC_SECRET:    "${CP_HMAC_SECRET:-}"
-      API_KEY:           "${API_KEY:-prism-dev-key}"
-      PRISM_MODE:        "${PRISM_MODE:-enforce}"
+      API_KEY:           "${API_KEY:-lelu-dev-key}"
+      LELU_MODE:         "${LELU_MODE:-enforce}"
       INCIDENT_WEBHOOK_URL: "${INCIDENT_WEBHOOK_URL:-}"
       INCIDENT_WEBHOOK_TIMEOUT_MS: "${INCIDENT_WEBHOOK_TIMEOUT_MS:-2000}"
+      INCIDENT_WEBHOOK_SLACK_MODE: "${INCIDENT_WEBHOOK_SLACK_MODE:-}"
+      INCIDENT_WEBHOOK_TEAMS_MODE: "${INCIDENT_WEBHOOK_TEAMS_MODE:-}"
+      INCIDENT_WEBHOOK_PAGERDUTY_MODE: "${INCIDENT_WEBHOOK_PAGERDUTY_MODE:-}"
+      PAGERDUTY_ROUTING_KEY: "${PAGERDUTY_ROUTING_KEY:-}"
+      LELU_ENGINE_PUBLIC_URL: "${LELU_ENGINE_PUBLIC_URL:-}"
+      TENANT_AUTH_RATE_LIMIT: "${TENANT_AUTH_RATE_LIMIT:-0}"
+      TENANT_MINT_RATE_LIMIT: "${TENANT_MINT_RATE_LIMIT:-0}"
+      FALLBACK_REDIS_MODE: "${FALLBACK_REDIS_MODE:-closed}"
+      FALLBACK_CP_MODE: "${FALLBACK_CP_MODE:-closed}"
     volumes:
-      - ./config:/etc/prism:ro
+      - ./config:/etc/lelu:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -40,15 +49,15 @@ services:
       retries: 3
       start_period: 5s
     networks:
-      - prism
+      - lelu
 
   # ── Redis — JIT token store & human-review queue ────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: prism-redis
+    container_name: lelu-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: >
       redis-server
       --maxmemory 128mb
@@ -62,42 +71,42 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - prism
+      - lelu
 
   # ── PostgreSQL — control plane store ─────────────────────────────────────────
   postgres:
     image: postgres:15
-    container_name: prism-postgres
+    container_name: lelu-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
-      POSTGRES_DB:       prism
-      POSTGRES_USER:     prism
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-prism-dev-secret}"
+      POSTGRES_DB:       lelu
+      POSTGRES_USER:     lelu
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-lelu-dev-secret}"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "prism"]
+      test: ["CMD", "pg_isready", "-U", "lelu"]
       interval: 5s
       timeout: 3s
       retries: 10
     networks:
-      - prism
+      - lelu
 
-  # ── Prism Control Plane ──────────────────────────────────────────────────────
+  # ── Lelu Control Plane ──────────────────────────────────────────────────────
   platform:
     build:
       context: platform
       dockerfile: Dockerfile
-    image: prism/platform:local
-    container_name: prism-platform
+    image: lelu/platform:local
+    container_name: lelu-platform
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "9091:9090"
     environment:
       LISTEN_ADDR:      ":9090"
-      DATABASE_URL:     "postgres://prism:${POSTGRES_PASSWORD:-prism-dev-secret}@postgres:5432/prism?sslmode=disable"
+      DATABASE_URL:     "postgres://lelu:${POSTGRES_PASSWORD:-lelu-dev-secret}@postgres:5432/lelu?sslmode=disable"
       PLATFORM_API_KEY: "${PLATFORM_API_KEY:-platform-dev-key}"
       EVIDENCE_SIGNING_KEY: "${EVIDENCE_SIGNING_KEY:-}"
     depends_on:
@@ -111,23 +120,23 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - prism
+      - lelu
 
   # ── Trace Explorer UI ──────────────────────────────────────────────────────
   ui:
     build:
       context: platform/ui
       dockerfile: Dockerfile
-    image: prism/ui:local
-    container_name: prism-ui
+    image: lelu/ui:local
+    container_name: lelu-ui
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       PLATFORM_URL:     "http://platform:9090"
       PLATFORM_API_KEY: "${PLATFORM_API_KEY:-platform-dev-key}"
-      PRISM_ENGINE_URL: "http://engine:8080"
-      PRISM_API_KEY:    "${API_KEY:-prism-dev-key}"
+      LELU_ENGINE_URL:  "http://engine:8080"
+      LELU_API_KEY:     "${API_KEY:-lelu-dev-key}"
     depends_on:
       platform:
         condition: service_healthy
@@ -139,23 +148,23 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - prism
+      - lelu
 
-  # ── Prism MCP Server ──────────────────────────────────────────────────────────
+  # ── Lelu MCP Server ──────────────────────────────────────────────────────────
   mcp:
     build:
       context: sdk/mcp
       dockerfile: Dockerfile
-    image: prism/mcp:local
-    container_name: prism-mcp
+    image: lelu/mcp:local
+    container_name: lelu-mcp
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3003:3001"
     environment:
       MCP_TRANSPORT:       "http"
       MCP_PORT:            "3001"
-      PRISM_ENGINE_URL:    "http://engine:8080"
-      PRISM_API_KEY:       "${API_KEY:-prism-dev-key}"
+      LELU_ENGINE_URL:     "http://engine:8080"
+      LELU_API_KEY:        "${API_KEY:-lelu-dev-key}"
     depends_on:
       engine:
         condition: service_healthy
@@ -167,21 +176,21 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - prism
+      - lelu
 
   # ── Redis Insight (optional dev UI) ─────────────────────────────────────────
   redis-ui:
     image: redislabs/redisinsight:latest
-    container_name: prism-redis-ui
+    container_name: lelu-redis-ui
     restart: unless-stopped
     ports:
-      - "5540:5540"
+      - "5541:5540"
     depends_on:
       - redis
     profiles:
       - debug                   # only started with: docker compose --profile debug up
     networks:
-      - prism
+      - lelu
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Volumes & Networks
@@ -192,5 +201,5 @@ volumes:
   postgres-data:
 
 networks:
-  prism:
+  lelu:
     driver: bridge

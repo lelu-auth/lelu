@@ -27,7 +27,7 @@ export default function DocsIntegrationsReact() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">terminal</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300">{`npm install prizm-engine`}</pre>
+            <pre className="p-4 font-mono text-sm text-zinc-300">{`npm install lelu`}</pre>
           </div>
         </section>
 
@@ -40,7 +40,7 @@ export default function DocsIntegrationsReact() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">ApprovalDashboard.tsx</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismApprovalUI } from "prizm-engine/react";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismApprovalUI } from "lelu/react";
 
 export function ApprovalDashboard() {
   return (
@@ -65,7 +65,7 @@ export function ApprovalDashboard() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">AgentStatus.tsx</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { AgentReputationDashboard } from "prizm-engine/react";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { AgentReputationDashboard } from "lelu/react";
 
 export function AgentStatus({ agentId }: { agentId: string }) {
   return (

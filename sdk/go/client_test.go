@@ -1,4 +1,4 @@
-package prism
+package lelu
 
 import (
 	"context"
@@ -116,6 +116,70 @@ func TestIsHealthy(t *testing.T) {
 	c := NewClient(ClientConfig{BaseURL: ts.URL, Timeout: 2 * time.Second})
 	if !c.IsHealthy(context.Background()) {
 		t.Fatalf("expected healthy=true")
+	}
+}
+
+func TestDelegateScope(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/agent/delegate" {
+			t.Fatalf("unexpected route: %s %s", r.Method, r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"token":          "child.jwt.token",
+			"token_id":       "dtid-1",
+			"expires_at":     1700000120,
+			"delegator":      "orchestrator",
+			"delegatee":      "research_bot",
+			"granted_scopes": []string{"research"},
+			"trace_id":       "td-1",
+		})
+	}))
+	defer ts.Close()
+
+	c := NewClient(ClientConfig{BaseURL: ts.URL})
+	res, err := c.DelegateScope(context.Background(), DelegateScopeRequest{
+		Delegator:  "orchestrator",
+		Delegatee:  "research_bot",
+		ScopedTo:   []string{"research"},
+		Confidence: 0.92,
+	})
+	if err != nil {
+		t.Fatalf("delegate failed: %v", err)
+	}
+	if res.Token != "child.jwt.token" {
+		t.Fatalf("unexpected token: %s", res.Token)
+	}
+	if res.TokenID != "dtid-1" {
+		t.Fatalf("unexpected token_id: %s", res.TokenID)
+	}
+	if res.TraceID != "td-1" {
+		t.Fatalf("unexpected trace_id: %s", res.TraceID)
+	}
+	if len(res.GrantedScopes) != 1 || res.GrantedScopes[0] != "research" {
+		t.Fatalf("unexpected granted_scopes: %v", res.GrantedScopes)
+	}
+	if res.ExpiresAt.Unix() != 1700000120 {
+		t.Fatalf("unexpected expires_at: %v", res.ExpiresAt)
+	}
+}
+
+func TestDelegateScope_Validation(t *testing.T) {
+	c := NewClient(ClientConfig{BaseURL: "http://localhost"})
+	_, err := c.DelegateScope(context.Background(), DelegateScopeRequest{
+		Delegatee: "bot",
+	})
+	if err == nil || err.Error() != "delegator is required" {
+		t.Fatalf("expected delegator required error, got: %v", err)
+	}
+
+	_, err = c.DelegateScope(context.Background(), DelegateScopeRequest{
+		Delegator:  "orch",
+		Delegatee:  "bot",
+		Confidence: 1.5,
+	})
+	if err == nil || err.Error() != "confidence must be between 0 and 1" {
+		t.Fatalf("expected confidence validation error, got: %v", err)
 	}
 }
 

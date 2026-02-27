@@ -1,17 +1,17 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
-import { PrismClient } from "../client";
+import { LeluClient } from "../client";
 
 export interface AuthorizeOptions {
-  /** Base URL of the Prism engine (default: http://localhost:8080) */
+  /** Base URL of the Lelu engine (default: http://localhost:8080) */
   baseUrl?: string;
-  /** API key for the Prism engine */
+  /** API key for the Lelu engine */
   apiKey?: string;
   /** HTTP header that carries the actor identifier (default: x-actor) */
   actorHeader?: string;
   /** Confidence score to pass to the engine (default: 1.0) */
   confidence?: number;
-  /** Explicit PrismClient instance (overrides baseUrl/apiKey) */
-  client?: PrismClient;
+  /** Explicit LeluClient instance (overrides baseUrl/apiKey) */
+  client?: LeluClient;
 }
 
 /**
@@ -34,7 +34,7 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
   if (apiKey !== undefined) {
     clientConfig.apiKey = apiKey;
   }
-  const client = opts.client ?? new PrismClient(clientConfig);
+  const client = opts.client ?? new LeluClient(clientConfig);
 
   const actorHeader = opts.actorHeader ?? "x-actor";
   const confidence = opts.confidence ?? 1.0;

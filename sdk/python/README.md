@@ -1,26 +1,28 @@
-# Prism · Python SDK
+# Lelu · Python SDK
 
-Python client for [Prism](https://github.com/Abenezer0923/Prism) — the confidence-aware authorization engine for autonomous AI agents.
+Python client for [Lelu](https://github.com/Abenezer0923/Prism) — the confidence-aware authorization engine for autonomous AI agents.
 
 ## Installation
 
 ```bash
-pip install prizm-engine
+pip install lelu
 ```
 
 ## Quick start
 
 ```python
 import asyncio
-from auth_pe import PrismClient, AgentAuthorizeRequest
+from lelu import LeluClient, AgentAuthRequest, AgentContext
 
 async def main():
-    async with PrismClient(base_url="http://localhost:8082") as client:
-        result = await client.agent_authorize(AgentAuthorizeRequest(
+    async with LeluClient(base_url="http://localhost:8082") as client:
+        result = await client.agent_authorize(AgentAuthRequest(
             actor="invoice_bot",
             action="invoice:create",
-            confidence=0.92,
-            acting_for="user_123",
+            context=AgentContext(
+                confidence=0.92,
+                acting_for="user_123",
+            ),
         ))
         print(result.allowed, result.reason)
 

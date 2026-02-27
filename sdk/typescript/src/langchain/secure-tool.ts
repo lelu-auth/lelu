@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { SecureTool } from 'prizm-engine/langchain';
+ * import { SecureTool } from 'lelu/langchain';
  *
  * const refundTool = new SecureTool({
  *   name: 'process_refund',
@@ -23,7 +23,7 @@
  * ```
  */
 
-import { PrismClient } from "../client.js";
+import { LeluClient } from "../client.js";
 
 // ─── Minimal LangChain-compatible interface ───────────────────────────────────
 
@@ -48,8 +48,8 @@ export interface SecureToolOptions {
   actor: string;
   /** The permission string being checked (e.g. "invoice:refund"). */
   requiredPermission: string;
-  /** Configured PrismClient. */
-  client: PrismClient;
+  /** Configured LeluClient. */
+  client: LeluClient;
   /** The actual tool function to execute when authorized. */
   func: (input: string) => Promise<string>;
   /**

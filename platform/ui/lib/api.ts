@@ -171,3 +171,68 @@ export async function getComplianceExport(framework: "owasp_genai" | "nist_ai_rm
     return null;
   }
 }
+
+// ─── Simulator ─────────────────────────────────────────────────────────────────
+
+export interface SimulatorTrace {
+  id: string;
+  kind: "human" | "agent";
+  user_id?: string;
+  actor?: string;
+  action: string;
+  confidence_signal?: {
+    provider: string;
+    token_logprobs: number[];
+  };
+}
+
+export interface SimulatorItem {
+  id: string;
+  kind: string;
+  changed: boolean;
+  before: { outcome: string; reason: string };
+  after: { outcome: string; reason: string };
+}
+
+export interface SimulatorReplayResponse {
+  summary: {
+    total: number;
+    changed: number;
+    unchanged: number;
+    allow_to_deny: number;
+    allow_to_review: number;
+    deny_to_allow: number;
+    review_to_allow: number;
+    review_to_deny: number;
+    deny_to_review: number;
+  };
+  items: SimulatorItem[];
+}
+
+export async function simulatorReplay(
+  proposedPolicyYaml: string,
+  traces: SimulatorTrace[],
+): Promise<SimulatorReplayResponse> {
+  const res = await fetch(`${ENGINE_URL}/v1/simulator/replay`, {
+    method: "POST",
+    headers: engineHeaders,
+    body: JSON.stringify({
+      proposed_policy_yaml: proposedPolicyYaml,
+      traces,
+    }),
+  });
+  if (!res.ok) throw new Error(`Simulator replay failed: ${res.status}`);
+  return res.json();
+}
+
+// ─── Policy CRUD ───────────────────────────────────────────────────────────────
+
+export async function createOrUpdatePolicy(name: string, content: string): Promise<Policy> {
+  const res = await fetch(`${PLATFORM_URL}/api/v1/policies`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ name, content }),
+  });
+  if (!res.ok) throw new Error(`Policy save failed: ${res.status}`);
+  return res.json();
+}

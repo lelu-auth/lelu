@@ -31,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/docs" className="hover:text-black dark:hover:text-white transition-colors">Docs</a>
               <a href="/audit" className="hover:text-black dark:hover:text-white transition-colors">Audit Log</a>
               <a href="/policies" className="hover:text-black dark:hover:text-white transition-colors">Policies</a>
+              <a href="/policies/safety" className="hover:text-black dark:hover:text-white transition-colors">Safety</a>
               <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-800 transition-colors duration-300"></div>
               <ThemeToggle />
               <a href="https://github.com/Abenezer0923/Prism" target="_blank" rel="noreferrer" className="hidden sm:flex hover:text-black dark:hover:text-white transition-colors items-center gap-2 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-white/10">

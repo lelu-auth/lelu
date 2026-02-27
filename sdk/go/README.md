@@ -1,11 +1,11 @@
-# Prism Go SDK
+# Lelu Go SDK
 
-Go client for [Prism](https://github.com/Abenezer0923/Prism) — confidence-aware authorization for AI agents.
+Go client for [Lelu](https://github.com/Abenezer0923/Prism) — confidence-aware authorization for AI agents.
 
 ## Install
 
 ```bash
-go get github.com/Abenezer0923/Prism/sdk/go
+go get github.com/lelu/sdk/go
 ```
 
 ## Quick Start
@@ -18,17 +18,17 @@ import (
 	"fmt"
 	"log"
 
-	prism "github.com/Abenezer0923/Prism/sdk/go"
+	lelu "github.com/lelu/sdk/go"
 )
 
 func main() {
 	ctx := context.Background()
-	client := prism.NewClient(prism.ClientConfig{
+	client := lelu.NewClient(lelu.ClientConfig{
 		BaseURL: "http://localhost:8080",
-		APIKey:  "prism-dev-key",
+		APIKey:  "lelu-dev-key",
 	})
 
-	decision, err := client.AgentAuthorize(ctx, prism.AgentAuthRequest{
+	decision, err := client.AgentAuthorize(ctx, lelu.AgentAuthRequest{
 		Actor:      "invoice_bot",
 		Action:     "approve_refunds",
 		Confidence: 0.92,

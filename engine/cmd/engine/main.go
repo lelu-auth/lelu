@@ -10,14 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/prism/engine/internal/audit"
-	"github.com/prism/engine/internal/confidence"
-	"github.com/prism/engine/internal/evaluator"
-	"github.com/prism/engine/internal/incident"
-	"github.com/prism/engine/internal/queue"
-	"github.com/prism/engine/internal/server"
-	syncer "github.com/prism/engine/internal/sync"
-	"github.com/prism/engine/internal/tokens"
+	"github.com/lelu/engine/internal/audit"
+	"github.com/lelu/engine/internal/confidence"
+	"github.com/lelu/engine/internal/evaluator"
+	"github.com/lelu/engine/internal/fallback"
+	"github.com/lelu/engine/internal/incident"
+	"github.com/lelu/engine/internal/queue"
+	"github.com/lelu/engine/internal/ratelimit"
+	"github.com/lelu/engine/internal/server"
+	syncer "github.com/lelu/engine/internal/sync"
+	"github.com/lelu/engine/internal/tokens"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -38,6 +40,14 @@ func main() {
 	enforcementMode := server.ParseEnforcementMode(envOr("PRISM_MODE", "enforce"))
 	incidentWebhookURL := envOr("INCIDENT_WEBHOOK_URL", "")
 	incidentTimeoutMS := parseIntOr(envOr("INCIDENT_WEBHOOK_TIMEOUT_MS", "2000"), 2000)
+	if isProductionEnv() {
+		if signingKey == "" || signingKey == "change-me-in-production" {
+			log.Fatal("JWT_SIGNING_KEY must be explicitly set to a strong secret in production")
+		}
+		if apiKey == "" || apiKey == "change-me-in-production" {
+			log.Fatal("API_KEY must be explicitly set in production")
+		}
+	}
 
 	// ── Bootstrap components ─────────────────────────────────────────────────
 	eval := evaluator.New()
@@ -84,11 +94,31 @@ func main() {
 		reviewQueue = queue.NewInMemory()
 	}
 
+	// ── Tenant rate limiter (Phase 2) ────────────────────────────────────────
+	rl := ratelimit.New(ratelimit.Config{
+		Defaults: ratelimit.TenantLimits{
+			AuthChecksPerMinute: parseIntOr(envOr("TENANT_AUTH_RATE_LIMIT", "0"), 0),
+			TokenMintsPerMinute: parseIntOr(envOr("TENANT_MINT_RATE_LIMIT", "0"), 0),
+		},
+	})
+	if rl != nil {
+		log.Printf("tenant rate limiter enabled (auth=%s/min, mint=%s/min)",
+			envOr("TENANT_AUTH_RATE_LIMIT", "0"), envOr("TENANT_MINT_RATE_LIMIT", "0"))
+	}
+
+	// ── Operational fallback modes (Phase 2) ─────────────────────────────────
+	fb := fallback.New(fallback.Config{
+		RedisMode:        fallback.ParseMode(envOr("FALLBACK_REDIS_MODE", "closed")),
+		ControlPlaneMode: fallback.ParseMode(envOr("FALLBACK_CP_MODE", "closed")),
+	})
+	log.Printf("fallback modes: redis=%s, control_plane=%s",
+		envOr("FALLBACK_REDIS_MODE", "closed"), envOr("FALLBACK_CP_MODE", "closed"))
+
 	// ── HTTP server ───────────────────────────────────────────────────────────
 	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue, apiKey, server.ConfidenceConfig{
 		AllowUnverifiedConfidence: allowUnverifiedConfidence,
 		MissingSignalMode:         missingConfidenceMode,
-	}, enforcementMode, incidentNotifier)
+	}, enforcementMode, incidentNotifier, rl, fb)
 	srv := server.NewHTTPServer(addr, h)
 
 	// ── Policy sync worker (optional) ─────────────────────────────────────────
@@ -145,4 +175,14 @@ func parseIntOr(value string, fallback int) int {
 		return fallback
 	}
 	return v
+}
+
+func isProductionEnv() bool {
+	v := envOr("APP_ENV", envOr("ENV", ""))
+	switch v {
+	case "prod", "production":
+		return true
+	default:
+		return false
+	}
 }

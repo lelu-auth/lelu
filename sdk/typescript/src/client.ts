@@ -3,9 +3,12 @@ import {
   AuthRequestSchema,
   AgentAuthRequestSchema,
   MintTokenRequestSchema,
+  DelegateScopeRequestSchema,
   type AuthDecision,
   type AgentAuthDecision,
   type MintTokenResult,
+  type DelegateScopeResult,
+  type DelegateScopeRequest,
   type RevokeTokenResult,
   type AuthRequest,
   type AgentAuthRequest,
@@ -16,14 +19,14 @@ import {
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 /**
- * PrismClient is the core SDK entry-point. It communicates with the local
+ * LeluClient is the core SDK entry-point. It communicates with the local
  * Auth Permission Engine sidecar over HTTP/JSON.
  *
  * @example
  * ```ts
- * const prism = new PrismClient({ baseUrl: "http://localhost:8080" });
+ * const lelu = new LeluClient({ baseUrl: "http://localhost:8080" });
  *
- * const decision = await prism.agentAuthorize({
+ * const decision = await lelu.agentAuthorize({
  *   actor: "invoice_bot",
  *   action: "approve_refunds",
  *   context: { confidence: 0.92, actingFor: "user_123" },
@@ -34,7 +37,7 @@ import {
  * }
  * ```
  */
-export class PrismClient {
+export class LeluClient {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
   private readonly apiKey: string | undefined;
@@ -155,14 +158,15 @@ export class PrismClient {
    * `require_confidence_above` before delegation is granted.
    */
   async delegateScope(req: DelegateScopeRequest): Promise<DelegateScopeResult> {
+    const validated = DelegateScopeRequestSchema.parse(req);
     const body = {
-      delegator: req.delegator,
-      delegatee: req.delegatee,
-      scoped_to: req.scopedTo ?? [],
-      ttl_seconds: req.ttlSeconds ?? 60,
-      confidence: req.confidence ?? 1.0,
-      acting_for: req.actingFor ?? "",
-      tenant_id: req.tenantId ?? "",
+      delegator: validated.delegator,
+      delegatee: validated.delegatee,
+      scoped_to: validated.scopedTo ?? [],
+      ttl_seconds: validated.ttlSeconds ?? 60,
+      confidence: validated.confidence ?? 1.0,
+      acting_for: validated.actingFor ?? "",
+      tenant_id: validated.tenantId ?? "",
     };
     const data = await this.post<{
       token: string;
@@ -267,3 +271,6 @@ export class PrismClient {
     return json as T;
   }
 }
+
+/** Backward-compatible alias. Prefer {@link LeluClient}. */
+export const PrismClient = LeluClient;

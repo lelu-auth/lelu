@@ -1,4 +1,4 @@
-module github.com/prism/platform
+module github.com/lelu/platform
 
 go 1.22
 

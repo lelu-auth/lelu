@@ -9,11 +9,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
-	auditstore "github.com/prism/platform/internal/audit"
-	"github.com/prism/platform/internal/policy"
+	auditstore "github.com/lelu/platform/internal/audit"
+	"github.com/lelu/platform/internal/policy"
 )
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -66,7 +67,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 // ─── Health ──────────────────────────────────────────────────────────────────
 
 func (h *Handler) handleHealth(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "prism-platform"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "lelu-platform"})
 }
 
 // ─── Policies ─────────────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ func (h *Handler) handleListPolicies(w http.ResponseWriter, r *http.Request) {
 	if tenantID == "" {
 		tenantID = "default"
 	}
-	list, err := h.policies.List()
+	list, err := h.policies.List(tenantID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -132,7 +133,7 @@ func (h *Handler) handleDeletePolicy(w http.ResponseWriter, r *http.Request) {
 	if tenantID == "" {
 		tenantID = "default"
 	}
-	if err := h.policies.Delete(r.PathValue("name")); err != nil {
+	if err := h.policies.Delete(tenantID, r.PathValue("name")); err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
@@ -147,13 +148,19 @@ func (h *Handler) handleListAudit(w http.ResponseWriter, r *http.Request) {
 		tenantID = "default"
 	}
 	q := r.URL.Query()
+	limit, cursor, err := parsePagination(q.Get("limit"), q.Get("cursor"), defaultAuditPageLimit, maxAuditPageLimit)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	filter := auditstore.QueryFilter{
 		TenantID: tenantID,
 		Actor:    q.Get("actor"),
 		Action:   q.Get("action"),
 		Decision: q.Get("decision"),
 		TraceID:  q.Get("trace_id"),
-		Limit:    50,
+		Limit:    limit,
+		Offset:   cursor,
 	}
 	if from := q.Get("from"); from != "" {
 		t, err := time.Parse(time.RFC3339, from)
@@ -173,7 +180,17 @@ func (h *Handler) handleListAudit(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"events": events, "count": len(events)})
+	nextCursor := int64(0)
+	if int64(len(events)) == limit {
+		nextCursor = cursor + int64(len(events))
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"events":      events,
+		"count":       len(events),
+		"limit":       limit,
+		"cursor":      cursor,
+		"next_cursor": nextCursor,
+	})
 }
 
 func (h *Handler) handleGetTrace(w http.ResponseWriter, r *http.Request) {
@@ -246,6 +263,13 @@ type complianceEvidenceMetadata struct {
 	Algorithm      string `json:"algorithm"`
 }
 
+const (
+	defaultAuditPageLimit      int64 = 50
+	maxAuditPageLimit          int64 = 500
+	defaultCompliancePageLimit int64 = 500
+	maxCompliancePageLimit     int64 = 2000
+)
+
 func (h *Handler) handleComplianceExport(w http.ResponseWriter, r *http.Request) {
 	tenantID := r.Header.Get("X-Tenant-ID")
 	if tenantID == "" {
@@ -253,6 +277,11 @@ func (h *Handler) handleComplianceExport(w http.ResponseWriter, r *http.Request)
 	}
 
 	q := r.URL.Query()
+	limit, cursor, err := parsePagination(q.Get("limit"), q.Get("cursor"), defaultCompliancePageLimit, maxCompliancePageLimit)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	framework := parseComplianceFramework(q.Get("framework"))
 	if framework == "" {
 		writeError(w, http.StatusBadRequest, "framework must be one of: owasp_genai, nist_ai_rmf, all")
@@ -261,7 +290,8 @@ func (h *Handler) handleComplianceExport(w http.ResponseWriter, r *http.Request)
 
 	filter := auditstore.QueryFilter{
 		TenantID: tenantID,
-		Limit:    500,
+		Limit:    limit,
+		Offset:   cursor,
 	}
 	if from := q.Get("from"); from != "" {
 		t, err := time.Parse(time.RFC3339, from)
@@ -300,8 +330,55 @@ func (h *Handler) handleComplianceExport(w http.ResponseWriter, r *http.Request)
 		resp.To = filter.To.Format(time.RFC3339)
 	}
 	resp.Evidence = buildComplianceEvidence(resp, h.evidenceSigningKey)
+	nextCursor := int64(0)
+	if int64(len(events)) == limit {
+		nextCursor = cursor + int64(len(events))
+	}
 
-	writeJSON(w, http.StatusOK, resp)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"export":      resp,
+		"limit":       limit,
+		"cursor":      cursor,
+		"next_cursor": nextCursor,
+	})
+}
+
+func parsePagination(limitRaw, cursorRaw string, defaultLimit, maxLimit int64) (int64, int64, error) {
+	limit := defaultLimit
+	cursor := int64(0)
+
+	if strings.TrimSpace(limitRaw) != "" {
+		v, err := strconv.ParseInt(strings.TrimSpace(limitRaw), 10, 64)
+		if err != nil || v <= 0 {
+			return 0, 0, httpErrorf("limit must be a positive integer")
+		}
+		if v > maxLimit {
+			v = maxLimit
+		}
+		limit = v
+	}
+
+	if strings.TrimSpace(cursorRaw) != "" {
+		v, err := strconv.ParseInt(strings.TrimSpace(cursorRaw), 10, 64)
+		if err != nil || v < 0 {
+			return 0, 0, httpErrorf("cursor must be a non-negative integer")
+		}
+		cursor = v
+	}
+
+	return limit, cursor, nil
+}
+
+func httpErrorf(msg string) error {
+	return &handlerError{msg: msg}
+}
+
+type handlerError struct {
+	msg string
+}
+
+func (e *handlerError) Error() string {
+	return e.msg
 }
 
 func buildComplianceEvidence(resp complianceExportResponse, signingKey string) complianceEvidenceMetadata {

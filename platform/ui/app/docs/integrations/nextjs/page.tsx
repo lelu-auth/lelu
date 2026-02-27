@@ -20,7 +20,7 @@ export default function DocsIntegrationsNextjs() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">terminal</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300">{`npm install prizm-engine`}</pre>
+            <pre className="p-4 font-mono text-sm text-zinc-300">{`npm install lelu`}</pre>
           </div>
         </section>
 
@@ -32,7 +32,7 @@ export default function DocsIntegrationsNextjs() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">app/api/agent-action/route.ts</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismClient } from "prizm-engine";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { PrismClient } from "lelu";
 import { NextResponse } from "next/server";
 
 const prism = new PrismClient({
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
               <span className="text-xs text-zinc-500 font-mono">app/admin/approvals/page.tsx</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`"use client";
-import { PrismApprovalUI } from "prizm-engine/react";
+import { PrismApprovalUI } from "lelu/react";
 
 export default function ApprovalsPage() {
   return (

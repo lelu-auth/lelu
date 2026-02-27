@@ -1,4 +1,4 @@
-module github.com/prism/engine
+module github.com/lelu/engine
 
 go 1.22
 

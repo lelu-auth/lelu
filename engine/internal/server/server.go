@@ -9,19 +9,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/prism/engine/internal/audit"
-	"github.com/prism/engine/internal/confidence"
-	"github.com/prism/engine/internal/evaluator"
-	"github.com/prism/engine/internal/incident"
-	"github.com/prism/engine/internal/injection"
-	"github.com/prism/engine/internal/queue"
-	"github.com/prism/engine/internal/tokens"
+	"github.com/lelu/engine/internal/audit"
+	"github.com/lelu/engine/internal/confidence"
+	"github.com/lelu/engine/internal/evaluator"
+	"github.com/lelu/engine/internal/fallback"
+	"github.com/lelu/engine/internal/incident"
+	"github.com/lelu/engine/internal/injection"
+	"github.com/lelu/engine/internal/queue"
+	"github.com/lelu/engine/internal/ratelimit"
+	"github.com/lelu/engine/internal/tokens"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -31,28 +34,28 @@ import (
 
 var (
 	httpRequestsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "prism_http_requests_total",
+		Name: "lelu_http_requests_total",
 		Help: "Total number of HTTP requests",
 	}, []string{"method", "path", "status"})
 
 	httpRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "prism_http_request_duration_seconds",
+		Name:    "lelu_http_request_duration_seconds",
 		Help:    "Duration of HTTP requests in seconds",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"method", "path"})
 
 	authDecisionsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "prism_auth_decisions_total",
+		Name: "lelu_auth_decisions_total",
 		Help: "Total number of authorization decisions",
 	}, []string{"type", "allowed"})
 
 	injectionAttemptsTotal = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "prism_injection_attempts_total",
+		Name: "lelu_injection_attempts_total",
 		Help: "Total number of detected prompt injection attempts",
 	})
 
 	anomalyAlertsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "prism_anomaly_alerts_total",
+		Name: "lelu_anomaly_alerts_total",
 		Help: "Total number of anomaly spike alerts fired per actor",
 	}, []string{"actor"})
 )
@@ -61,17 +64,19 @@ var (
 
 // Handler wires all engine sub-services into HTTP endpoints.
 type Handler struct {
-	eval     *evaluator.Evaluator
-	tokenSvc *tokens.Service
-	confGate *confidence.Gate
-	audit    *audit.Writer
-	queue    *queue.Queue
-	apiKey   string
-	confCfg  ConfidenceConfig
-	mode     EnforcementMode
-	shadow   *shadowStats
-	incident *incident.Notifier
-	anomaly  *anomalyTracker
+	eval      *evaluator.Evaluator
+	tokenSvc  *tokens.Service
+	confGate  *confidence.Gate
+	audit     *audit.Writer
+	queue     *queue.Queue
+	apiKey    string
+	confCfg   ConfidenceConfig
+	mode      EnforcementMode
+	shadow    *shadowStats
+	incident  *incident.Notifier
+	anomaly   *anomalyTracker
+	rateLimit *ratelimit.Limiter
+	fallback  *fallback.Strategy
 }
 
 // ─── Anomaly Tracker ──────────────────────────────────────────────────────────
@@ -184,22 +189,26 @@ func New(
 	confCfg ConfidenceConfig,
 	mode EnforcementMode,
 	incidentNotifier *incident.Notifier,
+	rl *ratelimit.Limiter,
+	fb *fallback.Strategy,
 ) *Handler {
 	if mode == "" {
 		mode = EnforcementModeEnforce
 	}
 	return &Handler{
-		eval:     eval,
-		tokenSvc: tokenSvc,
-		confGate: confGate,
-		audit:    auditWriter,
-		queue:    q,
-		apiKey:   apiKey,
-		confCfg:  confCfg.withDefaults(),
-		mode:     mode,
-		shadow:   newShadowStats(),
-		incident: incidentNotifier,
-		anomaly:  newAnomalyTracker(5, 60*time.Second),
+		eval:      eval,
+		tokenSvc:  tokenSvc,
+		confGate:  confGate,
+		audit:     auditWriter,
+		queue:     q,
+		apiKey:    apiKey,
+		confCfg:   confCfg.withDefaults(),
+		mode:      mode,
+		shadow:    newShadowStats(),
+		incident:  incidentNotifier,
+		anomaly:   newAnomalyTracker(5, 60*time.Second),
+		rateLimit: rl,
+		fallback:  fb,
 	}
 }
 
@@ -217,6 +226,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/queue/{id}", h.handleQueueGet)
 	mux.HandleFunc("POST /v1/queue/{id}/approve", h.handleQueueApprove)
 	mux.HandleFunc("POST /v1/queue/{id}/deny", h.handleQueueDeny)
+	mux.HandleFunc("GET /v1/fallback/status", h.handleFallbackStatus)
 	mux.HandleFunc("GET /healthz", h.handleHealth)
 	mux.Handle("GET /metrics", promhttp.Handler())
 }
@@ -244,6 +254,11 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 	var req authorizeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if h.rateLimit != nil && !h.rateLimit.AllowAuth(req.TenantID) {
+		writeError(w, http.StatusTooManyRequests, "rate limit exceeded for tenant")
 		return
 	}
 
@@ -330,6 +345,11 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	var req agentAuthorizeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if h.rateLimit != nil && !h.rateLimit.AllowAuth(req.TenantID) {
+		writeError(w, http.StatusTooManyRequests, "rate limit exceeded for tenant")
 		return
 	}
 
@@ -1008,6 +1028,7 @@ func (h *Handler) incrementTransitionCounter(summary *simulatorReplaySummary, be
 // ─── Mint Token ───────────────────────────────────────────────────────────────
 
 type mintTokenRequest struct {
+	TenantID   string `json:"tenant_id"`
 	Scope      string `json:"scope"`
 	ActingFor  string `json:"acting_for"`
 	TTLSeconds int64  `json:"ttl_seconds"`
@@ -1023,6 +1044,11 @@ func (h *Handler) handleMintToken(w http.ResponseWriter, r *http.Request) {
 	var req mintTokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if h.rateLimit != nil && !h.rateLimit.AllowMint(req.TenantID) {
+		writeError(w, http.StatusTooManyRequests, "rate limit exceeded for tenant")
 		return
 	}
 
@@ -1121,12 +1147,22 @@ func (h *Handler) handleQueueResolve(w http.ResponseWriter, r *http.Request, app
 	writeJSON(w, http.StatusOK, map[string]bool{"success": true})
 }
 
+// ─── Fallback Status ─────────────────────────────────────────────────────────
+
+func (h *Handler) handleFallbackStatus(w http.ResponseWriter, _ *http.Request) {
+	if h.fallback == nil {
+		writeJSON(w, http.StatusOK, map[string]string{"status": "fallback not configured"})
+		return
+	}
+	writeJSON(w, http.StatusOK, h.fallback.Status())
+}
+
 // ─── Health ───────────────────────────────────────────────────────────────────
 
 func (h *Handler) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{
 		"status":  "ok",
-		"service": "prizm-engine",
+		"service": "lelu-engine",
 	})
 }
 
@@ -1167,7 +1203,13 @@ func (h *Handler) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// If no API key is configured, allow all (for local dev/testing)
+		// In production, fail closed when API key is not configured.
+		if strings.EqualFold(strings.TrimSpace(os.Getenv("ENV")), "production") && h.apiKey == "" {
+			writeError(w, http.StatusInternalServerError, "server misconfigured: API key is required in production")
+			return
+		}
+
+		// If no API key is configured, allow all (for local dev/testing).
 		if h.apiKey == "" {
 			next.ServeHTTP(w, r)
 			return

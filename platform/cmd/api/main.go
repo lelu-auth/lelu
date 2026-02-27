@@ -1,4 +1,4 @@
-// Prism Platform — Cloud Control Plane entrypoint.
+// Lelu Platform — Cloud Control Plane entrypoint.
 //
 // Environment variables:
 //   LISTEN_ADDR        HTTP listen address (default: :9090)
@@ -20,10 +20,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/prism/platform/internal/audit"
-	"github.com/prism/platform/internal/db"
-	"github.com/prism/platform/internal/handlers"
-	"github.com/prism/platform/internal/policy"
+	"github.com/lelu/platform/internal/audit"
+	"github.com/lelu/platform/internal/db"
+	"github.com/lelu/platform/internal/handlers"
+	"github.com/lelu/platform/internal/policy"
 )
 
 func main() {
@@ -35,6 +35,9 @@ func main() {
 	trustedSSOHeader := envOr("SSO_TRUSTED_HEADER", "")
 	trustedSSODomain := envOr("SSO_TRUSTED_EMAIL_DOMAIN", "")
 	evidenceSigningKey := envOr("EVIDENCE_SIGNING_KEY", "")
+	if isProductionEnv() && (apiKey == "" || apiKey == "change-me-in-production") {
+		log.Fatal("PLATFORM_API_KEY must be explicitly set to a strong secret in production")
+	}
 
 	// ── Database ──────────────────────────────────────────────────────────────
 	database, err := db.Open(dsn)
@@ -103,8 +106,19 @@ func main() {
 }
 
 func envOr(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
 	}
-	return fallback
+	return v
+}
+
+func isProductionEnv() bool {
+	v := envOr("APP_ENV", envOr("ENV", ""))
+	switch v {
+	case "prod", "production":
+		return true
+	default:
+		return false
+	}
 }

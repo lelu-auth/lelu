@@ -1,12 +1,12 @@
 """
-auth_pe — Python SDK for the Auth Permission Engine.
+Prism Python SDK.
 
 Quick start::
 
-    from auth_pe import PrismClient, AgentAuthRequest, AgentContext
+    from lelu import LeluClient, AgentAuthRequest, AgentContext
 
-    async with PrismClient(base_url="http://localhost:8080") as prism:
-        decision = await prism.agent_authorize(
+    async with LeluClient(base_url="http://localhost:8080") as lelu:
+        decision = await lelu.agent_authorize(
             AgentAuthRequest(
                 actor="invoice_bot",
                 action="approve_refunds",
@@ -17,7 +17,7 @@ Quick start::
             print(decision.reason)
 """
 
-from .client import PrismClient
+from .client import LeluClient
 from .autogpt_plugin import PrismAutoGPTPlugin
 from .middleware import AgentMiddleware
 from .models import (
@@ -27,6 +27,8 @@ from .models import (
     AuthDecision,
     AuthEngineError,
     AuthRequest,
+    DelegateScopeRequest,
+    DelegateScopeResult,
     MintTokenRequest,
     MintTokenResult,
     RevokeTokenResult,
@@ -39,7 +41,7 @@ except ImportError:
     pass  # crewai not installed; PrismTool not available
 
 __all__ = [
-    "PrismClient",
+    "LeluClient",
     "PrismAutoGPTPlugin",
     "AgentMiddleware",
     # CrewAI
@@ -50,10 +52,12 @@ __all__ = [
     "AgentAuthRequest",
     "AgentContext",
     "MintTokenRequest",
+    "DelegateScopeRequest",
     # Decisions
     "AuthDecision",
     "AgentAuthDecision",
     "MintTokenResult",
+    "DelegateScopeResult",
     "RevokeTokenResult",
     # Errors
     "AuthEngineError",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PrismClient } from "../client";
+import { LeluClient } from "../client";
 
 export * from './PrismApprovalUI';
 export * from './AgentReputationDashboard';
@@ -55,7 +55,7 @@ export function useAgentPermission(
     if (opts.apiKey !== undefined) {
       clientConfig.apiKey = opts.apiKey;
     }
-    const client = new PrismClient(clientConfig);
+    const client = new LeluClient(clientConfig);
 
     client
       .agentAuthorize({ actor, action, context: { confidence, scope: opts.scope } })

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { secureTool } from "./index.js";
-import { PrismClient } from "../client.js";
+import { LeluClient } from "../client.js";
 
 // ─── Mock fetch globally ───────────────────────────────────────────────────────
 
@@ -26,11 +26,11 @@ const fakeTool = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("secureTool()", () => {
-    let client: PrismClient;
+    let client: LeluClient;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        client = new PrismClient({ baseUrl: "http://localhost:8080" });
+        client = new LeluClient({ baseUrl: "http://localhost:8080" });
     });
 
     it("calls the original execute when allowed", async () => {

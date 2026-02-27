@@ -10,11 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/prism/engine/internal/audit"
-	"github.com/prism/engine/internal/confidence"
-	"github.com/prism/engine/internal/evaluator"
-	"github.com/prism/engine/internal/server"
-	"github.com/prism/engine/internal/tokens"
+	"github.com/lelu/engine/internal/audit"
+	"github.com/lelu/engine/internal/confidence"
+	"github.com/lelu/engine/internal/evaluator"
+	"github.com/lelu/engine/internal/fallback"
+	"github.com/lelu/engine/internal/queue"
+	"github.com/lelu/engine/internal/ratelimit"
+	"github.com/lelu/engine/internal/server"
+	"github.com/lelu/engine/internal/tokens"
 )
 
 var samplePolicy = []byte(`
@@ -53,11 +56,36 @@ func newTestServerWithMode(t *testing.T, mode server.EnforcementMode) *httptest.
 		server.ConfidenceConfig{},
 		mode,
 		nil,
+		nil, // rateLimit
+		nil, // fallback
 	)
 
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
 	return httptest.NewServer(mux)
+}
+
+func newTestHTTPServerWithConfig(t *testing.T, policy []byte, apiKey string, q *queue.Queue) *httptest.Server {
+	t.Helper()
+	eval := evaluator.New()
+	require.NoError(t, eval.LoadPolicyBytes(policy))
+
+	h := server.New(
+		eval,
+		tokens.New(tokens.Config{SigningKey: "test-key"}),
+		confidence.New(),
+		audit.New(audit.Config{Sink: &bytes.Buffer{}}),
+		q,
+		apiKey,
+		server.ConfidenceConfig{},
+		server.EnforcementModeEnforce,
+		nil,
+		nil, // rateLimit
+		nil, // fallback
+	)
+
+	httpSrv := server.NewHTTPServer(":0", h)
+	return httptest.NewServer(httpSrv.Handler)
 }
 
 func postJSON(t *testing.T, srv *httptest.Server, path string, body any) *http.Response {
@@ -316,4 +344,344 @@ func TestShadowSummary_TracksWouldHaveOutcomes(t *testing.T) {
 
 	buckets := body["buckets"].([]any)
 	assert.NotEmpty(t, buckets)
+}
+
+func TestAgentDelegate_Allowed(t *testing.T) {
+	policy := []byte(`
+version: "1.0"
+roles:
+  finance_manager:
+    allow: [view_invoices, approve_refunds]
+agent_scopes:
+  orchestrator_agent:
+    inherits: finance_manager
+    can_delegate:
+      - to: research_agent
+        scoped_to:
+          - research
+          - read_reports
+        max_ttl_seconds: 300
+        require_confidence_above: 0.90
+  research_agent:
+    inherits: finance_manager
+`)
+
+	srv := newTestHTTPServerWithConfig(t, policy, "", nil)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/agent/delegate", map[string]any{
+		"delegator":  "orchestrator_agent",
+		"delegatee":  "research_agent",
+		"scoped_to":  []string{"research"},
+		"ttl_seconds": 120,
+		"confidence": 0.95,
+	})
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	assert.NotEmpty(t, body["token"])
+	assert.Equal(t, "orchestrator_agent", body["delegator"])
+	assert.Equal(t, "research_agent", body["delegatee"])
+}
+
+func TestAgentDelegate_Denied(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/agent/delegate", map[string]any{
+		"delegator":  "invoice_bot",
+		"delegatee":  "research_agent",
+		"scoped_to":  []string{"research"},
+		"ttl_seconds": 120,
+		"confidence": 0.95,
+	})
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	assert.False(t, body["allowed"].(bool))
+	assert.NotEmpty(t, body["reason"])
+}
+
+func TestQueueApproveDenyFlows(t *testing.T) {
+	srv := newTestHTTPServerWithConfig(t, samplePolicy, "", queue.NewInMemory())
+	defer srv.Close()
+
+	approveResp := postJSON(t, srv, "/v1/queue/fake-id/approve", map[string]any{
+		"resolved_by": "reviewer_1",
+		"note":        "looks good",
+	})
+	assert.Equal(t, http.StatusOK, approveResp.StatusCode)
+
+	denyResp := postJSON(t, srv, "/v1/queue/fake-id/deny", map[string]any{
+		"resolved_by": "reviewer_2",
+		"note":        "too risky",
+	})
+	assert.Equal(t, http.StatusOK, denyResp.StatusCode)
+}
+
+func TestQueueResolve_BadBody(t *testing.T) {
+	srv := newTestHTTPServerWithConfig(t, samplePolicy, "", queue.NewInMemory())
+	defer srv.Close()
+
+	resp, err := http.Post(srv.URL+"/v1/queue/fake-id/approve", "application/json", bytes.NewBufferString("{"))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+// ─── Delegation integration tests ────────────────────────────────────────────
+
+func TestAgentDelegate_LowConfidence_Denied(t *testing.T) {
+	policy := []byte(`
+version: "1.0"
+roles:
+  finance_manager:
+    allow: [view_invoices, approve_refunds]
+agent_scopes:
+  orchestrator_agent:
+    inherits: finance_manager
+    can_delegate:
+      - to: research_agent
+        scoped_to: [research]
+        max_ttl_seconds: 300
+        require_confidence_above: 0.90
+  research_agent:
+    inherits: finance_manager
+`)
+	srv := newTestHTTPServerWithConfig(t, policy, "", nil)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/agent/delegate", map[string]any{
+		"delegator":   "orchestrator_agent",
+		"delegatee":   "research_agent",
+		"scoped_to":   []string{"research"},
+		"ttl_seconds":  120,
+		"confidence":  0.50,
+	})
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	assert.False(t, body["allowed"].(bool))
+	assert.Contains(t, body["reason"], "confidence")
+}
+
+func TestAgentDelegate_TTL_CappedByPolicy(t *testing.T) {
+	policy := []byte(`
+version: "1.0"
+roles:
+  finance_manager:
+    allow: [view_invoices]
+agent_scopes:
+  orchestrator_agent:
+    inherits: finance_manager
+    can_delegate:
+      - to: research_agent
+        scoped_to: [research]
+        max_ttl_seconds: 60
+        require_confidence_above: 0.80
+  research_agent:
+    inherits: finance_manager
+`)
+	srv := newTestHTTPServerWithConfig(t, policy, "", nil)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/agent/delegate", map[string]any{
+		"delegator":   "orchestrator_agent",
+		"delegatee":   "research_agent",
+		"scoped_to":   []string{"research"},
+		"ttl_seconds":  9999,
+		"confidence":  0.95,
+	})
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	assert.NotEmpty(t, body["token"])
+}
+
+func TestAgentDelegate_MissingDelegator(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/agent/delegate", map[string]any{
+		"delegatee": "research_agent",
+	})
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+// ─── Queue integration tests ─────────────────────────────────────────────────
+
+func TestQueueList_Empty(t *testing.T) {
+	srv := newTestHTTPServerWithConfig(t, samplePolicy, "", queue.NewInMemory())
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/v1/queue/pending")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	// In-memory queue returns nil slice, which JSON-encodes as null.
+	if body["items"] != nil {
+		items, ok := body["items"].([]any)
+		assert.True(t, ok)
+		assert.Empty(t, items)
+	}
+	assert.Equal(t, float64(0), body["count"])
+}
+
+func TestQueueGet_NotFound(t *testing.T) {
+	srv := newTestHTTPServerWithConfig(t, samplePolicy, "", queue.NewInMemory())
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/v1/queue/nonexistent-id")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+// ─── Rate limiting integration tests ─────────────────────────────────────────
+
+func TestRateLimit_AuthEndpoint(t *testing.T) {
+	eval := evaluator.New()
+	require.NoError(t, eval.LoadPolicyBytes(samplePolicy))
+
+	rl := ratelimit.New(ratelimit.Config{
+		Defaults: ratelimit.TenantLimits{
+			AuthChecksPerMinute: 2,
+			TokenMintsPerMinute: 100,
+		},
+	})
+
+	h := server.New(
+		eval,
+		tokens.New(tokens.Config{SigningKey: "test-key"}),
+		confidence.New(),
+		audit.New(audit.Config{Sink: &bytes.Buffer{}}),
+		nil,
+		"",
+		server.ConfidenceConfig{},
+		server.EnforcementModeEnforce,
+		nil,
+		rl,
+		nil, // fallback
+	)
+	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	body := map[string]any{
+		"tenant_id": "tenant-rl",
+		"user_id":   "user_123",
+		"action":    "approve_refunds",
+	}
+
+	// First 2 calls should succeed.
+	for i := 0; i < 2; i++ {
+		resp := postJSON(t, srv, "/v1/authorize", body)
+		assert.Equal(t, http.StatusOK, resp.StatusCode, "call %d should pass", i+1)
+	}
+	// Third should be rate limited.
+	resp := postJSON(t, srv, "/v1/authorize", body)
+	assert.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+}
+
+// ─── Fallback status endpoint ────────────────────────────────────────────────
+
+func TestFallbackStatus_NilFallback(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/v1/fallback/status")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	assert.Contains(t, body["status"], "not configured")
+}
+
+func TestFallbackStatus_WithStrategy(t *testing.T) {
+	eval := evaluator.New()
+	require.NoError(t, eval.LoadPolicyBytes(samplePolicy))
+
+	fb := fallback.New(fallback.Config{
+		RedisMode:        fallback.ModeOpen,
+		ControlPlaneMode: fallback.ModeClosed,
+	})
+
+	h := server.New(
+		eval,
+		tokens.New(tokens.Config{SigningKey: "test-key"}),
+		confidence.New(),
+		audit.New(audit.Config{Sink: &bytes.Buffer{}}),
+		nil,
+		"",
+		server.ConfidenceConfig{},
+		server.EnforcementModeEnforce,
+		nil,
+		nil, // rateLimit
+		fb,
+	)
+	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/v1/fallback/status")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	redis, ok := body["redis"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, true, redis["healthy"])
+	assert.Equal(t, "open", redis["mode"])
+}
+
+func TestAuthMiddleware_ProductionRejectsEmptyAPIKey(t *testing.T) {
+	t.Setenv("ENV", "production")
+	srv := newTestHTTPServerWithConfig(t, samplePolicy, "", nil)
+	defer srv.Close()
+
+	resp := postJSON(t, srv, "/v1/authorize", map[string]any{
+		"user_id": "user_123",
+		"action":  "approve_refunds",
+	})
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+}
+
+func TestAuthMiddleware_InvalidAPIKeyUnauthorized(t *testing.T) {
+	t.Setenv("ENV", "development")
+	srv := newTestHTTPServerWithConfig(t, samplePolicy, "test-api-key", nil)
+	defer srv.Close()
+
+	reqBody, _ := json.Marshal(map[string]any{"user_id": "user_123", "action": "approve_refunds"})
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/v1/authorize", bytes.NewReader(reqBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer wrong-key")
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+}
+
+func TestAuthMiddleware_ValidAPIKeyAllowed(t *testing.T) {
+	t.Setenv("ENV", "development")
+	srv := newTestHTTPServerWithConfig(t, samplePolicy, "test-api-key", nil)
+	defer srv.Close()
+
+	reqBody, _ := json.Marshal(map[string]any{"user_id": "user_123", "action": "approve_refunds"})
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/v1/authorize", bytes.NewReader(reqBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer test-api-key")
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

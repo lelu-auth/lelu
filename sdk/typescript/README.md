@@ -1,19 +1,19 @@
-# Prizm Engine
+# Lelu
 
-The TypeScript SDK for the Auth Permission Engine — the immune system for autonomous AI agents.
+The TypeScript SDK for Lelu — the confidence-aware authorization engine for autonomous AI agents.
 
-Prizm Engine provides confidence-aware access control, human-in-the-loop approvals, and SOC 2-ready audit trails for your autonomous agents.
+Lelu provides confidence-aware access control, human-in-the-loop approvals, and SOC 2-ready audit trails for your autonomous agents.
 
 ## Installation
 
 ```bash
-npm install prizm-engine
+npm install lelu
 ```
 
 ## Quick Start
 
 ```typescript
-import { createClient } from "prizm-engine";
+import { createClient } from "lelu";
 
 // Initialize the client
 const prism = createClient({ 

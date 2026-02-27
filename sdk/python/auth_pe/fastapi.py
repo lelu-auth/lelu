@@ -4,11 +4,11 @@ FastAPI integration for Prism Auth Permission Engine.
 Usage::
 
     from fastapi import FastAPI, Depends
-    from auth_pe.fastapi import Authorize
-    from auth_pe import PrismClient
+    from lelu.fastapi import Authorize
+    from lelu import LeluClient
 
     app = FastAPI()
-    client = PrismClient(base_url="http://localhost:8080")
+    client = LeluClient(base_url="http://localhost:8080")
 
     @app.get("/sensitive")
     async def sensitive(
@@ -24,18 +24,18 @@ from typing import Callable, Optional
 
 from fastapi import Depends, HTTPException, Request, status
 
-from .client import PrismClient
+from .client import LeluClient
 from .models import AgentAuthDecision, AuthEngineError
 
-_DEFAULT_CLIENT: Optional[PrismClient] = None
+_DEFAULT_CLIENT: Optional[LeluClient] = None
 
 
-def _get_default_client() -> PrismClient:
+def _get_default_client() -> LeluClient:
     global _DEFAULT_CLIENT
     if _DEFAULT_CLIENT is None:
         base_url = os.environ.get("PRISM_BASE_URL", "http://localhost:8080")
         api_key = os.environ.get("PRISM_API_KEY")
-        _DEFAULT_CLIENT = PrismClient(base_url=base_url, api_key=api_key)
+        _DEFAULT_CLIENT = LeluClient(base_url=base_url, api_key=api_key)
     return _DEFAULT_CLIENT
 
 
@@ -44,7 +44,7 @@ def Authorize(
     *,
     confidence: float = 1.0,
     actor_header: str = "X-Actor",
-    client: Optional[PrismClient] = None,
+    client: Optional[LeluClient] = None,
 ) -> Callable:
     """
     FastAPI dependency factory that calls the Prism engine's ``/v1/agent/authorize``
@@ -59,7 +59,7 @@ def Authorize(
     actor_header:
         HTTP header that carries the actor identifier (default: ``X-Actor``).
     client:
-        Explicit ``PrismClient`` instance.  Falls back to one built from
+        Explicit ``LeluClient`` instance. Falls back to one built from
         ``PRISM_BASE_URL`` / ``PRISM_API_KEY`` environment variables.
 
     Returns

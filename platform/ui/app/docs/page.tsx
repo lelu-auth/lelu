@@ -7,18 +7,18 @@ export default function DocsPage() {
   const [manualTab, setManualTab] = useState<"Claude Code" | "Open Code" | "Manual">("Claude Code");
 
   const cliCommands: Record<typeof cliTab, string> = {
-    Cursor: "npx @prism/mcp add --cursor",
-    "Claude Code": "npx @prism/mcp add --claude",
-    "Open Code": "npx @prism/mcp add --open-code",
-    Manual: "npx @prism/mcp start --transport stdio",
+    Cursor: "npx @lelu/mcp add --cursor",
+    "Claude Code": "npx @lelu/mcp add --claude",
+    "Open Code": "npx @lelu/mcp add --open-code",
+    Manual: "npx @lelu/mcp start --transport stdio",
   };
 
   const manualCommands: Record<typeof manualTab, string> = {
-    "Claude Code": "claude mcp add --transport http prism http://localhost:3001/sse",
-    "Open Code": "open-code mcp add --transport http prism http://localhost:3001/sse",
+    "Claude Code": "claude mcp add --transport http lelu http://localhost:3001/sse",
+    "Open Code": "open-code mcp add --transport http lelu http://localhost:3001/sse",
     Manual: `{
   "mcpServers": {
-    "prism": {
+    "lelu": {
       "url": "http://localhost:3001/sse"
     }
   }
@@ -30,17 +30,17 @@ export default function DocsPage() {
       <div className="mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-sm font-medium mb-6">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Prism Engine Overview
+          Lelu Engine Overview
         </div>
         <h1 id="introduction" className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">Introduction</h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Prism is a policy engine for AI-driven systems. It combines Rego-based authorization, confidence-aware decisioning, human approval queues, and auditable enforcement so teams can ship AI agents without giving up control.
+          Lelu is a policy engine for AI-driven systems. It combines Rego-based authorization, confidence-aware decisioning, human approval queues, and auditable enforcement so teams can ship AI agents without giving up control.
         </p>
       </div>
 
       <h2 id="features" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Features</h2>
       <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
-        Prism includes the core building blocks needed to govern AI actions in production, with simple defaults for development and stronger controls for enterprise workloads.
+        Lelu includes the core building blocks needed to govern AI actions in production, with simple defaults for development and stronger controls for enterprise workloads.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
@@ -89,7 +89,7 @@ export default function DocsPage() {
       
       <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-2xl p-8 mb-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
-        <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-6 relative z-10">The Prism Advantage</h3>
+        <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-6 relative z-10">The Lelu Advantage</h3>
         <div className="space-y-6 relative z-10">
           <div className="flex gap-4">
             <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-500/10 flex items-center justify-center shrink-0">
@@ -169,7 +169,7 @@ export default function DocsPage() {
 
       <h2 id="mcp" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">MCP</h2>
       <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
-        Prism provides an MCP server so you can use it with any AI model that supports the Model Context Protocol (MCP).
+        Lelu provides an MCP server so you can use it with any AI model that supports the Model Context Protocol (MCP).
       </p>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3 mb-6">
@@ -187,13 +187,13 @@ export default function DocsPage() {
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
         <p className="text-sm text-blue-800 dark:text-blue-300">
-          We provide a first-party MCP, powered by <a href="https://github.com/modelcontextprotocol/servers" className="underline hover:text-blue-600 dark:hover:text-blue-200">fastmcp</a>. You can alternatively use <a href="https://github.com/zckly/mcp-server-prism" className="underline hover:text-blue-600 dark:hover:text-blue-200">zckly/mcp-server-prism</a> and other MCP providers.
+          We provide a first-party MCP, powered by <a href="https://github.com/modelcontextprotocol/servers" className="underline hover:text-blue-600 dark:hover:text-blue-200">fastmcp</a>. You can alternatively use <a href="https://github.com/zckly/mcp-server-lelu" className="underline hover:text-blue-600 dark:hover:text-blue-200">zckly/mcp-server-lelu</a> and other MCP providers.
         </p>
       </div>
 
       <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">CLI Options</h3>
       <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-        Use the Prism CLI to easily add the MCP server to your preferred client:
+        Use the Lelu CLI to easily add the MCP server to your preferred client:
       </p>
 
       {/* Tab-like interface */}
@@ -229,7 +229,7 @@ export default function DocsPage() {
 
       <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Manual Configuration</h3>
       <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-        Alternatively, you can manually configure the MCP server for each client with the Prism SSE endpoint:
+        Alternatively, you can manually configure the MCP server for each client with the Lelu SSE endpoint:
       </p>
 
       {/* Manual config tabs */}
@@ -263,11 +263,11 @@ export default function DocsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
         <a href="/docs/concepts/cli" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">AI Tooling</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Use Prism tools from Cursor, Claude, or any MCP-compatible client.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Use Lelu tools from Cursor, Claude, or any MCP-compatible client.</p>
         </a>
         <a href="/llms.txt" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">LLMs.txt</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Prism supports the LLMs.txt standard for AI-friendly documentation.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Lelu supports the LLMs.txt standard for AI-friendly documentation.</p>
         </a>
         <a href="/docs/concepts/skills" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Skills</h3>
@@ -283,7 +283,7 @@ export default function DocsPage() {
         </a>
         <a href="/docs/concepts/cli" className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors">
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Manual Configuration</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Full control over Prism configuration for advanced use cases.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Full control over Lelu configuration for advanced use cases.</p>
         </a>
       </div>
 

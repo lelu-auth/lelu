@@ -8,10 +8,10 @@ Usage
 -----
 .. code-block:: python
 
-    from auth_pe.langgraph import secure_node, AuthState
-    from auth_pe import PrismClient
+    from lelu.langgraph import secure_node, AuthState
+    from lelu import LeluClient
 
-    client = PrismClient(base_url="http://localhost:8080")
+    client = LeluClient(base_url="http://localhost:8080")
 
     @secure_node(
         client=client,
@@ -43,8 +43,8 @@ import functools
 import logging
 from typing import Any, Callable, TypeVar
 
-from .client import PrismClient
-from .models import AgentAuthorizeRequest
+from .client import LeluClient
+from .models import AgentAuthRequest, AgentContext
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ _REVIEW_ID_KEY = "prism_review_id"
 
 def secure_node(
     *,
-    client: PrismClient,
+    client: LeluClient,
     actor: str,
     action: str,
     confidence_key: str = "confidence",
@@ -76,7 +76,7 @@ def secure_node(
     Parameters
     ----------
     client:
-        Configured :class:`~auth_pe.PrismClient`.
+        Configured :class:`~lelu.LeluClient`.
     actor:
         Agent scope / actor name registered in Prism policy.
     action:
@@ -109,11 +109,13 @@ def secure_node(
 
             async with client:
                 decision = await client.agent_authorize(
-                    AgentAuthorizeRequest(
+                    AgentAuthRequest(
                         actor=actor,
                         action=action,
-                        confidence=confidence,
-                        acting_for=acting_for,
+                        context=AgentContext(
+                            confidence=confidence,
+                            acting_for=acting_for or None,
+                        ),
                     )
                 )
 

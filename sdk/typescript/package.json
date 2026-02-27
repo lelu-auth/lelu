@@ -1,7 +1,7 @@
 {
-  "name": "prizm-engine",
+  "name": "lelu",
   "version": "1.0.0",
-  "description": "TypeScript SDK for the Auth Permission Engine — the immune system for autonomous AI agents",
+  "description": "TypeScript SDK for Lelu — the authorization engine for autonomous AI agents",
   "author": "Abenezer",
   "homepage": "https://github.com/Abenezer0923/Prism#readme",
   "bugs": {

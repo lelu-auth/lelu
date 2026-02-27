@@ -17,8 +17,16 @@ type Config struct {
 	// SlackMode formats the outbound payload as a Slack Block Kit message with
 	// Approve / Deny buttons. Set INCIDENT_WEBHOOK_SLACK_MODE=true to enable.
 	SlackMode bool
-	// EnginePublicURL is required for Slack mode — it is used to build the
-	// Approve / Deny button URLs. e.g. "https://prism.yourcompany.com"
+	// TeamsMode formats the outbound payload as a Microsoft Teams Adaptive Card.
+	// Set INCIDENT_WEBHOOK_TEAMS_MODE=true to enable.
+	TeamsMode bool
+	// PagerDutyMode formats the outbound payload as a PagerDuty Events API v2
+	// trigger. Set INCIDENT_WEBHOOK_PAGERDUTY_MODE=true to enable.
+	PagerDutyMode bool
+	// PagerDutyRoutingKey is the integration/routing key for the PagerDuty service.
+	PagerDutyRoutingKey string
+	// EnginePublicURL is required for Slack/Teams/PagerDuty modes — it is used
+	// to build the Approve / Deny button URLs. e.g. "https://lelu.yourcompany.com"
 	EnginePublicURL string
 }
 
@@ -39,10 +47,13 @@ type Event struct {
 }
 
 type Notifier struct {
-	webhookURL      string
-	client          *http.Client
-	slackMode       bool
-	enginePublicURL string
+	webhookURL          string
+	client              *http.Client
+	slackMode           bool
+	teamsMode           bool
+	pagerDutyMode       bool
+	pagerDutyRoutingKey string
+	enginePublicURL     string
 }
 
 func New(cfg Config) *Notifier {
@@ -50,10 +61,13 @@ func New(cfg Config) *Notifier {
 		cfg.Timeout = 2 * time.Second
 	}
 	return &Notifier{
-		webhookURL:      strings.TrimSpace(cfg.WebhookURL),
-		client:          &http.Client{Timeout: cfg.Timeout},
-		slackMode:       cfg.SlackMode,
-		enginePublicURL: strings.TrimSpace(cfg.EnginePublicURL),
+		webhookURL:          strings.TrimSpace(cfg.WebhookURL),
+		client:              &http.Client{Timeout: cfg.Timeout},
+		slackMode:           cfg.SlackMode,
+		teamsMode:           cfg.TeamsMode,
+		pagerDutyMode:       cfg.PagerDutyMode,
+		pagerDutyRoutingKey: strings.TrimSpace(cfg.PagerDutyRoutingKey),
+		enginePublicURL:     strings.TrimSpace(cfg.EnginePublicURL),
 	}
 }
 
@@ -61,17 +75,33 @@ func New(cfg Config) *Notifier {
 //   - INCIDENT_WEBHOOK_URL
 //   - INCIDENT_WEBHOOK_TIMEOUT_MS   (default 2000)
 //   - INCIDENT_WEBHOOK_SLACK_MODE   ("true" / "1" to enable)
-//   - PRISM_ENGINE_PUBLIC_URL       (required for Slack button URLs)
+//   - INCIDENT_WEBHOOK_TEAMS_MODE   ("true" / "1" to enable)
+//   - INCIDENT_WEBHOOK_PAGERDUTY_MODE   ("true" / "1" to enable)
+//   - PAGERDUTY_ROUTING_KEY         (required for PagerDuty mode)
+//   - LELU_ENGINE_PUBLIC_URL        (required for action button URLs)
 func NewFromEnv() *Notifier {
 	timeout := 2 * time.Second
-	slackMode := strings.ToLower(os.Getenv("INCIDENT_WEBHOOK_SLACK_MODE")) == "true" ||
-		os.Getenv("INCIDENT_WEBHOOK_SLACK_MODE") == "1"
+	slackMode := envBool("INCIDENT_WEBHOOK_SLACK_MODE")
+	teamsMode := envBool("INCIDENT_WEBHOOK_TEAMS_MODE")
+	pagerDutyMode := envBool("INCIDENT_WEBHOOK_PAGERDUTY_MODE")
+	engineURL := os.Getenv("LELU_ENGINE_PUBLIC_URL")
+	if engineURL == "" {
+		engineURL = os.Getenv("PRISM_ENGINE_PUBLIC_URL") // backward compat
+	}
 	return New(Config{
-		WebhookURL:      os.Getenv("INCIDENT_WEBHOOK_URL"),
-		Timeout:         timeout,
-		SlackMode:       slackMode,
-		EnginePublicURL: os.Getenv("PRISM_ENGINE_PUBLIC_URL"),
+		WebhookURL:          os.Getenv("INCIDENT_WEBHOOK_URL"),
+		Timeout:             timeout,
+		SlackMode:           slackMode,
+		TeamsMode:           teamsMode,
+		PagerDutyMode:       pagerDutyMode,
+		PagerDutyRoutingKey: os.Getenv("PAGERDUTY_ROUTING_KEY"),
+		EnginePublicURL:     engineURL,
 	})
+}
+
+func envBool(key string) bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv(key)))
+	return v == "true" || v == "1"
 }
 
 func (n *Notifier) Enabled() bool {
@@ -87,8 +117,13 @@ func (n *Notifier) Notify(ctx context.Context, event Event) error {
 	}
 
 	var payload any = event
-	if n.slackMode {
+	switch {
+	case n.slackMode:
 		payload = FormatSlack(event, n.enginePublicURL)
+	case n.teamsMode:
+		payload = FormatTeams(event, n.enginePublicURL)
+	case n.pagerDutyMode:
+		payload = FormatPagerDuty(event, n.pagerDutyRoutingKey, n.enginePublicURL)
 	}
 
 	body, err := json.Marshal(payload)

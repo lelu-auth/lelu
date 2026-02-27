@@ -1,4 +1,4 @@
-package prism
+package lelu
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// ClientConfig configures the Prism client.
+// ClientConfig configures the Lelu client.
 type ClientConfig struct {
 	BaseURL    string
 	APIKey     string
@@ -21,14 +21,14 @@ type ClientConfig struct {
 	HTTPClient *http.Client
 }
 
-// Client is the Go SDK entry-point for Prism Engine.
+// Client is the Go SDK entry-point for the Lelu Auth Engine.
 type Client struct {
 	baseURL    string
 	apiKey     string
 	httpClient *http.Client
 }
 
-// NewClient constructs a new Prism SDK client.
+// NewClient constructs a new Lelu SDK client.
 func NewClient(cfg ClientConfig) *Client {
 	baseURL := strings.TrimSuffix(cfg.BaseURL, "/")
 	if baseURL == "" {
@@ -116,7 +116,7 @@ type healthResponse struct {
 	Status string `json:"status"`
 }
 
-// EngineError represents non-2xx responses from Prism Engine.
+// EngineError represents non-2xx responses from the Lelu Engine.
 type EngineError struct {
 	Message string
 	Status  int
@@ -208,6 +208,71 @@ func (c *Client) RevokeToken(ctx context.Context, tokenID string) (*RevokeTokenR
 		return nil, err
 	}
 	return &out, nil
+}
+
+// DelegateScopeRequest is the request payload for multi-agent delegation.
+type DelegateScopeRequest struct {
+	Delegator  string   `json:"delegator"`
+	Delegatee  string   `json:"delegatee"`
+	ScopedTo   []string `json:"scoped_to,omitempty"`
+	TTLSeconds int64    `json:"ttl_seconds,omitempty"`
+	Confidence float64  `json:"confidence,omitempty"`
+	ActingFor  string   `json:"acting_for,omitempty"`
+	TenantID   string   `json:"tenant_id,omitempty"`
+}
+
+// DelegateScopeResult is the response from /v1/agent/delegate.
+type DelegateScopeResult struct {
+	Token         string    `json:"-"`
+	TokenID       string    `json:"-"`
+	ExpiresAt     time.Time `json:"-"`
+	Delegator     string    `json:"delegator"`
+	Delegatee     string    `json:"delegatee"`
+	GrantedScopes []string  `json:"granted_scopes"`
+	TraceID       string    `json:"trace_id"`
+}
+
+type delegateScopeWire struct {
+	Token         string   `json:"token"`
+	TokenID       string   `json:"token_id"`
+	ExpiresAt     int64    `json:"expires_at"`
+	Delegator     string   `json:"delegator"`
+	Delegatee     string   `json:"delegatee"`
+	GrantedScopes []string `json:"granted_scopes"`
+	TraceID       string   `json:"trace_id"`
+}
+
+// DelegateScope delegates a constrained sub-scope from one agent to another.
+// The delegator's confidence score is checked against the policy's
+// require_confidence_above before delegation is granted.
+func (c *Client) DelegateScope(ctx context.Context, req DelegateScopeRequest) (*DelegateScopeResult, error) {
+	if strings.TrimSpace(req.Delegator) == "" {
+		return nil, errors.New("delegator is required")
+	}
+	if strings.TrimSpace(req.Delegatee) == "" {
+		return nil, errors.New("delegatee is required")
+	}
+	if req.Confidence < 0 || req.Confidence > 1 {
+		return nil, errors.New("confidence must be between 0 and 1")
+	}
+	if req.TTLSeconds == 0 {
+		req.TTLSeconds = 60
+	}
+
+	var wire delegateScopeWire
+	if err := c.postJSON(ctx, "/v1/agent/delegate", req, &wire); err != nil {
+		return nil, err
+	}
+
+	return &DelegateScopeResult{
+		Token:         wire.Token,
+		TokenID:       wire.TokenID,
+		ExpiresAt:     time.Unix(wire.ExpiresAt, 0).UTC(),
+		Delegator:     wire.Delegator,
+		Delegatee:     wire.Delegatee,
+		GrantedScopes: wire.GrantedScopes,
+		TraceID:       wire.TraceID,
+	}, nil
 }
 
 // IsHealthy returns true when the engine health endpoint reports status=ok.
