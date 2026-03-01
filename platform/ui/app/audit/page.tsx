@@ -4,7 +4,8 @@ import { AuditTable } from "@/components/AuditTable";
 export const dynamic = "force-dynamic";
 
 function buildSparklinePoints(summary: ShadowSummaryResponse): string {
-  const values = summary.buckets.map((bucket) => bucket.allow + bucket.review + bucket.deny);
+  const buckets = Array.isArray(summary?.buckets) ? summary.buckets : [];
+  const values = buckets.map((bucket) => bucket.allow + bucket.review + bucket.deny);
   if (values.length === 0) return "0,24 240,24";
   const maxValue = Math.max(...values, 1);
   const width = 240;
@@ -43,14 +44,15 @@ export default async function AuditPage({
   const compliance = await getComplianceExport("all");
   const sparklinePoints = shadow ? buildSparklinePoints(shadow) : "0,24 240,24";
   const knownControls = 6;
-  const coverageCount = compliance?.controls.length ?? 0;
+  const coverageCount = compliance?.controls?.length ?? 0;
   const coveragePercent = Math.round((coverageCount / knownControls) * 100);
 
-  const total = events.length;
-  const allowed  = events.filter((e) => e.decision === "allowed").length;
-  const denied   = events.filter((e) => e.decision === "denied").length;
-  const review   = events.filter((e) => e.decision === "human_review").length;
-  const highRiskIncidents = events
+  const safeEvents = Array.isArray(events) ? events : [];
+  const total = safeEvents.length;
+  const allowed  = safeEvents.filter((e) => e.decision === "allowed").length;
+  const denied   = safeEvents.filter((e) => e.decision === "denied").length;
+  const review   = safeEvents.filter((e) => e.decision === "human_review").length;
+  const highRiskIncidents = safeEvents
     .filter((event) => event.decision === "denied" || event.decision === "human_review")
     .slice(0, 8);
 
@@ -128,15 +130,15 @@ export default async function AuditPage({
         <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
             <p className="text-xs text-zinc-500 dark:text-zinc-400">Allow</p>
-            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals.allow ?? 0}</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals?.allow ?? 0}</p>
           </div>
           <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
             <p className="text-xs text-zinc-500 dark:text-zinc-400">Review</p>
-            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals.review ?? 0}</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals?.review ?? 0}</p>
           </div>
           <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
             <p className="text-xs text-zinc-500 dark:text-zinc-400">Deny</p>
-            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals.deny ?? 0}</p>
+            <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{shadow?.totals?.deny ?? 0}</p>
           </div>
         </div>
         <div className="mt-3 rounded-lg border border-zinc-200 dark:border-zinc-800 px-2 py-2 bg-white dark:bg-zinc-900/40">
