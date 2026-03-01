@@ -126,6 +126,31 @@ The existing CI workflow should continue to work. The new Release Please workflo
 | `OTEL_SAMPLE_RATE` | `1.0` | Trace sampling rate (0.0-1.0) |
 | `FALLBACK_REDIS_MODE` | `closed` | Redis fallback mode (`open` or `closed`) |
 
+### Risk Decision Tuning Variables
+
+These variables tune the risk-based merger in `/v1/agent/authorize`.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RISK_ALLOW_THRESHOLD_LOW` | `0.30` | Allow threshold for low-criticality actions |
+| `RISK_REVIEW_THRESHOLD_LOW` | `0.55` | Human-review threshold for low-criticality actions |
+| `RISK_READONLY_THRESHOLD_LOW` | `0.75` | Read-only threshold for low-criticality actions |
+| `RISK_ALLOW_THRESHOLD_MID` | `0.15` | Allow threshold for medium-criticality actions |
+| `RISK_REVIEW_THRESHOLD_MID` | `0.35` | Human-review threshold for medium-criticality actions |
+| `RISK_READONLY_THRESHOLD_MID` | `0.55` | Read-only threshold for medium-criticality actions |
+| `RISK_ALLOW_THRESHOLD_HIGH` | `0.08` | Allow threshold for high-criticality actions |
+| `RISK_REVIEW_THRESHOLD_HIGH` | `0.22` | Human-review threshold for high-criticality actions |
+| `RISK_READONLY_THRESHOLD_HIGH` | `0.40` | Read-only threshold for high-criticality actions |
+| `RISK_CRITICALITY_MID_MIN` | `0.50` | Minimum action criticality score treated as medium |
+| `RISK_CRITICALITY_HIGH_MIN` | `0.80` | Minimum action criticality score treated as high |
+
+Example override:
+
+```bash
+# More permissive for high-criticality actions (review -> allow sooner)
+RISK_ALLOW_THRESHOLD_HIGH=0.12 docker compose up -d engine
+```
+
 ## Troubleshooting
 
 ### Docker Build Fails

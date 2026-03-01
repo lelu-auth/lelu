@@ -70,6 +70,8 @@ type Handler struct {
 	eval      *evaluator.Evaluator
 	tokenSvc  *tokens.Service
 	confGate  *confidence.Gate
+	riskModel *riskModel
+	actorStat *actorStats
 	audit     *audit.Writer
 	queue     *queue.Queue
 	apiKey    string
@@ -129,6 +131,23 @@ func (a *anomalyTracker) record(actor string) bool {
 	a.buckets[actor] = filtered
 
 	return len(filtered) >= a.threshold
+}
+
+func (a *anomalyTracker) currentCount(actor string) int {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	now := time.Now()
+	cutoff := now.Add(-a.window)
+	times := a.buckets[actor]
+	filtered := times[:0]
+	for _, t := range times {
+		if t.After(cutoff) {
+			filtered = append(filtered, t)
+		}
+	}
+	a.buckets[actor] = filtered
+	return len(filtered)
 }
 
 type EnforcementMode string
@@ -208,6 +227,8 @@ func New(
 		eval:      eval,
 		tokenSvc:  tokenSvc,
 		confGate:  confGate,
+		riskModel: newRiskModel(NewRiskConfigFromEnv()),
+		actorStat: newActorStats(),
 		audit:     auditWriter,
 		queue:     q,
 		apiKey:    apiKey,
@@ -342,8 +363,13 @@ type agentAuthorizeResponse struct {
 	Reason                       string  `json:"reason"`
 	TraceID                      string  `json:"trace_id"`
 	DowngradedScope              string  `json:"downgraded_scope,omitempty"`
+	EffectiveScope               string  `json:"effective_scope,omitempty"`
 	RequiresHumanReview          bool    `json:"requires_human_review"`
 	ConfidenceUsed               float64 `json:"confidence_used"`
+	RiskScore                    float64 `json:"risk_score,omitempty"`
+	RiskCriticality              float64 `json:"risk_criticality,omitempty"`
+	RiskReliability              float64 `json:"risk_reliability,omitempty"`
+	RiskAnomalyFactor            float64 `json:"risk_anomaly_factor,omitempty"`
 	ShadowMode                   bool    `json:"shadow_mode,omitempty"`
 	WouldHaveAllowed             *bool   `json:"would_have_allowed,omitempty"`
 	WouldHaveReason              string  `json:"would_have_reason,omitempty"`
@@ -434,56 +460,10 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Confidence gate first (fastest path).
+	// 1. Confidence gate.
 	confDec, err := h.confGate.Evaluate(r.Context(), confidenceScore, nil)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf("confidence: %v", err))
-		return
-	}
-
-	if confDec.Level == confidence.LevelHardDeny {
-		traceID := audit.NewTraceID()
-		h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, false, confDec.Reason, confidenceScore, ms(start))
-		
-		authDecisionsTotal.WithLabelValues("agent", "false").Inc()
-
-		// Anomaly tracking — spike alert if denial threshold crossed.
-		if spike := h.anomaly.record(req.Actor); spike {
-			anomalyAlertsTotal.WithLabelValues(req.Actor).Inc()
-			h.notifyIncident(r.Context(), incident.Event{
-				Type:     "security.anomaly_spike",
-				Severity: "high",
-				TenantID: req.TenantID,
-				Actor:    req.Actor,
-				Action:   req.Action,
-				TraceID:  traceID,
-				Reason:   fmt.Sprintf("anomaly: actor %q exceeded denial spike threshold", req.Actor),
-				Decision: "denied",
-				Resource: req.Resource,
-			}, false, false)
-		}
-
-		resp := agentAuthorizeResponse{
-			Allowed:        false,
-			Reason:         confDec.Reason,
-			TraceID:        traceID,
-			ConfidenceUsed: confidenceScore,
-		}
-		h.notifyIncident(r.Context(), incident.Event{
-			Type:                "authorization.denied",
-			Severity:            "high",
-			TenantID:            req.TenantID,
-			Actor:               req.Actor,
-			ActingFor:           req.ActingFor,
-			Action:              req.Action,
-			TraceID:             traceID,
-			Reason:              confDec.Reason,
-			Decision:            decisionString(resp.Allowed, resp.RequiresHumanReview),
-			RequiresHumanReview: false,
-			ConfidenceUsed:      confidenceScore,
-			Resource:            req.Resource,
-		}, resp.Allowed, resp.RequiresHumanReview)
-		writeJSON(w, http.StatusOK, h.applyShadowMode(resp))
 		return
 	}
 
@@ -502,34 +482,90 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 3. Risk model (action criticality × (1-confidence) × reliability × anomaly).
+	reliability := h.actorStat.reliability(req.Actor)
+	anomalyCount := h.anomaly.currentCount(req.Actor)
+	anomalyFactor := 1.0 + minFloat(float64(anomalyCount)/10.0, 0.5)
+	riskDec := h.riskModel.evaluate(req.Action, confidenceScore, reliability, anomalyFactor)
+
+	finalOutcome := outcomeAllow
+	finalReason := evalDec.Reason
+
+	if oc := confidenceOutcome(confDec); oc != outcomeAllow {
+		merged := moreRestrictive(finalOutcome, oc)
+		if merged != finalOutcome {
+			finalOutcome = merged
+			finalReason = confDec.Reason
+		}
+	}
+	if oe := evaluatorOutcome(evalDec.Allowed, evalDec.RequiresHumanReview, evalDec.DowngradedScope); oe != outcomeAllow {
+		merged := moreRestrictive(finalOutcome, oe)
+		if merged != finalOutcome {
+			finalOutcome = merged
+			finalReason = evalDec.Reason
+		}
+	}
+	if or := riskDec.Outcome; or != outcomeAllow {
+		merged := moreRestrictive(finalOutcome, or)
+		if merged != finalOutcome {
+			finalOutcome = merged
+			finalReason = riskDec.Reason
+		}
+	}
+
+	allowed := false
+	requiresReview := false
+	downgradedScope := ""
+	effectiveScope := ""
+
+	switch finalOutcome {
+	case outcomeAllow:
+		allowed = true
+	case outcomeReadOnly:
+		allowed = true
+		downgradedScope = "read_only"
+		effectiveScope = "read_only"
+	case outcomeReview:
+		requiresReview = true
+	case outcomeDeny:
+		// defaults are already deny.
+	}
+
+	h.actorStat.record(req.Actor, finalOutcome)
+
 	// Record evaluation latency in span
 	if span != nil {
 		span.SetAttributes(
 			attribute.Float64("confidence_score", confidenceScore),
-			attribute.Bool("allowed", evalDec.Allowed),
-			attribute.Bool("requires_review", evalDec.RequiresHumanReview),
+			attribute.Bool("allowed", allowed),
+			attribute.Bool("requires_review", requiresReview),
+			attribute.Float64("risk_score", riskDec.Score),
 			attribute.Float64("latency_ms", ms(start)),
 		)
 	}
 
 	traceID := audit.NewTraceID()
-	h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, evalDec.Allowed, evalDec.Reason, confidenceScore, ms(start))
+	h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, allowed, finalReason, confidenceScore, ms(start))
 
-	authDecisionsTotal.WithLabelValues("agent", fmt.Sprintf("%t", evalDec.Allowed)).Inc()
+	authDecisionsTotal.WithLabelValues("agent", fmt.Sprintf("%t", allowed)).Inc()
 
 	// Phase 2 — enqueue for human review when flagged.
-	requiresReview := evalDec.RequiresHumanReview || confDec.RequiresHumanReview
 	if requiresReview && h.queue != nil && h.mode != EnforcementModeShadow {
-		_, _ = h.queue.Enqueue(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, confidenceScore, evalDec.Reason, req.ActingFor)
+		_, _ = h.queue.Enqueue(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource, confidenceScore, finalReason, req.ActingFor)
 	}
 
 	resp := agentAuthorizeResponse{
-		Allowed:             evalDec.Allowed,
-		Reason:              evalDec.Reason,
+		Allowed:             allowed,
+		Reason:              finalReason,
 		TraceID:             traceID,
-		DowngradedScope:     evalDec.DowngradedScope,
+		DowngradedScope:     downgradedScope,
+		EffectiveScope:      effectiveScope,
 		RequiresHumanReview: requiresReview,
 		ConfidenceUsed:      confidenceScore,
+		RiskScore:           riskDec.Score,
+		RiskCriticality:     riskDec.Criticality,
+		RiskReliability:     riskDec.Reliability,
+		RiskAnomalyFactor:   riskDec.AnomalyFactor,
 	}
 	h.notifyIncident(r.Context(), incident.Event{
 		Type:                eventTypeFrom(resp.Allowed, resp.RequiresHumanReview),
@@ -717,6 +753,7 @@ func (h *Handler) applyShadowMode(resp agentAuthorizeResponse) agentAuthorizeRes
 	resp.Allowed = true
 	resp.RequiresHumanReview = false
 	resp.DowngradedScope = ""
+	resp.EffectiveScope = ""
 	resp.Reason = "shadow mode: action allowed (observation only)"
 	return resp
 }
@@ -1307,6 +1344,13 @@ func ms(start time.Time) float64 {
 
 func boolPtr(v bool) *bool {
 	return &v
+}
+
+func minFloat(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func (h *Handler) notifyIncident(_ context.Context, evt incident.Event, allowed, requiresReview bool) {
