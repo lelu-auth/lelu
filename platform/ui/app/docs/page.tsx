@@ -14,12 +14,12 @@ export default function DocsPage() {
   };
 
   const manualCommands: Record<typeof manualTab, string> = {
-    "Claude Code": "claude mcp add --transport http lelu http://localhost:3001/sse",
-    "Open Code": "open-code mcp add --transport http lelu http://localhost:3001/sse",
+    "Claude Code": "claude mcp add --transport http lelu http://localhost:3003/sse",
+    "Open Code": "open-code mcp add --transport http lelu http://localhost:3003/sse",
     Manual: `{
   "mcpServers": {
     "lelu": {
-      "url": "http://localhost:3001/sse"
+      "url": "http://localhost:3003/sse"
     }
   }
 }`,

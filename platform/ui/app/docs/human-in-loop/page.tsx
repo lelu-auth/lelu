@@ -96,11 +96,11 @@ export default function DocsHumanInLoop() {
             </div>
             <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
               <pre><code>{`# Approve a request
-curl -X POST http://localhost:8080/api/v1/queue/req_12345/approve \\
+curl -X POST http://localhost:8083/v1/queue/req_12345/approve \\
   -H "Authorization: Bearer YOUR_API_KEY"
 
 # Deny a request
-curl -X POST http://localhost:8080/api/v1/queue/req_12345/deny \\
+curl -X POST http://localhost:8083/v1/queue/req_12345/deny \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</code></pre>
             </div>
           </div>

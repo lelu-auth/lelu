@@ -26,8 +26,8 @@ docker-compose up -d
 ```
 
 The services will be available at:
-- **Engine API:** `http://localhost:8080`
-- **Platform UI:** `http://localhost:3000`
+- **Engine API:** `http://localhost:8083`
+- **Platform UI:** `http://localhost:3002`
 
 ## 🧩 How to Contribute
 

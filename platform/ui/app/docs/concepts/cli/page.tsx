@@ -10,14 +10,14 @@ export default function DocsConceptCli() {
     Cursor: "npx @lelu/mcp add --cursor",
     "Claude Code": "npx @lelu/mcp add --claude",
     "Open Code": "npx @lelu/mcp add --open-code",
-    Manual: "npx @lelu/mcp start --transport stdio --engine-url http://localhost:8080 --api-key YOUR_API_KEY",
+    Manual: "npx @lelu/mcp start --transport stdio --engine-url http://localhost:8083 --api-key YOUR_API_KEY",
   };
 
   const configSnippets: Record<typeof configTab, string> = {
     "SSE (Docker)": `{
   "mcpServers": {
     "lelu": {
-      "url": "http://localhost:3001/sse"
+      "url": "http://localhost:3003/sse"
     }
   }
 }`,
@@ -27,13 +27,13 @@ export default function DocsConceptCli() {
       "command": "npx",
       "args": ["@lelu/mcp", "start", "--transport", "stdio"],
       "env": {
-        "LELU_ENGINE_URL": "http://localhost:8080",
+        "LELU_ENGINE_URL": "http://localhost:8083",
         "LELU_API_KEY": "YOUR_API_KEY"
       }
     }
   }
 }`,
-    "Claude Code": "claude mcp add --transport http lelu http://localhost:3001/sse",
+    "Claude Code": "claude mcp add --transport http lelu http://localhost:3003/sse",
   };
 
   return (
@@ -86,16 +86,16 @@ export default function DocsConceptCli() {
               {`docker compose up -d mcp
 
 # Health check
-curl http://localhost:3001/healthz
+curl http://localhost:3003/healthz
 # {"status":"ok","service":"lelu-mcp"}
 
 # SSE endpoint for AI clients
-# http://localhost:3001/sse`}
+# http://localhost:3003/sse`}
             </pre>
           </div>
 
           <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-sm">
-            The container connects to the engine over the internal Docker network (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">http://engine:8080</code>) and listens on port <strong>3001</strong>. Configure your API key via the <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">LELU_API_KEY</code> environment variable.
+            The container connects to the engine over the internal Docker network (<code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">http://engine:8080</code>) and is exposed on host port <strong>3003</strong>. Configure your API key via the <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">LELU_API_KEY</code> environment variable.
           </p>
 
           {/* npx / local */}
@@ -110,7 +110,7 @@ curl http://localhost:3001/healthz
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
               {`npx @lelu/mcp start --transport stdio \\
-  --engine-url http://localhost:8080 \\
+  --engine-url http://localhost:8083 \\
   --api-key YOUR_API_KEY`}
             </pre>
           </div>

@@ -50,7 +50,7 @@ export default function DocsQuickStart() {
                   <span className="text-xs text-zinc-500 font-mono">bash</span>
                 </div>
                 <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                  <pre><code>{`curl -X POST http://localhost:8080/v1/agent/authorize \\
+                  <pre><code>{`curl -X POST http://localhost:8083/v1/agent/authorize \\
   -H "Content-Type: application/json" \\
   -d '{
     "actor": "agent-123",
@@ -111,10 +111,10 @@ export default function DocsQuickStart() {
                   <pre><code>{`import { LeluClient } from "lelu";
 
 const client = new LeluClient({
-  endpoint: "http://localhost:8080",
+  baseUrl: "http://localhost:8083",
 });
 
-const decision = await client.authorizeAgent({
+const decision = await client.agentAuthorize({
   actor: "agent-123",
   action: "s3:DeleteObject",
   resource: { bucket: "prod-data" },
