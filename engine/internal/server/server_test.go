@@ -731,28 +731,27 @@ roles:
 agent_scopes:
   note_bot:
     inherits: writer
-    constraints: []
+    constraints:
+      - downgrade_to_read_only_if_confidence_below: 0.70
 `)
 
 	srv := newTestHTTPServerWithConfig(t, policy, "", nil)
 	defer srv.Close()
 
-	// Logprobs of -2.303 → confidence ≈ 0.10
-	// With action criticality 0.60 (write), risk score = 0.60 * 0.90 = 0.54
-	// This falls in the read-only range (0.35 < risk <= 0.55) for MidBand
+	// Confidence of 0.50 is below the 0.70 threshold, triggering policy-based downgrade
 	resp := postJSON(t, srv, "/v1/agent/authorize", map[string]any{
 		"actor":  "note_bot",
 		"action": "write_notes",
 		"confidence_signal": map[string]any{
 			"provider":       "openai",
-			"token_logprobs": []float64{-2.303, -2.303, -2.303},
+			"token_logprobs": []float64{-0.693, -0.693, -0.693}, // exp(-0.693) ≈ 0.50
 		},
 	})
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	var body map[string]any
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
-	assert.True(t, body["allowed"].(bool))
+	assert.True(t, body["allowed"].(bool)) // Read-only is still executable
 	assert.False(t, body["requires_human_review"].(bool))
 	assert.Equal(t, "read_only", body["downgraded_scope"])
 	assert.Equal(t, "read_only", body["effective_scope"])
