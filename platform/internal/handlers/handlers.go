@@ -194,10 +194,6 @@ func (h *Handler) handleListAudit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleGetTrace(w http.ResponseWriter, r *http.Request) {
-	tenantID := r.Header.Get("X-Tenant-ID")
-	if tenantID == "" {
-		tenantID = "default"
-	}
 	events, err := h.audit.GetByTraceID(r.PathValue("traceID"))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
