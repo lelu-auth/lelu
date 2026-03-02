@@ -20,12 +20,12 @@ Usage::
 from __future__ import annotations
 
 import os
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from fastapi import Depends, HTTPException, Request, status
 
 from .client import LeluClient
-from .models import AgentAuthDecision, AuthEngineError
+from .models import AgentAuthDecision, AgentAuthRequest, AgentContext, AuthEngineError
 
 _DEFAULT_CLIENT: Optional[LeluClient] = None
 
@@ -45,7 +45,7 @@ def Authorize(
     confidence: float = 1.0,
     actor_header: str = "X-Actor",
     client: Optional[LeluClient] = None,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     FastAPI dependency factory that calls the Lelu engine's ``/v1/agent/authorize``
     endpoint and raises ``HTTP 403`` when the decision is not *allowed*.
@@ -73,9 +73,11 @@ def Authorize(
         actor = request.headers.get(actor_header, "anonymous")
         try:
             decision = await lelu.agent_authorize(
-                actor=actor,
-                action=action,
-                confidence=confidence,
+                AgentAuthRequest(
+                    actor=actor,
+                    action=action,
+                    context=AgentContext(confidence=confidence),
+                )
             )
         except AuthEngineError as exc:
             raise HTTPException(
@@ -87,7 +89,7 @@ def Authorize(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
-                    "decision": decision.decision,
+                    "allowed": decision.allowed,
                     "reason": decision.reason,
                     "actor": actor,
                     "action": action,

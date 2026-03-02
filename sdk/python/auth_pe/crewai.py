@@ -57,12 +57,12 @@ logger = logging.getLogger(__name__)
 # ─── Attempt to import CrewAI ────────────────────────────────────────────────
 
 try:
-    from crewai.tools import BaseTool as CrewAIBaseTool  # type: ignore[import]
+    from crewai.tools import BaseTool as CrewAIBaseTool
 
     _CREWAI_AVAILABLE = True
 except ImportError:
     _CREWAI_AVAILABLE = False
-    CrewAIBaseTool = object  # type: ignore[assignment,misc]
+    CrewAIBaseTool = object
 
 
 # ─── Exceptions ───────────────────────────────────────────────────────────────
