@@ -2,8 +2,8 @@ package s3sink_test
 
 import (
 	"bytes"
-	"context"
 	"compress/gzip"
+	"context"
 	"io"
 	"strings"
 	"sync"
