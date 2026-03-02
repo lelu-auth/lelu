@@ -348,14 +348,14 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 // ─── Agent Authorize ─────────────────────────────────────────────────────────
 
 type agentAuthorizeRequest struct {
-	TenantID   string            `json:"tenant_id"`
-	Actor      string            `json:"actor"`
-	Action     string            `json:"action"`
-	Resource   map[string]string `json:"resource"`
-	Confidence *float64          `json:"confidence,omitempty"`
+	TenantID   string             `json:"tenant_id"`
+	Actor      string             `json:"actor"`
+	Action     string             `json:"action"`
+	Resource   map[string]string  `json:"resource"`
+	Confidence *float64           `json:"confidence,omitempty"`
 	Signal     *confidence.Signal `json:"confidence_signal,omitempty"`
-	ActingFor  string            `json:"acting_for"`
-	Scope      string            `json:"scope"`
+	ActingFor  string             `json:"acting_for"`
+	Scope      string             `json:"scope"`
 }
 
 type agentAuthorizeResponse struct {

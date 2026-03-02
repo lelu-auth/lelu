@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	"github.com/lelu/engine/internal/audit"
 	"github.com/lelu/engine/internal/confidence"
 	"github.com/lelu/engine/internal/evaluator"
@@ -21,7 +23,6 @@ import (
 	syncer "github.com/lelu/engine/internal/sync"
 	"github.com/lelu/engine/internal/telemetry"
 	"github.com/lelu/engine/internal/tokens"
-	"github.com/redis/go-redis/v9"
 )
 
 func main() {

@@ -392,11 +392,11 @@ func TestAgentDelegate_Denied(t *testing.T) {
 	defer srv.Close()
 
 	resp := postJSON(t, srv, "/v1/agent/delegate", map[string]any{
-		"delegator":  "invoice_bot",
-		"delegatee":  "research_agent",
-		"scoped_to":  []string{"research"},
+		"delegator":   "invoice_bot",
+		"delegatee":   "research_agent",
+		"scoped_to":   []string{"research"},
 		"ttl_seconds": 120,
-		"confidence": 0.95,
+		"confidence":  0.95,
 	})
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 
