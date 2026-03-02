@@ -10,8 +10,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/lelu/engine/internal/fallback"
 	"github.com/redis/go-redis/v9"
+
+	"github.com/lelu/engine/internal/fallback"
 )
 
 const defaultTTL = 60 * time.Second

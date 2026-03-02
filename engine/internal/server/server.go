@@ -272,12 +272,12 @@ type authorizeRequest struct {
 }
 
 type authorizeResponse struct {
-	Allowed          bool    `json:"allowed"`
-	Reason           string  `json:"reason"`
-	TraceID          string  `json:"trace_id"`
-	ShadowMode       bool    `json:"shadow_mode,omitempty"`
-	WouldHaveAllowed *bool   `json:"would_have_allowed,omitempty"`
-	WouldHaveReason  string  `json:"would_have_reason,omitempty"`
+	Allowed          bool   `json:"allowed"`
+	Reason           string `json:"reason"`
+	TraceID          string `json:"trace_id"`
+	ShadowMode       bool   `json:"shadow_mode,omitempty"`
+	WouldHaveAllowed *bool  `json:"would_have_allowed,omitempty"`
+	WouldHaveReason  string `json:"would_have_reason,omitempty"`
 }
 
 func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
