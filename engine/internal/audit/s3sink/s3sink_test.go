@@ -61,7 +61,7 @@ func TestSink_FlushOnClose(t *testing.T) {
 		FlushInterval: time.Hour, // disable auto-flush
 	}, up)
 
-	_, err := sink.Write([]byte(`{"trace_id":"abc"}`+"\n"))
+	_, err := sink.Write([]byte(`{"trace_id":"abc"}` + "\n"))
 	require.NoError(t, err)
 	assert.Equal(t, 0, up.count(), "should not upload before Close")
 

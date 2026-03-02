@@ -292,12 +292,13 @@ func (e *Evaluator) CheckDelegation(_ context.Context, delegator, delegatee stri
 
 // LoadRegoPolicy enables OPA/Rego evaluation mode.
 // Query must point to a rule that returns either a boolean or an object:
-// {
-//   "allowed": bool,
-//   "reason": string,
-//   "downgraded_scope": string,
-//   "requires_human_review": bool
-// }
+//
+//	{
+//	  "allowed": bool,
+//	  "reason": string,
+//	  "downgraded_scope": string,
+//	  "requires_human_review": bool
+//	}
 func (e *Evaluator) LoadRegoPolicy(path, query string) error {
 	rp, err := loadRegoPolicy(path, query)
 	if err != nil {
