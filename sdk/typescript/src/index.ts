@@ -7,7 +7,7 @@
 export { secureTool } from "./vercel/index.js";
 export type { SecureToolOptions, LeluDeniedResult, VercelTool } from "./vercel/index.js";
 
-export { LeluClient, LeluClient } from "./client.js";
+export { LeluClient } from "./client.js";
 
 export type {
   AuthRequest,

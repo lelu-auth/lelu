@@ -271,6 +271,3 @@ export class LeluClient {
     return json as T;
   }
 }
-
-/** Backward-compatible alias. Prefer {@link LeluClient}. */
-export const LeluClient = LeluClient;
