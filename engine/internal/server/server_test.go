@@ -737,15 +737,15 @@ agent_scopes:
 	srv := newTestHTTPServerWithConfig(t, policy, "", nil)
 	defer srv.Close()
 
-	// Logprobs of -1.386 → confidence ≈ 0.25
-	// With action criticality 0.60 (write), risk score = 0.60 * 0.75 = 0.45
+	// Logprobs of -1.897 → confidence ≈ 0.15
+	// With action criticality 0.60 (write), risk score = 0.60 * 0.85 = 0.51
 	// This falls in the read-only range (0.35 < risk <= 0.55) for MidBand
 	resp := postJSON(t, srv, "/v1/agent/authorize", map[string]any{
 		"actor":  "note_bot",
 		"action": "write_notes",
 		"confidence_signal": map[string]any{
 			"provider":       "openai",
-			"token_logprobs": []float64{-1.386, -1.386, -1.386},
+			"token_logprobs": []float64{-1.897, -1.897, -1.897},
 		},
 	})
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
