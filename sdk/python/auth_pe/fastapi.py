@@ -20,7 +20,7 @@ Usage::
 from __future__ import annotations
 
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, cast
 
 from fastapi import Depends, HTTPException, Request, status
 
@@ -98,4 +98,4 @@ def Authorize(
 
         return decision
 
-    return Depends(_dependency)
+    return cast(Callable[..., Any], Depends(_dependency))
