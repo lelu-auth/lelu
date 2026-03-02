@@ -44,7 +44,7 @@ func main() {
 	otelEnabled := envOr("OTEL_ENABLED", "false") == "true"
 	otelEndpoint := envOr("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317")
 	otelSampleRate := parseFloatOr(envOr("OTEL_SAMPLE_RATE", "1.0"), 1.0)
-	
+
 	if isProductionEnv() {
 		if signingKey == "" || signingKey == "change-me-in-production" {
 			log.Fatal("JWT_SIGNING_KEY must be explicitly set to a strong secret in production")

@@ -14,11 +14,11 @@ const (
 )
 
 type Signal struct {
-	Provider           Provider   `json:"provider"`
-	TokenLogProbs      []float64  `json:"token_logprobs,omitempty"`
-	TokenProbabilities []float64  `json:"token_probabilities,omitempty"`
-	Entropy            *float64   `json:"entropy,omitempty"`
-	EntropyMax         *float64   `json:"entropy_max,omitempty"`
+	Provider           Provider  `json:"provider"`
+	TokenLogProbs      []float64 `json:"token_logprobs,omitempty"`
+	TokenProbabilities []float64 `json:"token_probabilities,omitempty"`
+	Entropy            *float64  `json:"entropy,omitempty"`
+	EntropyMax         *float64  `json:"entropy_max,omitempty"`
 }
 
 func ExtractScore(sig *Signal) (float64, error) {

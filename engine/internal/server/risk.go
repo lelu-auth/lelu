@@ -28,6 +28,8 @@ func (o decisionOutcome) severity() int {
 		return 3
 	case outcomeReadOnly:
 		return 2
+	case outcomeAllow:
+		return 1
 	default:
 		return 1
 	}
@@ -108,7 +110,7 @@ func loadBandFromEnv(prefix string, fallback riskBandThresholds) riskBandThresho
 	return b
 }
 
-func getEnvFloatInRange(key string, fallback float64, min float64, max float64) float64 {
+func getEnvFloatInRange(key string, fallback float64, minVal float64, maxVal float64) float64 {
 	v, ok := os.LookupEnv(key)
 	if !ok || strings.TrimSpace(v) == "" {
 		return fallback
@@ -117,7 +119,7 @@ func getEnvFloatInRange(key string, fallback float64, min float64, max float64) 
 	if err != nil {
 		return fallback
 	}
-	if f < min || f > max {
+	if f < minVal || f > maxVal {
 		return fallback
 	}
 	return f
@@ -135,7 +137,6 @@ func (m *riskModel) evaluate(action string, confidenceScore float64, reliability
 	criticality := actionCriticality(action)
 	riskScore := riskScore(criticality, confidenceScore, reliability, anomalyFactor)
 
-	outcome := outcomeAllow
 	allowThreshold := m.cfg.LowBand.Allow
 	reviewThreshold := m.cfg.LowBand.Review
 	readOnlyThreshold := m.cfg.LowBand.ReadOnly
@@ -150,6 +151,7 @@ func (m *riskModel) evaluate(action string, confidenceScore float64, reliability
 		readOnlyThreshold = m.cfg.MidBand.ReadOnly
 	}
 
+	var outcome decisionOutcome
 	switch {
 	case riskScore <= allowThreshold:
 		outcome = outcomeAllow
@@ -271,6 +273,8 @@ func confidenceOutcome(dec *confidence.Decision) decisionOutcome {
 		return outcomeReview
 	case confidence.LevelReadOnly:
 		return outcomeReadOnly
+	case confidence.LevelFullPermission:
+		return outcomeAllow
 	default:
 		return outcomeAllow
 	}

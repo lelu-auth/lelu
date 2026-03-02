@@ -78,10 +78,10 @@ type DelegationRule struct {
 
 // DelegationDecision is the result of a delegation authorization check.
 type DelegationDecision struct {
-	Allowed       bool    `json:"allowed"`
-	Reason        string  `json:"reason"`
+	Allowed       bool     `json:"allowed"`
+	Reason        string   `json:"reason"`
 	GrantedScopes []string `json:"granted_scopes,omitempty"`
-	MaxTTL        int64   `json:"max_ttl_seconds,omitempty"`
+	MaxTTL        int64    `json:"max_ttl_seconds,omitempty"`
 }
 
 // Constraint is a single named constraint value pair.

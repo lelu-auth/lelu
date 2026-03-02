@@ -23,7 +23,7 @@ func newInMemoryCache() *inMemoryCache {
 }
 
 // Set stores a token ID with the given TTL.
-func (c *inMemoryCache) Set(ctx context.Context, tokenID string, ttl time.Duration) error {
+func (c *inMemoryCache) Set(_ context.Context, tokenID string, ttl time.Duration) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.items[tokenID] = time.Now().Add(ttl)
@@ -31,7 +31,7 @@ func (c *inMemoryCache) Set(ctx context.Context, tokenID string, ttl time.Durati
 }
 
 // Exists checks if a token ID exists and hasn't expired.
-func (c *inMemoryCache) Exists(ctx context.Context, tokenID string) (bool, error) {
+func (c *inMemoryCache) Exists(_ context.Context, tokenID string) (bool, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	exp, ok := c.items[tokenID]
@@ -45,7 +45,7 @@ func (c *inMemoryCache) Exists(ctx context.Context, tokenID string) (bool, error
 }
 
 // Delete removes a token ID from the cache.
-func (c *inMemoryCache) Delete(ctx context.Context, tokenID string) error {
+func (c *inMemoryCache) Delete(_ context.Context, tokenID string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.items, tokenID)

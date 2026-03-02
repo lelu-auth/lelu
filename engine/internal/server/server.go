@@ -720,6 +720,8 @@ func (h *Handler) decisionForMissingSignal(ctx context.Context, req agentAuthori
 	case MissingConfidenceReadOnly:
 		reason = "missing confidence signal from provider; downgraded to read_only"
 		downgradedScope = "read_only"
+	case MissingConfidenceDeny:
+		reason = "missing confidence signal from provider; request denied"
 	default:
 		reason = "missing confidence signal from provider; request denied"
 	}
@@ -795,6 +797,8 @@ func (s *shadowStats) record(outcome shadowOutcome) {
 		b.Allow++
 	case shadowOutcomeReview:
 		b.Review++
+	case shadowOutcomeDeny:
+		b.Deny++
 	default:
 		b.Deny++
 	}
