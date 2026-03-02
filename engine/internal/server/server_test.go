@@ -58,6 +58,7 @@ func newTestServerWithMode(t *testing.T, mode server.EnforcementMode) *httptest.
 		nil,
 		nil, // rateLimit
 		nil, // fallback
+		nil, // telemetry
 	)
 
 	mux := http.NewServeMux()
@@ -82,6 +83,7 @@ func newTestHTTPServerWithConfig(t *testing.T, policy []byte, apiKey string, q *
 		nil,
 		nil, // rateLimit
 		nil, // fallback
+		nil, // telemetry
 	)
 
 	httpSrv := server.NewHTTPServer(":0", h)
@@ -566,6 +568,7 @@ func TestRateLimit_AuthEndpoint(t *testing.T) {
 		nil,
 		rl,
 		nil, // fallback
+		nil, // telemetry
 	)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
@@ -624,6 +627,7 @@ func TestFallbackStatus_WithStrategy(t *testing.T) {
 		nil,
 		nil, // rateLimit
 		fb,
+		nil, // telemetry
 	)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
