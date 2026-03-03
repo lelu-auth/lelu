@@ -884,7 +884,7 @@ func outcomeFrom(allowed, requiresReview bool) shadowOutcome {
 // ─── Policy Simulator / Replay ──────────────────────────────────────────────
 
 type simulatorReplayRequest struct {
-	ProposedPolicyYAML string              `json:"proposed_policy_yaml"`
+	ProposedPolicyYAML string               `json:"proposed_policy_yaml"`
 	Traces             []simulatorTraceItem `json:"traces"`
 }
 
