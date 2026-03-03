@@ -16,6 +16,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/lelu/engine/internal/audit"
 	"github.com/lelu/engine/internal/confidence"
 	"github.com/lelu/engine/internal/evaluator"
@@ -26,11 +32,6 @@ import (
 	"github.com/lelu/engine/internal/ratelimit"
 	"github.com/lelu/engine/internal/telemetry"
 	"github.com/lelu/engine/internal/tokens"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // ─── Metrics ──────────────────────────────────────────────────────────────────
@@ -650,8 +651,8 @@ func (h *Handler) handleAgentDelegate(w http.ResponseWriter, r *http.Request) {
 			"agent:delegate", map[string]string{"delegatee": req.Delegatee},
 			false, dec.Reason, req.Confidence, ms(start))
 		writeJSON(w, http.StatusForbidden, map[string]any{
-			"allowed": false,
-			"reason":  dec.Reason,
+			"allowed":  false,
+			"reason":   dec.Reason,
 			"trace_id": traceID,
 		})
 		return

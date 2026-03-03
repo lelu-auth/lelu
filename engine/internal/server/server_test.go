@@ -493,7 +493,7 @@ agent_scopes:
 		"delegator":   "orchestrator_agent",
 		"delegatee":   "research_agent",
 		"scoped_to":   []string{"research"},
-		"ttl_seconds":  9999,
+		"ttl_seconds": 9999,
 		"confidence":  0.95,
 	})
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
