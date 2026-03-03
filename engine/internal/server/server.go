@@ -1309,20 +1309,19 @@ func (h *Handler) authMiddleware(next http.Handler) http.Handler {
 func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		
+
 		rec := &responseRecorder{
 			ResponseWriter: w,
 			statusCode:     http.StatusOK,
 		}
-		
+
 		next.ServeHTTP(rec, r)
-		
+
 		duration := time.Since(start).Seconds()
-		
+
 		// Record metrics
 		httpRequestsTotal.WithLabelValues(r.Method, r.URL.Path, fmt.Sprintf("%d", rec.statusCode)).Inc()
 		httpRequestDuration.WithLabelValues(r.Method, r.URL.Path).Observe(duration)
-		
 		log.Printf("%s %s %d %.2fms", r.Method, r.URL.Path, rec.statusCode, ms(start))
 	})
 }
