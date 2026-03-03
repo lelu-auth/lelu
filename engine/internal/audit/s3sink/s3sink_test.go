@@ -10,9 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lelu/engine/internal/audit/s3sink"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/lelu/engine/internal/audit/s3sink"
 )
 
 // ─── Fake uploader ────────────────────────────────────────────────────────────

@@ -458,7 +458,7 @@ agent_scopes:
 		"delegator":   "orchestrator_agent",
 		"delegatee":   "research_agent",
 		"scoped_to":   []string{"research"},
-		"ttl_seconds":  120,
+		"ttl_seconds": 120,
 		"confidence":  0.50,
 	})
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)

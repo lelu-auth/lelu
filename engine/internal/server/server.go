@@ -378,7 +378,7 @@ type agentAuthorizeResponse struct {
 
 func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	
+
 	// Start OpenTelemetry span
 	var span trace.Span
 	ctx := r.Context()
@@ -386,7 +386,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 		ctx, span = h.tracer.Start(ctx, "agent.authorize")
 		defer span.End()
 	}
-	
+
 	var req agentAuthorizeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
