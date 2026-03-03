@@ -889,16 +889,16 @@ type simulatorReplayRequest struct {
 }
 
 type simulatorTraceItem struct {
-	ID         string            `json:"id,omitempty"`
-	Kind       string            `json:"kind"` // "human" | "agent"
-	TenantID   string            `json:"tenant_id"`
-	UserID     string            `json:"user_id,omitempty"`
-	Actor      string            `json:"actor,omitempty"`
-	Action     string            `json:"action"`
-	Resource   map[string]string `json:"resource,omitempty"`
-	ActingFor  string            `json:"acting_for,omitempty"`
-	Scope      string            `json:"scope,omitempty"`
-	Confidence *float64          `json:"confidence,omitempty"`
+	ID         string             `json:"id,omitempty"`
+	Kind       string             `json:"kind"` // "human" | "agent"
+	TenantID   string             `json:"tenant_id"`
+	UserID     string             `json:"user_id,omitempty"`
+	Actor      string             `json:"actor,omitempty"`
+	Action     string             `json:"action"`
+	Resource   map[string]string  `json:"resource,omitempty"`
+	ActingFor  string             `json:"acting_for,omitempty"`
+	Scope      string             `json:"scope,omitempty"`
+	Confidence *float64           `json:"confidence,omitempty"`
 	Signal     *confidence.Signal `json:"confidence_signal,omitempty"`
 }
 
