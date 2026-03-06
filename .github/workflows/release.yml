@@ -99,6 +99,9 @@ jobs:
     name: "PyPI — publish SDK"
     runs-on: ubuntu-latest
     needs: validate
+    permissions:
+      id-token: write
+      contents: read
 
     environment:
       name: pypi
@@ -116,6 +119,13 @@ jobs:
         run: |
           pip install build
           python -m build
+
+      - name: Validate PyPI token
+        run: |
+          if [ -z "${{ secrets.PYPI_API_TOKEN }}" ] && [ -z "${{ secrets.PYPI_TOKEN }}" ]; then
+            echo "Missing PyPI secret. Set PYPI_API_TOKEN or PYPI_TOKEN."
+            exit 1
+          fi
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
