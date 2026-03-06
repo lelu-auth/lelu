@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write        # create GitHub releases
   packages: write        # push to GHCR
+  id-token: write        # required for PyPI trusted publishing fallback
 
 # ─────────────────────────────────────────────────────────────────────────────
 jobs:
@@ -120,7 +121,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: sdk/python/dist/
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.PYPI_API_TOKEN || secrets.PYPI_TOKEN }}
 
   # ── GitHub Release ────────────────────────────────────────────────────────────
   github-release:
