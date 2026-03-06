@@ -51,7 +51,7 @@ FALLBACK_REDIS_MODE=open docker compose up -d
 ### 2. Verify the Engine is Running
 
 ```bash
-curl http://localhost:8082/healthz
+curl http://localhost:8083/healthz
 # {"status":"ok","version":"1.0.0"}
 ```
 
@@ -60,7 +60,7 @@ curl http://localhost:8082/healthz
 Lelu evaluates the request against your defined policies (YAML or Rego) and the agent's current confidence score.
 
 ```bash
-curl -s -X POST http://localhost:8082/v1/agent/authorize \
+curl -s -X POST http://localhost:8083/v1/agent/authorize \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer lelu-dev-key" \
   -d '{
@@ -105,7 +105,7 @@ import (
 
 func main() {
   client := lelu.NewClient(lelu.ClientConfig{
-    BaseURL: "http://localhost:8082",
+    BaseURL: "http://localhost:8083",
     APIKey:  "your-api-key",
   })
 
@@ -132,7 +132,7 @@ npm install lelu
 import { LeluClient } from "lelu";
 
 const client = new LeluClient({
-  baseUrl: "http://localhost:8082",
+  baseUrl: "http://localhost:8083",
   apiKey: process.env.LELU_API_KEY
 });
 
@@ -159,7 +159,7 @@ pip install lelu
 from lelu.client import LeluClient
 
 client = LeluClient(
-    base_url="http://localhost:8082",
+    base_url="http://localhost:8083",
     api_key="your-api-key"
 )
 
@@ -357,9 +357,67 @@ export EVIDENCE_SIGNING_KEY=replace-with-strong-secret
 
 We welcome contributions! Whether it's adding a new SDK integration, writing custom Rego evaluators, or improving the core engine, please see our [Contributing Guide](CONTRIBUTING.md) to get started.
 
+## 🛡️ Code of Conduct
+
+This project follows a contributor code of conduct. By participating, you agree to uphold this standard.
+
+- Read: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+
 ## 📄 License
 
-MIT License
+MIT License. See [LICENSE](LICENSE).
+
+---
+
+## 🌐 Deploy UI on Vercel
+
+The Next.js UI under `platform/ui` is a good fit for Vercel deployment.
+
+### 1. Create Vercel project
+
+- Import this repository in Vercel.
+- Set the project root directory to `platform/ui`.
+- Framework preset: Next.js.
+
+### 2. Configure environment variables
+
+Set these in Vercel Project Settings -> Environment Variables:
+
+- `NEXT_PUBLIC_ENGINE_URL`: Engine API URL (for example `https://engine.yourdomain.com`)
+- `NEXT_PUBLIC_PLATFORM_URL`: Platform API URL (for example `https://api.yourdomain.com`)
+- `NEXT_PUBLIC_API_KEY`: only for controlled demo environments, avoid exposing production secrets in browser apps
+
+### 3. Keep backend services outside Vercel
+
+Vercel hosts the UI, while backend services run in your own infrastructure:
+
+| Layer | Recommended Runtime |
+|---|---|
+| `platform/ui` (Next.js) | Vercel |
+| `engine` (Go) | Docker/Kubernetes/VM |
+| `platform` API (Go) | Docker/Kubernetes/VM |
+| Redis/PostgreSQL | Managed services or self-hosted |
+
+### 4. Validate after deployment
+
+- Open the deployed UI and check pages load.
+- Confirm the UI can reach Engine/Platform endpoints.
+- Validate one end-to-end authorization request and trace view.
+
+---
+
+## 📈 Traction Signals (OSS Application Readiness)
+
+If you are applying to an open source program, keep this section updated with measurable signals:
+
+- GitHub stars: `0` (update as community grows)
+- Contributors (last 90 days): `TBD`
+- Weekly active developers: `TBD`
+- Production adopters: `TBD`
+- SDK downloads / installs: `TBD`
+- Notable usage examples: `TBD`
+
+Even early-stage numbers are useful if updated consistently.
 
 ---
 *Lelu: The Authorization Engine for AI Agents · Go · TypeScript · Python · 2026*
