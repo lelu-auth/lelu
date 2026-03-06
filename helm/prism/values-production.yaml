@@ -16,7 +16,7 @@ secrets:
 engine:
   enabled: true
   replicaCount: 2
-  image: ghcr.io/lelu-auth/prizm-engine:latest
+  image: ghcr.io/lelu-auth/lelu-engine:latest
   resources:
     requests:
       cpu: 100m
