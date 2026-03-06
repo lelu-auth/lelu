@@ -8,7 +8,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
 
 jobs:
   release-please:
@@ -16,7 +15,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -58,33 +56,21 @@ jobs:
         if: ${{ steps.release.outputs['sdk/python--release_created'] }}
         working-directory: sdk/python
         run: |
-          pip install build
+          pip install build twine
           python -m build
 
-      - name: Resolve PyPI token
+      - name: Publish Python SDK to PyPI
         if: ${{ steps.release.outputs['sdk/python--release_created'] }}
-        id: pypi_token
-        shell: bash
+        working-directory: sdk/python
         env:
-          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN || secrets.PYPI_TOKEN }}
         run: |
-          if [ -n "$PYPI_API_TOKEN" ]; then
-            echo "token=$PYPI_API_TOKEN" >> "$GITHUB_OUTPUT"
-          elif [ -n "$PYPI_TOKEN" ]; then
-            echo "token=$PYPI_TOKEN" >> "$GITHUB_OUTPUT"
-          else
-            echo "Missing PyPI secret. Set PYPI_API_TOKEN or PYPI_TOKEN."
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "::error::Missing PyPI secret. Set PYPI_API_TOKEN or PYPI_TOKEN in repo secrets."
             exit 1
           fi
-
-      - name: Publish Python SDK to PyPI (token auth)
-        if: ${{ steps.release.outputs['sdk/python--release_created'] }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: sdk/python/dist/
-          username: __token__
-          password: ${{ steps.pypi_token.outputs.token }}
+          twine upload dist/*
 
       # Publish Go SDK (module release via git tag)
       - name: Setup Go
