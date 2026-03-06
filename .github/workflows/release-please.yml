@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release-please:
@@ -38,7 +39,7 @@ jobs:
         run: |
           npm ci
           npm run build
-          npm publish
+          npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -49,16 +50,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Build and Publish Python SDK
+      - name: Build Python SDK
         if: ${{ steps.release.outputs['sdk/python--release_created'] }}
         working-directory: sdk/python
         run: |
-          pip install build twine
+          pip install build
           python -m build
-          twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Publish Python SDK to PyPI
+        if: ${{ steps.release.outputs['sdk/python--release_created'] }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist/
+          password: ${{ secrets.PYPI_TOKEN }}
 
       # Publish Go SDK (module release via git tag)
       - name: Setup Go
@@ -73,6 +77,7 @@ jobs:
         run: |
           go mod tidy
           go test ./...
+          go list -m
 
       - name: Go SDK publish note
         if: ${{ steps.release.outputs['sdk/go--release_created'] }}

@@ -1,0 +1,61 @@
+name: Vercel Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "platform/ui/**"
+      - ".github/workflows/vercel-deploy.yml"
+  pull_request:
+    paths:
+      - "platform/ui/**"
+      - ".github/workflows/vercel-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy platform/ui to Vercel
+    runs-on: ubuntu-latest
+    container:
+      image: node:20-bookworm
+
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Vercel secrets
+        run: |
+          test -n "$VERCEL_TOKEN" || (echo "Missing secret: VERCEL_TOKEN" && exit 1)
+          test -n "$VERCEL_ORG_ID" || (echo "Missing secret: VERCEL_ORG_ID" && exit 1)
+          test -n "$VERCEL_PROJECT_ID" || (echo "Missing secret: VERCEL_PROJECT_ID" && exit 1)
+
+      - name: Install dependencies
+        working-directory: platform/ui
+        run: npm ci
+
+      - name: Pull Vercel environment
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN" --cwd=platform/ui
+          else
+            npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN" --cwd=platform/ui
+          fi
+
+      - name: Build Vercel output
+        run: npx vercel build --token="$VERCEL_TOKEN" --cwd=platform/ui
+
+      - name: Deploy Preview
+        if: ${{ github.event_name == 'pull_request' }}
+        run: npx vercel deploy --prebuilt --token="$VERCEL_TOKEN" --cwd=platform/ui
+
+      - name: Deploy Production
+        if: ${{ github.event_name != 'pull_request' }}
+        run: npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN" --cwd=platform/ui

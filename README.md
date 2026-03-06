@@ -57,6 +57,23 @@ If you discover a security issue, please report it privately to:
 
 Reports will be reviewed promptly and handled responsibly.
 
+## CI/CD
+
+This repository includes automated release workflows:
+
+- npm publish: `sdk/typescript`
+- PyPI publish: `sdk/python`
+- Go SDK release validation: `sdk/go` (versioned via git tags)
+- Vercel deployment: `platform/ui` (Preview on PR, Production on `main`) using a Dockerized Node 20 runner
+
+Required GitHub Secrets:
+
+- `NPM_TOKEN`
+- `PYPI_TOKEN`
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
