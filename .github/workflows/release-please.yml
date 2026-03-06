@@ -70,12 +70,20 @@ jobs:
           fi
 
       - name: Publish Python SDK to PyPI (token)
-        if: ${{ steps.release.outputs['sdk/python--release_created'] && (secrets.PYPI_API_TOKEN != '' || secrets.PYPI_TOKEN != '') }}
+        if: ${{ steps.release.outputs['sdk/python--release_created'] && secrets.PYPI_API_TOKEN != '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: sdk/python/dist/
           username: __token__
-          password: ${{ secrets.PYPI_API_TOKEN != '' && secrets.PYPI_API_TOKEN || secrets.PYPI_TOKEN }}
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Publish Python SDK to PyPI (legacy token)
+        if: ${{ steps.release.outputs['sdk/python--release_created'] && secrets.PYPI_API_TOKEN == '' && secrets.PYPI_TOKEN != '' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist/
+          username: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
 
       # Publish Go SDK (module release via git tag)
       - name: Setup Go
