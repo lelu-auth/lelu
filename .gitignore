@@ -8,8 +8,14 @@ coverage.out
 *.test
 
 # Node
+node_modules/
+**/node_modules/
+**/.next/
+*.tsbuildinfo
 sdk/typescript/node_modules/
 sdk/typescript/dist/
+platform/ui/node_modules/
+platform/ui/.next/
 
 # Python
 sdk/python/__pycache__/
@@ -21,6 +27,9 @@ __pycache__/
 
 # Docker
 .docker/
+
+# Local caches
+engine/.gomodcache/
 
 # Local env
 .env
