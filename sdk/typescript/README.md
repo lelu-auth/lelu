@@ -48,7 +48,7 @@ async function runAgent() {
 
 ## Documentation
 
-For full documentation, visit [https://github.com/Abenezer0923/Lelu](https://github.com/Abenezer0923/Lelu).
+For full documentation, visit [https://github.com/lelu-auth/lelu](https://github.com/lelu-auth/lelu).
 
 ## License
 

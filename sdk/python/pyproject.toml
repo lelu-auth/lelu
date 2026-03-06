@@ -32,8 +32,8 @@ fastapi = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Abenezer0923/Lelu"
-Repository = "https://github.com/Abenezer0923/Lelu"
+Homepage = "https://github.com/lelu-auth/lelu"
+Repository = "https://github.com/lelu-auth/lelu"
 
 [tool.hatch.build.targets.wheel]
 packages = ["auth_pe", "lelu"]

@@ -1,6 +1,6 @@
 # Lelu · Python SDK
 
-Python client for [Lelu](https://github.com/Abenezer0923/Lelu) — the confidence-aware authorization engine for autonomous AI agents.
+Python client for [Lelu](https://github.com/lelu-auth/lelu) — the confidence-aware authorization engine for autonomous AI agents.
 
 ## Installation
 
