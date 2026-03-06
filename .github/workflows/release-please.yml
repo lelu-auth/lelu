@@ -61,29 +61,30 @@ jobs:
           pip install build
           python -m build
 
-      - name: Validate PyPI token
+      - name: Resolve PyPI token
         if: ${{ steps.release.outputs['sdk/python--release_created'] }}
+        id: pypi_token
+        shell: bash
+        env:
+          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          if [ -z "${{ secrets.PYPI_API_TOKEN }}" ] && [ -z "${{ secrets.PYPI_TOKEN }}" ]; then
+          if [ -n "$PYPI_API_TOKEN" ]; then
+            echo "token=$PYPI_API_TOKEN" >> "$GITHUB_OUTPUT"
+          elif [ -n "$PYPI_TOKEN" ]; then
+            echo "token=$PYPI_TOKEN" >> "$GITHUB_OUTPUT"
+          else
             echo "Missing PyPI secret. Set PYPI_API_TOKEN or PYPI_TOKEN."
             exit 1
           fi
 
-      - name: Publish Python SDK to PyPI (token)
-        if: ${{ steps.release.outputs['sdk/python--release_created'] && secrets.PYPI_API_TOKEN != '' }}
+      - name: Publish Python SDK to PyPI (token auth)
+        if: ${{ steps.release.outputs['sdk/python--release_created'] }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: sdk/python/dist/
           username: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
-      - name: Publish Python SDK to PyPI (legacy token)
-        if: ${{ steps.release.outputs['sdk/python--release_created'] && secrets.PYPI_API_TOKEN == '' && secrets.PYPI_TOKEN != '' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: sdk/python/dist/
-          username: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+          password: ${{ steps.pypi_token.outputs.token }}
 
       # Publish Go SDK (module release via git tag)
       - name: Setup Go
