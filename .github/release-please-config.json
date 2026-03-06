@@ -12,6 +12,12 @@
       "changelog-path": "CHANGELOG.md",
       "release-type": "node"
     },
+    "sdk/go": {
+      "component": "go-sdk",
+      "package-name": "lelu-go-sdk",
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "go"
+    },
     "sdk/python": {
       "component": "python-sdk",
       "package-name": "lelu",

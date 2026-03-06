@@ -5,7 +5,7 @@ Go client for [Lelu](https://github.com/lelu-auth/lelu) — confidence-aware aut
 ## Install
 
 ```bash
-go get github.com/lelu/sdk/go
+go get github.com/lelu-auth/lelu/sdk/go
 ```
 
 ## Quick Start
@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"log"
 
-	lelu "github.com/lelu/sdk/go"
+	lelu "github.com/lelu-auth/lelu/sdk/go"
 )
 
 func main() {

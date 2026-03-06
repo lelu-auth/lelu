@@ -1,3 +1,3 @@
-module github.com/lelu/sdk/go
+module github.com/lelu-auth/lelu/sdk/go
 
 go 1.22

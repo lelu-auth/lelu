@@ -20,11 +20,11 @@ jobs:
           config-file: .github/release-please-config.json
           manifest-file: .github/release-please-manifest.json
 
-      # Publish TypeScript SDK to npm
       - name: Checkout
-        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         uses: actions/checkout@v4
 
+      # Publish TypeScript SDK to npm
       - name: Setup Node.js
         if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
         uses: actions/setup-node@v4
@@ -59,3 +59,23 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+      # Publish Go SDK (module release via git tag)
+      - name: Setup Go
+        if: ${{ steps.release.outputs['sdk/go--release_created'] }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Validate Go SDK module
+        if: ${{ steps.release.outputs['sdk/go--release_created'] }}
+        working-directory: sdk/go
+        run: |
+          go mod tidy
+          go test ./...
+
+      - name: Go SDK publish note
+        if: ${{ steps.release.outputs['sdk/go--release_created'] }}
+        run: |
+          echo "Go module release created via tag: ${{ steps.release.outputs['sdk/go--tag_name'] }}"
+          echo "Consumers can install with: go get github.com/lelu-auth/lelu/sdk/go@latest"
