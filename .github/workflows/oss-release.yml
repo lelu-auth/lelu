@@ -22,9 +22,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=amd64 go build -o dist/lelu-engine-linux-amd64 ./engine/cmd/engine
-          GOOS=darwin GOARCH=arm64 go build -o dist/lelu-engine-darwin-arm64 ./engine/cmd/engine
-          GOOS=windows GOARCH=amd64 go build -o dist/lelu-engine-windows-amd64.exe ./engine/cmd/engine
+          pushd engine
+          GOOS=linux GOARCH=amd64 go build -o ../dist/lelu-engine-linux-amd64 ./cmd/engine
+          GOOS=darwin GOARCH=arm64 go build -o ../dist/lelu-engine-darwin-arm64 ./cmd/engine
+          GOOS=windows GOARCH=amd64 go build -o ../dist/lelu-engine-windows-amd64.exe ./cmd/engine
+          popd
 
       - name: Prepare release notes
         id: notes
