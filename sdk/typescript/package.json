@@ -12,24 +12,24 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./langchain": {
+      "types": "./dist/langchain/index.d.ts",
       "import": "./dist/langchain/index.mjs",
-      "require": "./dist/langchain/index.js",
-      "types": "./dist/langchain/index.d.ts"
+      "require": "./dist/langchain/index.js"
     },
     "./react": {
+      "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.mjs",
-      "require": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
+      "require": "./dist/react/index.js"
     },
     "./express": {
+      "types": "./dist/express/index.d.ts",
       "import": "./dist/express/index.mjs",
-      "require": "./dist/express/index.js",
-      "types": "./dist/express/index.d.ts"
+      "require": "./dist/express/index.js"
     }
   },
   "files": [
