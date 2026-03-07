@@ -83,6 +83,15 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Derive release version
+        id: npm_version
+        shell: bash
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set TypeScript SDK version
+        working-directory: sdk/typescript
+        run: npm version ${{ steps.npm_version.outputs.value }} --no-git-tag-version
+
       - name: Install & build
         working-directory: sdk/typescript
         run: npm ci && npm run build
@@ -126,6 +135,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Derive release version
+        id: py_version
+        shell: bash
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set Python SDK version
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          version = "${{ steps.py_version.outputs.value }}"
+          path = Path("sdk/python/pyproject.toml")
+          text = path.read_text(encoding="utf-8")
+          updated = re.sub(r'(?m)^version\s*=\s*"[^"]+"$', f'version = "{version}"', text, count=1)
+          if updated == text:
+            raise SystemExit("Failed to update python SDK version in pyproject.toml")
+          path.write_text(updated, encoding="utf-8")
+          PY
 
       - name: Build distribution
         working-directory: sdk/python
