@@ -87,11 +87,27 @@ jobs:
         working-directory: sdk/typescript
         run: npm ci && npm run build
 
+      - name: Resolve npm token
+        id: npm_token
+        shell: bash
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "token=$NPM_TOKEN" >> "$GITHUB_OUTPUT"
+          elif [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "token=$NODE_AUTH_TOKEN" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Missing npm secret. Set NPM_TOKEN (or NODE_AUTH_TOKEN) in repo Actions secrets."
+            exit 1
+          fi
+
       - name: Publish
         working-directory: sdk/typescript
         run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ steps.npm_token.outputs.token }}
 
   # ── Publish Python SDK to PyPI ───────────────────────────────────────────────
   pypi-publish:
