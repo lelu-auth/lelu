@@ -58,11 +58,6 @@ jobs:
         run: |
           printf "//registry.npmjs.org/:_authToken=%s\n" "${{ steps.npm_token.outputs.token }}" > "$HOME/.npmrc"
 
-      - name: Validate npm auth
-        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
-        shell: bash
-        run: npm whoami
-
       - name: Build and Publish TypeScript SDK
         if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
         working-directory: sdk/typescript
