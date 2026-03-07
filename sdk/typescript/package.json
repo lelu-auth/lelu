@@ -1,5 +1,5 @@
 {
-  "name": "lelu",
+  "name": "@lelu-auth/lelu",
   "version": "0.1.0",
   "description": "TypeScript SDK for Lelu — the authorization engine for autonomous AI agents",
   "author": "Abenezer",
@@ -89,7 +89,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lelu-auth/lelu.git",
+    "url": "git+https://github.com/lelu-auth/lelu.git",
     "directory": "sdk/typescript"
   }
 }

@@ -1,4 +1,4 @@
-﻿export default function Home() {
+export default function Home() {
   return (
     <div className="flex flex-col items-center px-6 py-12 md:py-20">
       {/* Hero Section */}
@@ -24,7 +24,7 @@
 
             <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-500">
               <code className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono">
-                npm i lelu
+                npm i @lelu-auth/lelu
               </code>
               <span>or</span>
               <code className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono">
@@ -238,24 +238,24 @@
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[
-            { name: "LangChain", icon: "⛓️" },
-            { name: "LangGraph", icon: "🕸️" },
-            { name: "AutoGPT", icon: "🤖" },
-            { name: "MCP", icon: "🧰" },
-            { name: "FastAPI", icon: "⚡" },
-            { name: "Express", icon: "🚏" },
-            { name: "React", icon: "⚛️" },
-            { name: "Go SDK", icon: "🐹" },
-            { name: "TypeScript SDK", icon: "📘" },
-            { name: "Python SDK", icon: "🐍" },
-            { name: "Datadog", icon: "📊" },
-            { name: "Splunk", icon: "🧭" },
-            { name: "PagerDuty", icon: "🚨" },
-            { name: "Jira", icon: "📝" },
-            { name: "Postgres", icon: "🐘" },
-            { name: "Redis", icon: "🟥" },
-            { name: "Helm", icon: "⎈" },
-            { name: "Docker", icon: "🐳" },
+            { name: "LangChain", icon: "??" },
+            { name: "LangGraph", icon: "???" },
+            { name: "AutoGPT", icon: "??" },
+            { name: "MCP", icon: "??" },
+            { name: "FastAPI", icon: "?" },
+            { name: "Express", icon: "??" },
+            { name: "React", icon: "??" },
+            { name: "Go SDK", icon: "??" },
+            { name: "TypeScript SDK", icon: "??" },
+            { name: "Python SDK", icon: "??" },
+            { name: "Datadog", icon: "??" },
+            { name: "Splunk", icon: "??" },
+            { name: "PagerDuty", icon: "??" },
+            { name: "Jira", icon: "??" },
+            { name: "Postgres", icon: "??" },
+            { name: "Redis", icon: "??" },
+            { name: "Helm", icon: "?" },
+            { name: "Docker", icon: "??" },
           ].map((provider) => (
             <div
               key={provider.name}

@@ -7,13 +7,13 @@ Lelu provides confidence-aware access control, human-in-the-loop approvals, and 
 ## Installation
 
 ```bash
-npm install lelu
+npm install @lelu-auth/lelu
 ```
 
 ## Quick Start
 
 ```typescript
-import { createClient } from "lelu";
+import { createClient } from "@lelu-auth/lelu";
 
 // Initialize the client
 const lelu = createClient({ 

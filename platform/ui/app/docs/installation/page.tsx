@@ -13,7 +13,7 @@ export default function DocsInstallation() {
   ];
 
   const packageCommands: Record<typeof packageTab, string> = {
-    npm: "npm install lelu",
+    npm: "npm install @lelu-auth/lelu",
     pnpm: "pnpm add lelu",
     yarn: "yarn add lelu",
     bun: "bun add lelu",
@@ -227,7 +227,7 @@ export default function DocsInstallation() {
               <span className="text-xs text-zinc-500 font-mono">lib/lelu.ts</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose overflow-x-auto">
-              {`import { LeluClient } from "lelu";
+              {`import { LeluClient } from "@lelu-auth/lelu";
 
 export const lelu = new LeluClient({
   baseUrl: process.env.LELU_ENGINE_URL!,

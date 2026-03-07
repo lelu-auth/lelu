@@ -43,7 +43,7 @@ import type { ClientConfig } from "./types.js";
  *
  * @example
  * ```ts
- * import { createClient } from "lelu";
+ * import { createClient } from "@lelu-auth/lelu";
  *
  * const lelu = createClient({ baseUrl: "http://localhost:8080" });
  * const { allowed } = await lelu.agentAuthorize({ ... });
