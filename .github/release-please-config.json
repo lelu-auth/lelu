@@ -26,6 +26,7 @@
     }
   },
   "release-type": "simple",
+  "pull-request-title-pattern": "release${scope}: ${component} ${version}",
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "changelog-sections": [
