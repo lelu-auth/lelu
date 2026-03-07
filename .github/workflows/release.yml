@@ -103,6 +103,15 @@ jobs:
             exit 1
           fi
 
+      - name: Configure npm auth
+        shell: bash
+        run: |
+          printf "//registry.npmjs.org/:_authToken=%s\n" "${{ steps.npm_token.outputs.token }}" > "$HOME/.npmrc"
+
+      - name: Validate npm auth
+        shell: bash
+        run: npm whoami
+
       - name: Publish
         working-directory: sdk/typescript
         run: npm publish --access public
