@@ -5,7 +5,7 @@ Python client for [Lelu](https://github.com/lelu-auth/lelu) — the confidence-a
 ## Installation
 
 ```bash
-pip install lelu
+pip install lelu-agent-auth-sdk
 ```
 
 ## Quick start

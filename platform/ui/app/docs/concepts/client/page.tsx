@@ -72,7 +72,7 @@ if (decision.allowed) {
               <span className="text-xs text-zinc-500 font-mono">Installation</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300">
-              {`pip install lelu`}
+              {`pip install lelu-agent-auth-sdk`}
             </pre>
           </div>
 
