@@ -11,6 +11,11 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
+Notes:
+
+- Main release workflow derives SDK version from the tag (for example `v0.1.9` -> package version `0.1.9`).
+- Re-running an old tag can fail if that version already exists on npm/PyPI.
+
 - Go SDK module tag (for `sdk/go` submodule path):
 
 ```bash
@@ -34,7 +39,7 @@ Check these workflows:
 
 Package page:
 
-- https://www.npmjs.com/package/lelu
+- https://www.npmjs.com/package/@lelu-auth/lelu
 
 Verify:
 
@@ -50,7 +55,7 @@ npm i @lelu-auth/lelu@latest
 
 Package page:
 
-- https://pypi.org/project/lelu/
+- https://pypi.org/project/lelu-agent-auth-sdk/
 
 Verify:
 
@@ -58,7 +63,7 @@ Verify:
 - Install works:
 
 ```bash
-python -m pip install -U lelu
+python -m pip install -U lelu-agent-auth-sdk
 python -c "import lelu; print('ok')"
 ```
 
@@ -104,10 +109,11 @@ Required GitHub Secrets for workflow:
 Set in GitHub repo settings -> Secrets and variables -> Actions:
 
 - `NPM_TOKEN`
-- `PYPI_TOKEN`
+- `PYPI_API_TOKEN` (preferred) or `PYPI_TOKEN`
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
+- `RELEASE_PLEASE_TOKEN`
 
 ## 8) Post-Release Smoke Tests
 
