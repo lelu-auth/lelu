@@ -53,6 +53,30 @@ If you discover a security issue, please report it privately to:
 Reports will be reviewed promptly and handled responsibly.
 
 
+### Connect GitHub and Vercel (One-Time Setup)
+
+1. Link the UI project to Vercel:
+
+```bash
+cd platform/ui
+npx vercel link
+```
+
+2. Read `orgId` and `projectId` from `platform/ui/.vercel/project.json`.
+
+3. Create a Vercel token at `https://vercel.com/account/tokens`.
+
+4. Add these GitHub repository secrets in `Settings -> Secrets and variables -> Actions`:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+5. Trigger deploy:
+
+- Push changes under `platform/ui/**` to run automatic deploy.
+- Or run `Vercel Deploy` manually from the Actions tab (`workflow_dispatch`).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
