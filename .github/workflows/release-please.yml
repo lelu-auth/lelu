@@ -21,13 +21,36 @@ jobs:
         shell: bash
         env:
           RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
+          repo_api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+
+          token_can_access_repo() {
+            local token="$1"
+            local code
+            code=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer ${token}" \
+              -H "Accept: application/vnd.github+json" \
+              "${repo_api}")
+            [ "${code}" = "200" ]
+          }
+
           if [ -n "$RELEASE_PLEASE_TOKEN" ]; then
-            echo "token=$RELEASE_PLEASE_TOKEN" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::RELEASE_PLEASE_TOKEN is missing. Falling back to GITHUB_TOKEN; PR creation may fail if repo policy blocks it."
+            if token_can_access_repo "$RELEASE_PLEASE_TOKEN"; then
+              echo "token=$RELEASE_PLEASE_TOKEN" >> "$GITHUB_OUTPUT"
+              echo "Using RELEASE_PLEASE_TOKEN."
+              exit 0
+            fi
+            echo "::warning::RELEASE_PLEASE_TOKEN cannot access ${GITHUB_REPOSITORY}. Falling back to GITHUB_TOKEN."
+          fi
+
+          if token_can_access_repo "$GITHUB_TOKEN"; then
             echo "token=$GITHUB_TOKEN" >> "$GITHUB_OUTPUT"
+            echo "Using GITHUB_TOKEN."
+          else
+            echo "::error::Neither RELEASE_PLEASE_TOKEN nor GITHUB_TOKEN can access ${GITHUB_REPOSITORY}. Check PAT repo scope/owner and org SSO authorization."
+            exit 1
           fi
 
       - uses: googleapis/release-please-action@v4
