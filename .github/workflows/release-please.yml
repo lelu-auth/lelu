@@ -39,6 +39,7 @@ jobs:
           if [ -n "$RELEASE_PLEASE_TOKEN" ]; then
             if token_can_access_repo "$RELEASE_PLEASE_TOKEN"; then
               echo "token=$RELEASE_PLEASE_TOKEN" >> "$GITHUB_OUTPUT"
+              echo "source=release_please_token" >> "$GITHUB_OUTPUT"
               echo "Using RELEASE_PLEASE_TOKEN."
               exit 0
             fi
@@ -47,11 +48,19 @@ jobs:
 
           if token_can_access_repo "$GITHUB_TOKEN"; then
             echo "token=$GITHUB_TOKEN" >> "$GITHUB_OUTPUT"
+            echo "source=github_token" >> "$GITHUB_OUTPUT"
             echo "Using GITHUB_TOKEN."
           else
             echo "::error::Neither RELEASE_PLEASE_TOKEN nor GITHUB_TOKEN can access ${GITHUB_REPOSITORY}. Check PAT repo scope/owner and org SSO authorization."
             exit 1
           fi
+
+      - name: Require PAT for PR creation
+        if: ${{ steps.rp_token.outputs.source == 'github_token' }}
+        shell: bash
+        run: |
+          echo "::error::Release Please is using GITHUB_TOKEN. This repository/org currently blocks PR creation from GitHub Actions. Add RELEASE_PLEASE_TOKEN with repo contents+pull-requests write permissions (and org SSO authorization if required)."
+          exit 1
 
       - uses: googleapis/release-please-action@v4
         id: release
