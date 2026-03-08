@@ -104,6 +104,16 @@ Required GitHub Secrets for workflow:
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 
+One-time setup reference:
+
+```bash
+cd platform/ui
+npx vercel link
+cat .vercel/project.json
+```
+
+Copy `orgId` -> `VERCEL_ORG_ID` and `projectId` -> `VERCEL_PROJECT_ID`.
+
 ## 7) Required Repository Secrets
 
 Set in GitHub repo settings -> Secrets and variables -> Actions:
