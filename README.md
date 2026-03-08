@@ -29,12 +29,7 @@ Lelu solves this by making decisions through a layered pipeline:
 
 This helps teams avoid over-permissive agent behavior while keeping developer workflow simple.
 
-## Quick Start
 
-```bash
-docker compose up -d --build
-curl http://localhost:8083/healthz
-```
 
 ## Contribution
 
@@ -57,29 +52,6 @@ If you discover a security issue, please report it privately to:
 
 Reports will be reviewed promptly and handled responsibly.
 
-## CI/CD
-
-This repository includes automated release workflows:
-
-- npm publish: `sdk/typescript` -> `@lelu-auth/lelu`
-- PyPI publish: `sdk/python` -> `lelu-agent-auth-sdk`
-- Go SDK release validation: `sdk/go` (versioned via git tags)
-- Vercel deployment: `platform/ui` (Preview on PR, Production on `main`) using a Dockerized Node 20 runner
-- Release Please: multi-package release PRs from `main`
-
-Release tags:
-
-- Main release tag format: `vX.Y.Z`
-- The `Release` workflow derives npm/PyPI SDK versions from the tag value automatically.
-
-Required GitHub Secrets:
-
-- `NPM_TOKEN`
-- `PYPI_API_TOKEN` (preferred) or `PYPI_TOKEN`
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
-- `RELEASE_PLEASE_TOKEN` (PAT with `contents: write` and `pull_requests: write`)
 
 ## License
 
