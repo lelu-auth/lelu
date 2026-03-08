@@ -16,17 +16,19 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Validate release-please token
+      - name: Resolve release-please token
         id: rp_token
         shell: bash
         env:
           RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ -z "$RELEASE_PLEASE_TOKEN" ]; then
-            echo "::error::Missing RELEASE_PLEASE_TOKEN secret. Create a PAT with repo contents+pull-requests write permissions and add it as RELEASE_PLEASE_TOKEN."
-            exit 1
+          if [ -n "$RELEASE_PLEASE_TOKEN" ]; then
+            echo "token=$RELEASE_PLEASE_TOKEN" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::RELEASE_PLEASE_TOKEN is missing. Falling back to GITHUB_TOKEN; PR creation may fail if repo policy blocks it."
+            echo "token=$GITHUB_TOKEN" >> "$GITHUB_OUTPUT"
           fi
-          echo "token=$RELEASE_PLEASE_TOKEN" >> "$GITHUB_OUTPUT"
 
       - uses: googleapis/release-please-action@v4
         id: release
