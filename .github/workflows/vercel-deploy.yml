@@ -68,7 +68,12 @@ jobs:
 
       - name: Build Vercel output
         working-directory: platform/ui
-        run: npx vercel build --token="$VERCEL_TOKEN"
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx vercel build --token="$VERCEL_TOKEN"
+          else
+            npx vercel build --prod --token="$VERCEL_TOKEN"
+          fi
 
       - name: Deploy Preview
         if: ${{ github.event_name == 'pull_request' }}
