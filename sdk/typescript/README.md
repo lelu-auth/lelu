@@ -12,6 +12,22 @@ Lelu provides confidence-aware access control, human-in-the-loop approvals, and 
 npm install @lelu-auth/lelu
 ```
 
+## Docker Support
+
+Lelu works in Dockerized apps.
+
+The SDK resolves engine URL in this order:
+
+1. `baseUrl` passed to `createClient(...)`
+2. `LELU_BASE_URL` environment variable
+3. `http://localhost:8080` fallback
+
+Example for containers:
+
+```bash
+LELU_BASE_URL=http://host.docker.internal:8083
+```
+
 ## Quick Start
 
 ```typescript
