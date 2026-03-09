@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lelu-auth/lelu/main/platform/ui/public/logo.svg" alt="Lelu logo" width="120" />
+</p>
+
 # Lelu
 
 The TypeScript SDK for Lelu — the confidence-aware authorization engine for autonomous AI agents.
