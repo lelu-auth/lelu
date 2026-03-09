@@ -4,6 +4,29 @@
 
 # Lelu
 
+## Quick Start (Docker)
+
+Run all Lelu services with one command:
+
+```bash
+docker compose up -d --build
+```
+
+Key local endpoints:
+
+- Engine: `http://localhost:8083/healthz`
+- Platform: `http://localhost:9091/healthz`
+- UI: `http://localhost:3002`
+- MCP: `http://localhost:3003/healthz`
+
+Quick check that functions are working:
+
+```bash
+curl http://localhost:8083/healthz
+```
+
+Expected output includes `ok`.
+
 ## About the Project
 
 Lelu is a framework-agnostic authorization engine for AI agents. It combines policy evaluation, confidence-aware controls, runtime risk checks, and human-review workflows in one system.

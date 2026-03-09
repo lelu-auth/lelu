@@ -103,7 +103,7 @@ export type MintTokenRequest = z.infer<typeof MintTokenRequestSchema>;
 // ─── Client config ────────────────────────────────────────────────────────────
 
 export interface ClientConfig {
-  /** Base URL of the Auth Permission Engine (default: http://localhost:8080) */
+  /** Base URL of the Auth Permission Engine (defaults to LELU_BASE_URL env var, else http://localhost:8080) */
   baseUrl?: string;
   /** Request timeout in milliseconds (default: 5000) */
   timeoutMs?: number;

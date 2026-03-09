@@ -43,7 +43,11 @@ export class LeluClient {
   private readonly apiKey: string | undefined;
 
   constructor(cfg: ClientConfig = {}) {
-    this.baseUrl = (cfg.baseUrl ?? "http://localhost:8080").replace(/\/$/, "");
+    const envBaseUrl =
+      typeof process !== "undefined" && process.env
+        ? process.env["LELU_BASE_URL"]
+        : undefined;
+    this.baseUrl = (cfg.baseUrl ?? envBaseUrl ?? "http://localhost:8080").replace(/\/$/, "");
     this.timeoutMs = cfg.timeoutMs ?? 5_000;
     this.apiKey = cfg.apiKey;
   }
