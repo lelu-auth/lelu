@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lelu-auth/lelu/main/platform/ui/public/logo.svg" alt="Lelu logo" width="120" />
-</p>
+[![Lelu logo](https://ui-seven-amber.vercel.app/logo.svg)](https://ui-seven-amber.vercel.app/)
 
 # Lelu
 
@@ -52,7 +50,7 @@ async function runAgent() {
 
 ## Documentation
 
-For full documentation, visit [https://github.com/lelu-auth/lelu](https://github.com/lelu-auth/lelu).
+For full documentation, visit [https://ui-seven-amber.vercel.app/](https://ui-seven-amber.vercel.app/).
 
 ## License
 
