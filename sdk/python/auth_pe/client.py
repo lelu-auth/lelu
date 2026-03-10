@@ -18,6 +18,9 @@ from .models import (
     MintTokenRequest,
     MintTokenResult,
     RevokeTokenResult,
+    AuditEvent,
+    ListAuditEventsRequest,
+    ListAuditEventsResult,
 )
 
 
@@ -181,6 +184,50 @@ class LeluClient:
             return resp.status_code == 200 and resp.json().get("status") == "ok"
         except httpx.HTTPError:
             return False
+
+    # ── Audit log ─────────────────────────────────────────────────────────────
+
+    async def list_audit_events(self, req: ListAuditEventsRequest | None = None) -> ListAuditEventsResult:
+        """
+        List audit events from the platform API.
+        Requires the platform service to be running (not just the engine).
+        """
+        if req is None:
+            req = ListAuditEventsRequest()
+
+        params = {}
+        if req.limit != 20:  # Only add if not default
+            params["limit"] = str(req.limit)
+        if req.cursor != 0:
+            params["cursor"] = str(req.cursor)
+        if req.actor:
+            params["actor"] = req.actor
+        if req.action:
+            params["action"] = req.action
+        if req.decision:
+            params["decision"] = req.decision
+        if req.trace_id:
+            params["trace_id"] = req.trace_id
+        if req.from_time:
+            params["from"] = req.from_time
+        if req.to_time:
+            params["to"] = req.to_time
+
+        headers = {}
+        if req.tenant_id:
+            headers["X-Tenant-ID"] = req.tenant_id
+
+        resp = await self._client.get("/v1/audit", params=params, headers=headers)
+        await self._raise_for_status(resp)
+        data = resp.json()
+
+        return ListAuditEventsResult(
+            events=[AuditEvent(**event) for event in data["events"]],
+            count=data["count"],
+            limit=data["limit"],
+            cursor=data["cursor"],
+            next_cursor=data["next_cursor"],
+        )
 
     # ── HTTP helpers ──────────────────────────────────────────────────────────
 

@@ -93,6 +93,55 @@ export interface RevokeTokenResult {
   success: boolean;
 }
 
+// ─── Audit types ──────────────────────────────────────────────────────────────
+
+export interface AuditEvent {
+  id: number;
+  tenantId: string;
+  traceId: string;
+  timestamp: string;
+  actor: string;
+  action: string;
+  resource?: Record<string, string>;
+  confidenceScore?: number;
+  decision: string; // "allowed" | "denied" | "human_review"
+  reason?: string;
+  downgradedScope?: string;
+  latencyMs: number;
+  engineVersion?: string;
+  policyVersion?: string;
+  createdAt: string;
+}
+
+export interface ListAuditEventsRequest {
+  /** Maximum number of events to return (default: 20, max: 500) */
+  limit?: number;
+  /** Pagination cursor (offset) */
+  cursor?: number;
+  /** Filter by actor */
+  actor?: string;
+  /** Filter by action */
+  action?: string;
+  /** Filter by decision */
+  decision?: string;
+  /** Filter by trace ID */
+  traceId?: string;
+  /** Filter events from this timestamp (ISO 8601) */
+  from?: string;
+  /** Filter events to this timestamp (ISO 8601) */
+  to?: string;
+  /** Tenant ID (defaults to "default") */
+  tenantId?: string;
+}
+
+export interface ListAuditEventsResult {
+  events: AuditEvent[];
+  count: number;
+  limit: number;
+  cursor: number;
+  nextCursor: number;
+}
+
 // ─── Typed Input types ───────────────────────────────────────────────────────
 
 export type AuthRequest = z.infer<typeof AuthRequestSchema>;

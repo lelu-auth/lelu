@@ -127,20 +127,79 @@ export default function DocsInstallation() {
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               2
             </span>
-            Start the Dashboard
+            View Audit Logs
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            After installing, start the local dashboard with:
+            After installing, you can view audit logs directly in your terminal using the built-in CLI:
           </p>
-          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
-            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-              <span className="text-xs text-zinc-500 font-mono">terminal</span>
+          
+          {/* TypeScript/Node.js */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">TypeScript/Node.js</h3>
+            <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
+              <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                <span className="text-xs text-zinc-500 font-mono">terminal</span>
+              </div>
+              <pre className="p-4 font-mono text-sm text-blue-300">
+                npx @lelu-auth/lelu audit-log
+              </pre>
             </div>
-            <pre className="p-4 font-mono text-sm text-blue-300">
-              npx @lelu-auth/lelu dashboard
-            </pre>
-            <div className="p-4 font-mono text-xs text-blue-400">
-              <span>Opens the dashboard at <b>http://localhost:3002/audit</b></span>
+          </div>
+
+          {/* Python */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Python</h3>
+            <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
+              <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                <span className="text-xs text-zinc-500 font-mono">terminal</span>
+              </div>
+              <pre className="p-4 font-mono text-sm text-blue-300">
+                {`# After installing: pip install lelu-agent-auth-sdk
+lelu audit-log
+
+# Or using Docker:
+docker run --rm lelu-python-cli audit-log`}
+              </pre>
+            </div>
+          </div>
+
+          {/* Go */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Go</h3>
+            <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
+              <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                <span className="text-xs text-zinc-500 font-mono">terminal</span>
+              </div>
+              <pre className="p-4 font-mono text-sm text-blue-300">
+                {`# Build and run with Docker:
+cd sdk/go
+docker build -t lelu-go-cli .
+docker run --rm lelu-go-cli audit-log`}
+              </pre>
+            </div>
+          </div>
+          
+          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <div className="text-sm text-blue-800 dark:text-blue-300">
+              <p className="mb-2">
+                <strong>Note:</strong> The audit-log command requires the Lelu platform service to be running (not just the engine).
+              </p>
+              <p className="text-xs">
+                Set <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded font-mono">LELU_PLATFORM_URL</code> to point to your platform instance (default: http://localhost:3001).
+              </p>
             </div>
           </div>
         </section>
