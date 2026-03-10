@@ -7,9 +7,10 @@ export default function DocsInstallation() {
 
   const steps = [
     { num: 1, title: "Install the Package" },
-    { num: 2, title: "Set Environment Variables" },
-    { num: 3, title: "Configure Lelu Client" },
-    { num: 4, title: "That's it!" },
+    { num: 2, title: "Start the Dashboard" },
+    { num: 3, title: "Set Environment Variables" },
+    { num: 4, title: "Configure Lelu Client" },
+    { num: 5, title: "That's it!" },
   ];
 
   const packageCommands: Record<typeof packageTab, string> = {
@@ -99,7 +100,7 @@ export default function DocsInstallation() {
               </svg>
             </button>
           </div>
-
+          
           <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3">
             <svg
               width="20"
@@ -117,6 +118,30 @@ export default function DocsInstallation() {
             <p className="text-sm text-blue-800 dark:text-blue-300">
               If your frontend and backend are in separate repositories, install the Lelu SDK in each service that calls the Lelu Engine.
             </p>
+          </div>
+        </section>
+
+        {/* Step 2 */}
+        <section id="step-2">
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
+              2
+            </span>
+            Start the Dashboard
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-6">
+            After installing, start the local dashboard with:
+          </p>
+          <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
+            <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+              <span className="text-xs text-zinc-500 font-mono">terminal</span>
+            </div>
+            <pre className="p-4 font-mono text-sm text-blue-300">
+              npx @lelu-auth/lelu dashboard
+            </pre>
+            <div className="p-4 font-mono text-xs text-blue-400">
+              <span>Opens the dashboard at <b>http://localhost:3002/audit</b></span>
+            </div>
           </div>
         </section>
 

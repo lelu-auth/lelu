@@ -28,7 +28,10 @@ export default function DocsQuickStart() {
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                  <code>docker compose up -d --build</code>
+                  <code>npx @lelu-auth/lelu dashboard</code>
+                </div>
+                <div className="p-4 font-mono text-xs text-blue-400">
+                  <span>Opens the dashboard at <b>http://localhost:3002/audit</b></span>
                 </div>
               </div>
             </div>
