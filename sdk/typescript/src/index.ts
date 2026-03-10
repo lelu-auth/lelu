@@ -21,6 +21,9 @@ export type {
   DelegateScopeResult,
   RevokeTokenResult,
   ClientConfig,
+  AuditEvent,
+  ListAuditEventsRequest,
+  ListAuditEventsResult,
 } from "./types.js";
 
 export {

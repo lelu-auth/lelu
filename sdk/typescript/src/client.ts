@@ -14,6 +14,9 @@ import {
   type AgentAuthRequest,
   type MintTokenRequest,
   type ClientConfig,
+  type AuditEvent,
+  type ListAuditEventsRequest,
+  type ListAuditEventsResult,
 } from "./types.js";
 
 // ─── Client ───────────────────────────────────────────────────────────────────
@@ -204,6 +207,59 @@ export class LeluClient {
       return data.status === "ok";
     } catch {
       return false;
+    }
+  }
+
+  // ── Audit log ──────────────────────────────────────────────────────────────
+
+  /**
+   * Lists audit events from the platform API.
+   * Requires the platform service to be running (not just the engine).
+   */
+  async listAuditEvents(req: ListAuditEventsRequest = {}): Promise<ListAuditEventsResult> {
+    const params = new URLSearchParams();
+    
+    if (req.limit !== undefined) params.set("limit", req.limit.toString());
+    if (req.cursor !== undefined) params.set("cursor", req.cursor.toString());
+    if (req.actor) params.set("actor", req.actor);
+    if (req.action) params.set("action", req.action);
+    if (req.decision) params.set("decision", req.decision);
+    if (req.traceId) params.set("trace_id", req.traceId);
+    if (req.from) params.set("from", req.from);
+    if (req.to) params.set("to", req.to);
+
+    const headers = this.headers();
+    if (req.tenantId) {
+      headers["X-Tenant-ID"] = req.tenantId;
+    }
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), this.timeoutMs);
+    try {
+      const url = `${this.baseUrl}/v1/audit${params.toString() ? `?${params.toString()}` : ""}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers,
+        signal: ctrl.signal,
+      });
+      
+      const data = await this.parseResponse<{
+        events: AuditEvent[];
+        count: number;
+        limit: number;
+        cursor: number;
+        next_cursor: number;
+      }>(res);
+
+      return {
+        events: data.events,
+        count: data.count,
+        limit: data.limit,
+        cursor: data.cursor,
+        nextCursor: data.next_cursor,
+      };
+    } finally {
+      clearTimeout(timer);
     }
   }
 

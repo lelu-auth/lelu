@@ -111,6 +111,53 @@ class RevokeTokenResult(BaseModel):
     success: bool
 
 
+# ─── Audit ────────────────────────────────────────────────────────────────────
+
+
+class AuditEvent(BaseModel):
+    """A single audit event from the platform."""
+
+    id: int
+    tenant_id: str
+    trace_id: str
+    timestamp: str
+    actor: str
+    action: str
+    resource: dict[str, str] | None = None
+    confidence_score: float | None = None
+    decision: str  # "allowed" | "denied" | "human_review"
+    reason: str | None = None
+    downgraded_scope: str | None = None
+    latency_ms: float
+    engine_version: str | None = None
+    policy_version: str | None = None
+    created_at: str
+
+
+class ListAuditEventsRequest(BaseModel):
+    """Request for listing audit events."""
+
+    limit: int = Field(default=20, ge=1, le=500, description="Maximum number of events")
+    cursor: int = Field(default=0, ge=0, description="Pagination cursor (offset)")
+    actor: str | None = Field(default=None, description="Filter by actor")
+    action: str | None = Field(default=None, description="Filter by action")
+    decision: str | None = Field(default=None, description="Filter by decision")
+    trace_id: str | None = Field(default=None, description="Filter by trace ID")
+    from_time: str | None = Field(default=None, description="Filter from timestamp (ISO 8601)")
+    to_time: str | None = Field(default=None, description="Filter to timestamp (ISO 8601)")
+    tenant_id: str | None = Field(default=None, description="Tenant ID")
+
+
+class ListAuditEventsResult(BaseModel):
+    """Result of listing audit events."""
+
+    events: list[AuditEvent]
+    count: int
+    limit: int
+    cursor: int
+    next_cursor: int
+
+
 # ─── Errors ───────────────────────────────────────────────────────────────────
 
 

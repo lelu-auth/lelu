@@ -106,6 +106,47 @@ type RevokeTokenResult struct {
 	Success bool `json:"success"`
 }
 
+// AuditEvent represents a single audit event from the platform.
+type AuditEvent struct {
+	ID              int64             `json:"id"`
+	TenantID        string            `json:"tenant_id"`
+	TraceID         string            `json:"trace_id"`
+	Timestamp       string            `json:"timestamp"`
+	Actor           string            `json:"actor"`
+	Action          string            `json:"action"`
+	Resource        map[string]string `json:"resource,omitempty"`
+	ConfidenceScore *float64          `json:"confidence_score,omitempty"`
+	Decision        string            `json:"decision"` // "allowed" | "denied" | "human_review"
+	Reason          *string           `json:"reason,omitempty"`
+	DowngradedScope *string           `json:"downgraded_scope,omitempty"`
+	LatencyMS       float64           `json:"latency_ms"`
+	EngineVersion   *string           `json:"engine_version,omitempty"`
+	PolicyVersion   *string           `json:"policy_version,omitempty"`
+	CreatedAt       string            `json:"created_at"`
+}
+
+// ListAuditEventsRequest configures audit event listing.
+type ListAuditEventsRequest struct {
+	Limit    int64   `json:"limit,omitempty"`    // Maximum number of events (default: 20, max: 500)
+	Cursor   int64   `json:"cursor,omitempty"`   // Pagination cursor (offset)
+	Actor    string  `json:"actor,omitempty"`    // Filter by actor
+	Action   string  `json:"action,omitempty"`   // Filter by action
+	Decision string  `json:"decision,omitempty"` // Filter by decision
+	TraceID  string  `json:"trace_id,omitempty"` // Filter by trace ID
+	From     *string `json:"from,omitempty"`     // Filter from timestamp (ISO 8601)
+	To       *string `json:"to,omitempty"`       // Filter to timestamp (ISO 8601)
+	TenantID string  `json:"tenant_id,omitempty"` // Tenant ID
+}
+
+// ListAuditEventsResult contains the audit events response.
+type ListAuditEventsResult struct {
+	Events     []AuditEvent `json:"events"`
+	Count      int          `json:"count"`
+	Limit      int64        `json:"limit"`
+	Cursor     int64        `json:"cursor"`
+	NextCursor int64        `json:"next_cursor"`
+}
+
 type mintTokenWire struct {
 	Token     string `json:"token"`
 	TokenID   string `json:"token_id"`
@@ -282,6 +323,96 @@ func (c *Client) IsHealthy(ctx context.Context) bool {
 		return false
 	}
 	return out.Status == "ok"
+}
+
+// ListAuditEvents fetches audit events from the platform API.
+// Requires the platform service to be running (not just the engine).
+func (c *Client) ListAuditEvents(ctx context.Context, req *ListAuditEventsRequest) (*ListAuditEventsResult, error) {
+	if req == nil {
+		req = &ListAuditEventsRequest{Limit: 20}
+	}
+	if req.Limit <= 0 {
+		req.Limit = 20
+	}
+	if req.Limit > 500 {
+		req.Limit = 500
+	}
+
+	// Build query parameters
+	params := url.Values{}
+	if req.Limit != 20 { // Only add if not default
+		params.Set("limit", fmt.Sprintf("%d", req.Limit))
+	}
+	if req.Cursor > 0 {
+		params.Set("cursor", fmt.Sprintf("%d", req.Cursor))
+	}
+	if req.Actor != "" {
+		params.Set("actor", req.Actor)
+	}
+	if req.Action != "" {
+		params.Set("action", req.Action)
+	}
+	if req.Decision != "" {
+		params.Set("decision", req.Decision)
+	}
+	if req.TraceID != "" {
+		params.Set("trace_id", req.TraceID)
+	}
+	if req.From != nil {
+		params.Set("from", *req.From)
+	}
+	if req.To != nil {
+		params.Set("to", *req.To)
+	}
+
+	// Build URL
+	path := "/v1/audit"
+	if len(params) > 0 {
+		path += "?" + params.Encode()
+	}
+
+	// Build request
+	hreq, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("build request: %w", err)
+	}
+	hreq.Header.Set("Content-Type", "application/json")
+	if c.apiKey != "" {
+		hreq.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
+	if req.TenantID != "" {
+		hreq.Header.Set("X-Tenant-ID", req.TenantID)
+	}
+
+	// Execute request
+	resp, err := c.httpClient.Do(hreq)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		msg := strings.TrimSpace(string(respBytes))
+		var eb errorBody
+		if len(respBytes) > 0 && json.Unmarshal(respBytes, &eb) == nil && eb.Error != "" {
+			msg = eb.Error
+		}
+		if msg == "" {
+			msg = "request failed"
+		}
+		return nil, &EngineError{Message: msg, Status: resp.StatusCode, Body: string(respBytes)}
+	}
+
+	var result ListAuditEventsResult
+	if err := json.Unmarshal(respBytes, &result); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+	return &result, nil
 }
 
 func (c *Client) postJSON(ctx context.Context, path string, in any, out any) error {

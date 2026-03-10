@@ -3,17 +3,11 @@
 /*
  * Lelu CLI
  *
- * Provides a one-command local dashboard bootstrap for SDK users.
+ * Provides audit log viewing and other utilities for SDK users.
  */
 
 const { spawnSync } = require("node:child_process");
-const fs = require("node:fs");
-const os = require("node:os");
 const path = require("node:path");
-
-const REPO_URL = "https://github.com/lelu-auth/lelu.git";
-const STACK_DIR = path.join(os.homedir(), ".lelu-stack");
-const DASHBOARD_URL = "http://localhost:3002/audit";
 
 function run(cmd, args, options = {}) {
   const result = spawnSync(cmd, args, {
@@ -30,40 +24,9 @@ function run(cmd, args, options = {}) {
   }
 }
 
-function checkTool(command, name) {
-  const check = spawnSync(command, ["--version"], { stdio: "ignore", shell: false });
-  if (check.error || check.status !== 0) {
-    console.error(`\n${name} is required but was not found in PATH.`);
-    process.exit(1);
-  }
-}
-
-function ensureRepo() {
-  if (!fs.existsSync(STACK_DIR)) {
-    console.log(`\nCloning Lelu stack into ${STACK_DIR} ...`);
-    run("git", ["clone", "--depth", "1", REPO_URL, STACK_DIR]);
-    return;
-  }
-
-  console.log("\nUpdating local Lelu stack...");
-  run("git", ["-C", STACK_DIR, "checkout", "main"]);
-  run("git", ["-C", STACK_DIR, "pull", "--ff-only", "origin", "main"]);
-}
-
-function startDashboard() {
-  checkTool("git", "Git");
-  checkTool("docker", "Docker");
-
-  ensureRepo();
-
-  console.log("\nStarting local Lelu dashboard stack (this may take a few minutes)...");
-  run("docker", ["compose", "up", "-d", "--build"], { cwd: STACK_DIR });
-
-  console.log("\nLelu dashboard is ready:");
-  console.log(`  ${DASHBOARD_URL}`);
-  console.log("\nTo stop later:");
-  console.log(`  cd ${STACK_DIR}`);
-  console.log("  docker compose down");
+function showAuditLog() {
+  const auditScript = path.join(__dirname, "audit-log.js");
+  run("node", [auditScript]);
 }
 
 function printHelp() {
@@ -71,16 +34,25 @@ function printHelp() {
 Lelu CLI
 
 Usage:
-  lelu dashboard    Start local dashboard stack and print URL
-  lelu help         Show this help
+  lelu audit-log       View recent audit events from the platform
+  lelu help            Show this help
+
+Environment Variables:
+  LELU_PLATFORM_URL   Platform API URL (default: http://localhost:3001)
+  LELU_AUDIT_LIMIT    Number of events to fetch (default: 20)
+
+Examples:
+  lelu audit-log                                    # View recent audit events
+  LELU_AUDIT_LIMIT=50 lelu audit-log               # View 50 recent events
+  LELU_PLATFORM_URL=https://api.example.com lelu audit-log  # Use custom platform URL
 `);
 }
 
 function main() {
-  const command = process.argv[2] || "dashboard";
+  const command = process.argv[2] || "audit-log";
 
-  if (command === "dashboard") {
-    startDashboard();
+  if (command === "audit-log") {
+    showAuditLog();
     return;
   }
 
