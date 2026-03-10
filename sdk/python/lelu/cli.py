@@ -135,115 +135,6 @@ async def show_audit_log() -> None:
             sys.exit(1)
 
 
-def main() -> None:
-    """Main CLI entry point."""
-    command = sys.argv[1] if len(sys.argv) > 1 else "help"
-    
-    if command in ("help", "-h", "--help"):
-        print_help()
-        return
-    
-    if command == "audit-log":
-        asyncio.run(show_audit_log())
-        return
-    
-    if command == "policies":
-        asyncio.run(show_policies())
-        return
-    
-    print(f"Unknown command: {command}")
-    print_help()
-    sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
-
-
-async def show_policies() -> None:
-    """Handle policies subcommands."""
-    base_url = os.getenv("LELU_PLATFORM_URL", "http://localhost:9091")
-    api_key = os.getenv("LELU_PLATFORM_API_KEY", "platform-dev-key")
-    tenant_id = os.getenv("LELU_TENANT_ID", "default")
-    
-    if len(sys.argv) < 3:
-        print("❌ Policies command is required")
-        print("Usage: lelu policies <list|get|set|delete> [args...]")
-        sys.exit(1)
-    
-    subcommand = sys.argv[2]
-    
-    # First check if the service is reachable
-    try:
-        async with httpx.AsyncClient() as client:
-            health_response = await client.get(f"{base_url}/healthz", timeout=3.0)
-            if health_response.status_code != 200:
-                raise httpx.HTTPError("Service not healthy")
-    except (httpx.HTTPError, httpx.ConnectError, httpx.TimeoutException):
-        print("❌ Lelu platform service is not running or not reachable")
-        print("")
-        print("To manage policies, you need the Lelu platform service running.")
-        print("")
-        print("🚀 Quick start with Docker:")
-        print("  git clone https://github.com/lelu-auth/lelu.git")
-        print("  cd lelu")
-        print("  docker compose up -d")
-        print("  lelu policies list  # Try again")
-        print("")
-        print("🌐 Or set LELU_PLATFORM_URL to point to your hosted instance:")
-        print("  LELU_PLATFORM_URL=https://your-lelu-platform.com lelu policies list")
-        print("")
-        print(f"💡 Currently trying to connect to: {base_url}")
-        sys.exit(1)
-    
-    async with LeluClient(base_url=base_url, api_key=api_key) as lelu:
-        try:
-            if subcommand == "list":
-                await list_policies(lelu, tenant_id)
-            elif subcommand == "get":
-                if len(sys.argv) < 4:
-                    print("❌ Policy name is required")
-                    print("Usage: lelu policies get <policy-name>")
-                    sys.exit(1)
-                policy_name = sys.argv[3]
-                await get_policy(lelu, policy_name, tenant_id)
-            elif subcommand == "set":
-                if len(sys.argv) < 5:
-                    print("❌ Policy name and file path are required")
-                    print("Usage: lelu policies set <policy-name> <file-path>")
-                    sys.exit(1)
-                policy_name = sys.argv[3]
-                file_path = sys.argv[4]
-                await set_policy(lelu, policy_name, file_path, tenant_id)
-            elif subcommand == "delete":
-                if len(sys.argv) < 4:
-                    print("❌ Policy name is required")
-                    print("Usage: lelu policies delete <policy-name>")
-                    sys.exit(1)
-                policy_name = sys.argv[3]
-                await delete_policy(lelu, policy_name, tenant_id)
-            else:
-                print(f"❌ Unknown policies command: {subcommand}")
-                print("Available commands: list, get, set, delete")
-                sys.exit(1)
-                
-        except httpx.HTTPError as e:
-            if "ECONNREFUSED" in str(e) or "ConnectError" in str(e):
-                print("❌ Connection failed to Lelu platform service")
-                print("")
-                print("🔧 Troubleshooting steps:")
-                print("1. Ensure the Lelu platform service is running")
-                print("2. Check the platform URL is correct")
-                print("3. Verify your network connection")
-                print("4. Check if firewall is blocking the connection")
-            else:
-                print(f"❌ Error: {e}")
-            sys.exit(1)
-        except Exception as e:
-            print(f"❌ Error: {e}")
-            sys.exit(1)
-
-
 async def list_policies(lelu: LeluClient, tenant_id: str) -> None:
     """List all policies."""
     print(f"Fetching policies from {lelu._client.base_url}...")
@@ -284,7 +175,7 @@ async def get_policy(lelu: LeluClient, name: str, tenant_id: str) -> None:
         created_at = datetime.fromisoformat(policy.created_at.replace('Z', '+00:00'))
         updated_at = datetime.fromisoformat(policy.updated_at.replace('Z', '+00:00'))
         
-        print(f"\n📄 Policy: {policy.name} (v{policy.version})")
+        print(f"\n� Policy: {policy.name} (v{policy.version})")
         print("─" * 80)
         print(f"ID: {policy.id}")
         print(f"Tenant: {policy.tenant_id}")
@@ -297,7 +188,7 @@ async def get_policy(lelu: LeluClient, name: str, tenant_id: str) -> None:
         print(policy.content)
         
     except Exception as e:
-        if hasattr(e, 'status') and e.status == 404:
+        if hasattr(e, 'response') and e.response.status_code == 404:
             print(f'❌ Policy "{name}" not found')
             print("")
             print('💡 Use "lelu policies list" to see available policies')
@@ -351,9 +242,127 @@ async def delete_policy(lelu: LeluClient, name: str, tenant_id: str) -> None:
             print(f'❌ Failed to delete policy "{name}"')
             
     except Exception as e:
-        if hasattr(e, 'status') and e.status == 404:
+        if hasattr(e, 'response') and e.response.status_code == 404:
             print(f'❌ Policy "{name}" not found')
             print("")
             print('💡 Use "lelu policies list" to see available policies')
         else:
             raise
+
+
+async def show_policies() -> None:
+    """Handle policies subcommands."""
+    base_url = os.getenv("LELU_PLATFORM_URL", "http://localhost:9091")
+    api_key = os.getenv("LELU_PLATFORM_API_KEY", "platform-dev-key")
+    tenant_id = os.getenv("LELU_TENANT_ID", "default")
+    
+    if len(sys.argv) < 3:
+        print("❌ Policies command is required")
+        print("")
+        print("Available commands:")
+        print("  lelu policies list          List all policies")
+        print("  lelu policies get <name>    Get a specific policy")
+        print("  lelu policies set <name> <file>  Create or update a policy from file")
+        print("  lelu policies delete <name> Delete a policy")
+        sys.exit(1)
+    
+    subcommand = sys.argv[2]
+    
+    async with LeluClient(base_url=base_url, api_key=api_key) as lelu:
+        try:
+            # First check if the service is reachable
+            try:
+                health_response = await lelu._client.get("/healthz", timeout=3.0)
+                if health_response.status_code != 200:
+                    raise httpx.HTTPError("Service not healthy")
+            except (httpx.HTTPError, httpx.ConnectError, httpx.TimeoutException):
+                print("❌ Lelu platform service is not running or not reachable")
+                print("")
+                print("To manage policies, you need the Lelu platform service running.")
+                print("")
+                print("🚀 Quick start with Docker:")
+                print("  git clone https://github.com/lelu-auth/lelu.git")
+                print("  cd lelu")
+                print("  docker compose up -d")
+                print("  lelu policies list  # Try again")
+                print("")
+                print("🌐 Or set LELU_PLATFORM_URL to point to your hosted instance:")
+                print("  LELU_PLATFORM_URL=https://your-lelu-platform.com lelu policies list")
+                print("")
+                print(f"💡 Currently trying to connect to: {base_url}")
+                sys.exit(1)
+            
+            if subcommand == "list":
+                await list_policies(lelu, tenant_id)
+            elif subcommand == "get":
+                if len(sys.argv) < 4:
+                    print("❌ Policy name is required")
+                    print("Usage: lelu policies get <name>")
+                    sys.exit(1)
+                policy_name = sys.argv[3]
+                await get_policy(lelu, policy_name, tenant_id)
+            elif subcommand == "set":
+                if len(sys.argv) < 5:
+                    print("❌ Policy name and file path are required")
+                    print("Usage: lelu policies set <name> <file>")
+                    sys.exit(1)
+                policy_name = sys.argv[3]
+                file_path = sys.argv[4]
+                await set_policy(lelu, policy_name, file_path, tenant_id)
+            elif subcommand == "delete":
+                if len(sys.argv) < 4:
+                    print("❌ Policy name is required")
+                    print("Usage: lelu policies delete <name>")
+                    sys.exit(1)
+                policy_name = sys.argv[3]
+                await delete_policy(lelu, policy_name, tenant_id)
+            else:
+                print(f"❌ Unknown policies subcommand: {subcommand}")
+                print("")
+                print("Available commands:")
+                print("  lelu policies list          List all policies")
+                print("  lelu policies get <name>    Get a specific policy")
+                print("  lelu policies set <name> <file>  Create or update a policy from file")
+                print("  lelu policies delete <name> Delete a policy")
+                sys.exit(1)
+                
+        except httpx.HTTPError as e:
+            if "ECONNREFUSED" in str(e) or "ConnectError" in str(e):
+                print("❌ Connection failed to Lelu platform service")
+                print("")
+                print("🔧 Troubleshooting steps:")
+                print("1. Ensure the Lelu platform service is running")
+                print("2. Check the platform URL is correct")
+                print("3. Verify your network connection")
+                print("4. Check if firewall is blocking the connection")
+            else:
+                print(f"❌ Error managing policies: {e}")
+            sys.exit(1)
+        except Exception as e:
+            print(f"❌ Error managing policies: {e}")
+            sys.exit(1)
+
+
+def main() -> None:
+    """Main CLI entry point."""
+    command = sys.argv[1] if len(sys.argv) > 1 else "help"
+    
+    if command in ("help", "-h", "--help"):
+        print_help()
+        return
+    
+    if command == "audit-log":
+        asyncio.run(show_audit_log())
+        return
+    
+    if command == "policies":
+        asyncio.run(show_policies())
+        return
+    
+    print(f"Unknown command: {command}")
+    print_help()
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

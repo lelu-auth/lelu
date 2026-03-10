@@ -228,12 +228,15 @@ class LeluClient:
         await self._raise_for_status(resp)
         data = resp.json()
 
+        # Handle case where service returns empty or malformed response
+        events = data.get("events", []) if data else []
+        
         return ListAuditEventsResult(
-            events=[AuditEvent(**event) for event in data["events"]],
-            count=data["count"],
-            limit=data["limit"],
-            cursor=data["cursor"],
-            next_cursor=data["next_cursor"],
+            events=[AuditEvent(**event) for event in events] if events else [],
+            count=data.get("count", 0) if data else 0,
+            limit=data.get("limit", req.limit) if data else req.limit,
+            cursor=data.get("cursor", 0) if data else 0,
+            next_cursor=data.get("next_cursor", 0) if data else 0,
         )
 
     # ── Policy Management ─────────────────────────────────────────────────────
@@ -251,9 +254,12 @@ class LeluClient:
         await self._raise_for_status(resp)
         data = resp.json()
 
+        # Handle case where service returns empty or malformed response
+        policies = data.get("policies", []) if data else []
+
         return ListPoliciesResult(
-            policies=[Policy(**policy) for policy in data["policies"]],
-            count=data["count"],
+            policies=[Policy(**policy) for policy in policies] if policies else [],
+            count=data.get("count", 0) if data else 0,
         )
 
     async def get_policy(self, req: GetPolicyRequest) -> Policy:
