@@ -10,6 +10,7 @@ from typing import Optional
 import httpx
 
 from auth_pe.client import LeluClient
+from auth_pe.storage import LocalStorage
 from auth_pe.models import (
     ListAuditEventsRequest,
     ListPoliciesRequest,
@@ -25,7 +26,7 @@ def print_help() -> None:
 Lelu CLI
 
 Usage:
-  lelu audit-log         View recent audit events from the platform
+  lelu audit-log         View recent audit events
   lelu policies          Manage authorization policies
   lelu help              Show this help
 
@@ -36,225 +37,147 @@ Commands:
   policies set <name> <file>  Create or update a policy from file
   policies delete <name> Delete a policy
 
+Storage:
+  Default: Local SQLite (~/.lelu/lelu.db)
+  Remote:  Set LELU_PLATFORM_URL environment variable
+
 Environment Variables:
-  LELU_PLATFORM_URL       Platform API URL (default: http://localhost:9091)
+  LELU_PLATFORM_URL       Platform API URL (uses local SQLite if not set)
   LELU_PLATFORM_API_KEY   Platform API key (default: platform-dev-key)
   LELU_TENANT_ID          Tenant ID (default: default)
   LELU_AUDIT_LIMIT        Number of events to fetch (default: 20)
 
 Examples:
-  lelu audit-log                              # View recent audit events
-  lelu policies list                          # List all policies
-  lelu policies get auth                      # View the "auth" policy
-  lelu policies set auth ./auth.rego          # Create/update policy from file
-  LELU_TENANT_ID=prod lelu policies list      # Use different tenant
+  lelu audit-log                              # View from local storage
+  lelu policies list                          # List from local storage
+  lelu policies set auth ./auth.rego          # Save to local storage
+  LELU_PLATFORM_URL=https://lelu.example.com lelu audit-log  # Use remote
 """)
 
 
 async def show_audit_log() -> None:
     """Fetch and display audit events."""
-    base_url = os.getenv("LELU_PLATFORM_URL", "http://localhost:9091")
-    api_key = os.getenv("LELU_PLATFORM_API_KEY", "platform-dev-key")
+    platform_url = os.getenv("LELU_PLATFORM_URL")
     limit = int(os.getenv("LELU_AUDIT_LIMIT", "20"))
     
-    print(f"Fetching audit log from {base_url}...")
+    # Priority: 1. Platform URL, 2. Local SQLite
+    if platform_url:
+        await show_audit_log_platform(platform_url, limit)
+    else:
+        show_audit_log_local(limit)
+
+
+async def show_audit_log_platform(platform_url: str, limit: int) -> None:
+    """Fetch audit log from platform service."""
+    api_key = os.getenv("LELU_PLATFORM_API_KEY", "platform-dev-key")
     
-    async with LeluClient(base_url=base_url, api_key=api_key) as lelu:
+    print(f"🌐 Using platform: {platform_url}")
+    print("")
+    
+    async with LeluClient(base_url=platform_url, api_key=api_key) as lelu:
         try:
-            # First check if the service is reachable
+            # Check if service is reachable
             try:
                 health_response = await lelu._client.get("/healthz", timeout=3.0)
                 if health_response.status_code != 200:
                     raise httpx.HTTPError("Service not healthy")
             except (httpx.HTTPError, httpx.ConnectError, httpx.TimeoutException):
-                print("❌ Lelu platform service is not running or not reachable")
+                print("❌ Lelu platform service is not reachable")
                 print("")
-                print("To view audit logs, you need the Lelu platform service running.")
+                print("💡 Falling back to local SQLite storage...")
+                print("   Unset LELU_PLATFORM_URL to use local storage by default")
                 print("")
-                print("🚀 Quick start with Docker:")
-                print("  git clone https://github.com/lelu-auth/lelu.git")
-                print("  cd lelu")
-                print("  docker compose up -d")
-                print("  lelu audit-log  # Try again")
-                print("")
-                print("🌐 Or set LELU_PLATFORM_URL to point to your hosted instance:")
-                print("  LELU_PLATFORM_URL=https://your-lelu-platform.com lelu audit-log")
-                print("")
-                print(f"💡 Currently trying to connect to: {base_url}")
-                sys.exit(1)
-            
-            result = await lelu.list_audit_events(
-                ListAuditEventsRequest(limit=limit)
-            )
-            
-            if not result.events:
-                print("📋 No audit events found.")
-                print("")
-                print("This could mean:")
-                print("- No authorization requests have been made yet")
-                print("- The audit data is stored elsewhere")
-                print("- Filters are too restrictive")
+                show_audit_log_local(limit)
                 return
             
-            print(f"\n📊 Audit Log ({result.count} events, limit: {limit})")
-            print("─" * 80)
-            
-            for event in result.events:
-                timestamp = datetime.fromisoformat(event.timestamp.replace('Z', '+00:00'))
-                formatted_time = timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+            result = await lelu.list_audit_events(ListAuditEventsRequest(limit=limit))
+            display_audit_events(result.events, result.count, limit, result.next_cursor, "platform")
                 
-                confidence = f" (confidence: {event.confidence_score:.2f})" if event.confidence_score else ""
-                resource = f" on {event.resource}" if event.resource else ""
-                
-                print(f"[{formatted_time}] {event.actor} → {event.action}{resource}")
-                print(f"  Decision: {event.decision}{confidence}")
-                if event.reason:
-                    print(f"  Reason: {event.reason}")
-                if event.downgraded_scope:
-                    print(f"  Downgraded scope: {event.downgraded_scope}")
-                print(f"  Trace ID: {event.trace_id}")
-                print()
-            
-            if result.next_cursor > 0:
-                print(f"📄 Use cursor {result.next_cursor} to fetch more events.")
-                
-        except httpx.HTTPError as e:
-            if "ECONNREFUSED" in str(e) or "ConnectError" in str(e):
-                print("❌ Connection failed to Lelu platform service")
-                print("")
-                print("🔧 Troubleshooting steps:")
-                print("1. Ensure the Lelu platform service is running")
-                print("2. Check the platform URL is correct")
-                print("3. Verify your network connection")
-                print("4. Check if firewall is blocking the connection")
-            else:
-                print(f"❌ Error fetching audit log: {e}")
-            sys.exit(1)
         except Exception as e:
-            print(f"❌ Error fetching audit log: {e}")
+            print(f"❌ Error fetching from platform: {e}")
             sys.exit(1)
 
 
-async def list_policies(lelu: LeluClient, tenant_id: str) -> None:
-    """List all policies."""
-    print(f"Fetching policies from {lelu._client.base_url}...")
-    
-    result = await lelu.list_policies(ListPoliciesRequest(tenant_id=tenant_id))
-    
-    if not result.policies:
-        print("📋 No policies found.")
+def show_audit_log_local(limit: int) -> None:
+    """Fetch audit log from local SQLite storage."""
+    with LocalStorage() as storage:
+        print(f"[Local] Using storage: {storage.get_db_path()}")
         print("")
-        print("This could mean:")
-        print("- No policies have been created yet")
-        print("- You are looking at the wrong tenant")
-        print("- The policies are stored elsewhere")
-        return
-    
-    print(f"\n📊 Policies ({result.count} total)")
+        
+        result = storage.list_audit_events(limit=limit)
+        
+        if not result["events"]:
+            print("📋 No audit events found in local storage.")
+            print("")
+            print("This could mean:")
+            print("- No authorization requests have been logged yet")
+            print("- Audit events are stored in a remote platform")
+            print("")
+            print("💡 To use remote platform:")
+            print("   LELU_PLATFORM_URL=https://your-platform.com lelu audit-log")
+            return
+        
+        display_audit_events(
+            result["events"],
+            result["count"],
+            limit,
+            result["next_cursor"],
+            "local"
+        )
+
+
+def display_audit_events(events, count, limit, next_cursor, source):
+    """Display audit events in a formatted way."""
+    print(f"📊 Audit Log ({count} events, limit: {limit}) [{source}]")
     print("─" * 80)
     
-    for policy in result.policies:
-        created_at = datetime.fromisoformat(policy.created_at.replace('Z', '+00:00'))
-        updated_at = datetime.fromisoformat(policy.updated_at.replace('Z', '+00:00'))
+    for event in events:
+        if isinstance(event, dict):
+            timestamp = event["timestamp"]
+            actor = event["actor"]
+            action = event["action"]
+            decision = event["decision"]
+            confidence_score = event.get("confidence_score")
+            reason = event.get("reason")
+            downgraded_scope = event.get("downgraded_scope")
+            trace_id = event["trace_id"]
+            resource = event.get("resource")
+        else:
+            timestamp = event.timestamp
+            actor = event.actor
+            action = event.action
+            decision = event.decision
+            confidence_score = event.confidence_score
+            reason = event.reason
+            downgraded_scope = event.downgraded_scope
+            trace_id = event.trace_id
+            resource = event.resource
         
-        print(f"📄 {policy.name} (v{policy.version})")
-        print(f"  ID: {policy.id}")
-        print(f"  Created: {created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
-        print(f"  Updated: {updated_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
-        print(f"  Content: {len(policy.content)} characters")
+        try:
+            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+        except:
+            formatted_time = timestamp
+        
+        confidence = f" (confidence: {confidence_score:.2f})" if confidence_score else ""
+        resource_str = f" on {resource}" if resource else ""
+        
+        print(f"[{formatted_time}] {actor} → {action}{resource_str}")
+        print(f"  Decision: {decision}{confidence}")
+        if reason:
+            print(f"  Reason: {reason}")
+        if downgraded_scope:
+            print(f"  Downgraded scope: {downgraded_scope}")
+        print(f"  Trace ID: {trace_id}")
         print()
-
-
-async def get_policy(lelu: LeluClient, name: str, tenant_id: str) -> None:
-    """Get a specific policy."""
-    print(f'Fetching policy "{name}"...')
     
-    try:
-        policy = await lelu.get_policy(GetPolicyRequest(name=name, tenant_id=tenant_id))
-        
-        created_at = datetime.fromisoformat(policy.created_at.replace('Z', '+00:00'))
-        updated_at = datetime.fromisoformat(policy.updated_at.replace('Z', '+00:00'))
-        
-        print(f"\n� Policy: {policy.name} (v{policy.version})")
-        print("─" * 80)
-        print(f"ID: {policy.id}")
-        print(f"Tenant: {policy.tenant_id}")
-        print(f"Created: {created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
-        print(f"Updated: {updated_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
-        print(f"HMAC: {policy.hmac_sha256}")
-        print()
-        print("Content:")
-        print("─" * 40)
-        print(policy.content)
-        
-    except Exception as e:
-        if hasattr(e, 'response') and e.response.status_code == 404:
-            print(f'❌ Policy "{name}" not found')
-            print("")
-            print('💡 Use "lelu policies list" to see available policies')
-        else:
-            raise
-
-
-async def set_policy(lelu: LeluClient, name: str, file_path: str, tenant_id: str) -> None:
-    """Create or update a policy from file."""
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        print(f'Setting policy "{name}" from {file_path}...')
-        
-        policy = await lelu.upsert_policy(UpsertPolicyRequest(
-            name=name,
-            content=content,
-            tenant_id=tenant_id
-        ))
-        
-        updated_at = datetime.fromisoformat(policy.updated_at.replace('Z', '+00:00'))
-        
-        print(f'✅ Policy "{name}" saved successfully')
-        print(f"  ID: {policy.id}")
-        print(f"  Version: {policy.version}")
-        print(f"  Updated: {updated_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
-        print(f"  Content: {len(content)} characters")
-        
-    except FileNotFoundError:
-        print(f"❌ File not found: {file_path}")
-        sys.exit(1)
-    except PermissionError:
-        print(f"❌ Permission denied reading file: {file_path}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"❌ Error reading file: {e}")
-        sys.exit(1)
-
-
-async def delete_policy(lelu: LeluClient, name: str, tenant_id: str) -> None:
-    """Delete a policy."""
-    print(f'Deleting policy "{name}"...')
-    
-    try:
-        result = await lelu.delete_policy(DeletePolicyRequest(name=name, tenant_id=tenant_id))
-        
-        if result.deleted:
-            print(f'✅ Policy "{name}" deleted successfully')
-        else:
-            print(f'❌ Failed to delete policy "{name}"')
-            
-    except Exception as e:
-        if hasattr(e, 'response') and e.response.status_code == 404:
-            print(f'❌ Policy "{name}" not found')
-            print("")
-            print('💡 Use "lelu policies list" to see available policies')
-        else:
-            raise
+    if next_cursor > 0:
+        print(f"📄 Use cursor {next_cursor} to fetch more events.")
 
 
 async def show_policies() -> None:
     """Handle policies subcommands."""
-    base_url = os.getenv("LELU_PLATFORM_URL", "http://localhost:9091")
-    api_key = os.getenv("LELU_PLATFORM_API_KEY", "platform-dev-key")
-    tenant_id = os.getenv("LELU_TENANT_ID", "default")
+    platform_url = os.getenv("LELU_PLATFORM_URL")
     
     if len(sys.argv) < 3:
         print("❌ Policies command is required")
@@ -262,45 +185,54 @@ async def show_policies() -> None:
         print("Available commands:")
         print("  lelu policies list          List all policies")
         print("  lelu policies get <name>    Get a specific policy")
-        print("  lelu policies set <name> <file>  Create or update a policy from file")
+        print("  lelu policies set <name> <file>  Create or update a policy")
         print("  lelu policies delete <name> Delete a policy")
         sys.exit(1)
     
     subcommand = sys.argv[2]
     
-    async with LeluClient(base_url=base_url, api_key=api_key) as lelu:
+    # Priority: 1. Platform URL, 2. Local SQLite
+    if platform_url:
+        await show_policies_platform(platform_url, subcommand)
+    else:
+        show_policies_local(subcommand)
+
+
+async def show_policies_platform(platform_url: str, subcommand: str) -> None:
+    """Manage policies on platform service."""
+    api_key = os.getenv("LELU_PLATFORM_API_KEY", "platform-dev-key")
+    tenant_id = os.getenv("LELU_TENANT_ID", "default")
+    
+    print(f"🌐 Using platform: {platform_url}")
+    print("")
+    
+    async with LeluClient(base_url=platform_url, api_key=api_key) as lelu:
         try:
-            # First check if the service is reachable
+            # Check if service is reachable
             try:
                 health_response = await lelu._client.get("/healthz", timeout=3.0)
                 if health_response.status_code != 200:
                     raise httpx.HTTPError("Service not healthy")
             except (httpx.HTTPError, httpx.ConnectError, httpx.TimeoutException):
-                print("❌ Lelu platform service is not running or not reachable")
+                print("❌ Lelu platform service is not reachable")
                 print("")
-                print("To manage policies, you need the Lelu platform service running.")
+                print("💡 Falling back to local SQLite storage...")
+                print("   Unset LELU_PLATFORM_URL to use local storage by default")
                 print("")
-                print("🚀 Quick start with Docker:")
-                print("  git clone https://github.com/lelu-auth/lelu.git")
-                print("  cd lelu")
-                print("  docker compose up -d")
-                print("  lelu policies list  # Try again")
-                print("")
-                print("🌐 Or set LELU_PLATFORM_URL to point to your hosted instance:")
-                print("  LELU_PLATFORM_URL=https://your-lelu-platform.com lelu policies list")
-                print("")
-                print(f"💡 Currently trying to connect to: {base_url}")
-                sys.exit(1)
+                show_policies_local(subcommand)
+                return
             
             if subcommand == "list":
-                await list_policies(lelu, tenant_id)
+                result = await lelu.list_policies(ListPoliciesRequest(tenant_id=tenant_id))
+                display_policies_list(result.policies, result.count, "platform")
             elif subcommand == "get":
                 if len(sys.argv) < 4:
                     print("❌ Policy name is required")
                     print("Usage: lelu policies get <name>")
                     sys.exit(1)
                 policy_name = sys.argv[3]
-                await get_policy(lelu, policy_name, tenant_id)
+                policy = await lelu.get_policy(GetPolicyRequest(name=policy_name, tenant_id=tenant_id))
+                display_policy_detail(policy, "platform")
             elif subcommand == "set":
                 if len(sys.argv) < 5:
                     print("❌ Policy name and file path are required")
@@ -308,39 +240,132 @@ async def show_policies() -> None:
                     sys.exit(1)
                 policy_name = sys.argv[3]
                 file_path = sys.argv[4]
-                await set_policy(lelu, policy_name, file_path, tenant_id)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                policy = await lelu.upsert_policy(UpsertPolicyRequest(
+                    name=policy_name,
+                    content=content,
+                    tenant_id=tenant_id
+                ))
+                print(f'✅ Policy "{policy_name}" saved to platform')
             elif subcommand == "delete":
                 if len(sys.argv) < 4:
                     print("❌ Policy name is required")
                     print("Usage: lelu policies delete <name>")
                     sys.exit(1)
                 policy_name = sys.argv[3]
-                await delete_policy(lelu, policy_name, tenant_id)
+                result = await lelu.delete_policy(DeletePolicyRequest(name=policy_name, tenant_id=tenant_id))
+                if result.deleted:
+                    print(f'✅ Policy "{policy_name}" deleted from platform')
+                else:
+                    print(f'❌ Failed to delete policy "{policy_name}"')
             else:
-                print(f"❌ Unknown policies subcommand: {subcommand}")
-                print("")
-                print("Available commands:")
-                print("  lelu policies list          List all policies")
-                print("  lelu policies get <name>    Get a specific policy")
-                print("  lelu policies set <name> <file>  Create or update a policy from file")
-                print("  lelu policies delete <name> Delete a policy")
+                print(f"❌ Unknown subcommand: {subcommand}")
                 sys.exit(1)
                 
-        except httpx.HTTPError as e:
-            if "ECONNREFUSED" in str(e) or "ConnectError" in str(e):
-                print("❌ Connection failed to Lelu platform service")
-                print("")
-                print("🔧 Troubleshooting steps:")
-                print("1. Ensure the Lelu platform service is running")
-                print("2. Check the platform URL is correct")
-                print("3. Verify your network connection")
-                print("4. Check if firewall is blocking the connection")
-            else:
-                print(f"❌ Error managing policies: {e}")
-            sys.exit(1)
         except Exception as e:
-            print(f"❌ Error managing policies: {e}")
+            print(f"❌ Error: {e}")
             sys.exit(1)
+
+
+def show_policies_local(subcommand: str) -> None:
+    """Manage policies in local SQLite storage."""
+    with LocalStorage() as storage:
+        print(f"[Local] Using storage: {storage.get_db_path()}")
+        print("")
+        
+        if subcommand == "list":
+            policies = storage.list_policies()
+            if not policies:
+                print("📋 No policies found in local storage.")
+                print("")
+                print("💡 Add a policy:")
+                print("   lelu policies set my-policy policy.rego")
+                return
+            display_policies_list(policies, len(policies), "local")
+        elif subcommand == "get":
+            if len(sys.argv) < 4:
+                print("❌ Policy name is required")
+                print("Usage: lelu policies get <name>")
+                sys.exit(1)
+            policy_name = sys.argv[3]
+            policy = storage.get_policy(policy_name)
+            if not policy:
+                print(f'❌ Policy "{policy_name}" not found')
+                sys.exit(1)
+            display_policy_detail(policy, "local")
+        elif subcommand == "set":
+            if len(sys.argv) < 5:
+                print("❌ Policy name and file path are required")
+                print("Usage: lelu policies set <name> <file>")
+                sys.exit(1)
+            policy_name = sys.argv[3]
+            file_path = sys.argv[4]
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            storage.upsert_policy(policy_name, content)
+            print(f'✅ Policy "{policy_name}" saved to local storage')
+        elif subcommand == "delete":
+            if len(sys.argv) < 4:
+                print("❌ Policy name is required")
+                print("Usage: lelu policies delete <name>")
+                sys.exit(1)
+            policy_name = sys.argv[3]
+            deleted = storage.delete_policy(policy_name)
+            if deleted:
+                print(f'✅ Policy "{policy_name}" deleted from local storage')
+            else:
+                print(f'⚠️  Policy "{policy_name}" not found')
+        else:
+            print(f"❌ Unknown subcommand: {subcommand}")
+            sys.exit(1)
+
+
+def display_policies_list(policies, count, source):
+    """Display list of policies."""
+    print(f"📜 Policies ({count} total) [{source}]")
+    print("─" * 80)
+    
+    for policy in policies:
+        if isinstance(policy, dict):
+            name = policy["name"]
+            version = policy["version"]
+            created_at = policy["created_at"]
+            updated_at = policy["updated_at"]
+            hmac = policy["hmac_sha256"]
+        else:
+            name = policy.name
+            version = policy.version
+            created_at = policy.created_at
+            updated_at = policy.updated_at
+            hmac = policy.hmac_sha256
+        
+        print(f"\n{name} (v{version})")
+        try:
+            created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            updated_dt = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+            print(f"  Created: {created_dt.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+            print(f"  Updated: {updated_dt.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+        except:
+            print(f"  Created: {created_at}")
+            print(f"  Updated: {updated_at}")
+        print(f"  HMAC: {hmac[:16]}...")
+
+
+def display_policy_detail(policy, source):
+    """Display detailed policy information."""
+    if isinstance(policy, dict):
+        name = policy["name"]
+        version = policy["version"]
+        content = policy["content"]
+    else:
+        name = policy.name
+        version = policy.version
+        content = policy.content
+    
+    print(f"📜 Policy: {name} (v{version}) [{source}]")
+    print("─" * 80)
+    print(content)
 
 
 def main() -> None:
