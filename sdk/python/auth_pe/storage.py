@@ -257,10 +257,10 @@ class LocalStorage:
         """Get the database file path."""
         return self.db_path
 
-    def __enter__(self):
+    def __enter__(self) -> "LocalStorage":
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.close()
