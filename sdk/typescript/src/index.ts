@@ -8,6 +8,7 @@ export { secureTool } from "./vercel/index.js";
 export type { SecureToolOptions, LeluDeniedResult, VercelTool } from "./vercel/index.js";
 
 export { LeluClient } from "./client.js";
+export { LocalStorage } from "./storage.js";
 
 export type {
   AuthRequest,
@@ -24,6 +25,13 @@ export type {
   AuditEvent,
   ListAuditEventsRequest,
   ListAuditEventsResult,
+  Policy,
+  ListPoliciesRequest,
+  ListPoliciesResult,
+  GetPolicyRequest,
+  UpsertPolicyRequest,
+  DeletePolicyRequest,
+  DeletePolicyResult,
 } from "./types.js";
 
 export {

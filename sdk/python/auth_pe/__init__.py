@@ -20,6 +20,7 @@ Quick start::
 from .client import LeluClient
 from .autogpt_plugin import LeluAutoGPTPlugin
 from .middleware import AgentMiddleware
+from .storage import LocalStorage
 from .models import (
     AgentAuthDecision,
     AgentAuthRequest,
@@ -44,6 +45,7 @@ __all__ = [
     "LeluClient",
     "LeluAutoGPTPlugin",
     "AgentMiddleware",
+    "LocalStorage",
     # CrewAI
     "LeluTool",
     "CrewAIPermissionDeniedError",

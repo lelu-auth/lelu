@@ -1,241 +1,243 @@
 #!/usr/bin/env node
 
-// Lelu Policies CLI
+// Lelu Policies CLI - with SQLite local storage support
+import { readFileSync } from 'fs';
+
 async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === 'help' || command === '--help') {
+    showHelp();
+    return;
+  }
+
   try {
-    // Dynamic import to handle ESM module
-    const { createClient } = await import('@lelu-auth/lelu');
-    
-    const baseUrl = process.env.LELU_PLATFORM_URL || 'http://localhost:9091';
-    const apiKey = process.env.LELU_PLATFORM_API_KEY || 'platform-dev-key';
-    const tenantId = process.env.LELU_TENANT_ID || 'default';
-    
-    const command = process.argv[2] || 'list';
-    const policyName = process.argv[3];
-    const filePath = process.argv[4];
-    
-    const lelu = createClient({ baseUrl, apiKey });
-    
-    // First check if the service is reachable
-    try {
-      const healthResponse = await fetch(`${baseUrl}/healthz`, { 
-        method: 'GET',
-        signal: AbortSignal.timeout(3000)
-      });
-      if (!healthResponse.ok) {
-        throw new Error('Service not healthy');
-      }
-    } catch (healthError) {
-      console.log('❌ Lelu platform service is not running or not reachable');
-      console.log('');
-      console.log('To manage policies, you need the Lelu platform service running.');
-      console.log('');
-      console.log('🚀 Quick start with Docker:');
-      console.log('  git clone https://github.com/lelu-auth/lelu.git');
-      console.log('  cd lelu');
-      console.log('  docker compose up -d');
-      console.log('  lelu policies list  # Try again');
-      console.log('');
-      console.log('🌐 Or set LELU_PLATFORM_URL to point to your hosted instance:');
-      console.log('  LELU_PLATFORM_URL=https://your-lelu-platform.com lelu policies list');
-      console.log('');
-      console.log(`💡 Currently trying to connect to: ${baseUrl}`);
-      process.exit(1);
-    }
-    
-    switch (command) {
-      case 'list':
-        await listPolicies(lelu, tenantId);
-        break;
-      case 'get':
-        if (!policyName) {
-          console.log('❌ Policy name is required');
-          console.log('Usage: lelu policies get <policy-name>');
-          process.exit(1);
-        }
-        await getPolicy(lelu, policyName, tenantId);
-        break;
-      case 'set':
-        if (!policyName || !filePath) {
-          console.log('❌ Policy name and file path are required');
-          console.log('Usage: lelu policies set <policy-name> <file-path>');
-          process.exit(1);
-        }
-        await setPolicy(lelu, policyName, filePath, tenantId);
-        break;
-      case 'delete':
-        if (!policyName) {
-          console.log('❌ Policy name is required');
-          console.log('Usage: lelu policies delete <policy-name>');
-          process.exit(1);
-        }
-        await deletePolicy(lelu, policyName, tenantId);
-        break;
-      case 'help':
-      case '--help':
-      case '-h':
-        showHelp();
-        break;
-      default:
-        console.log(`❌ Unknown command: ${command}`);
-        showHelp();
-        process.exit(1);
-    }
-    
-  } catch (err) {
-    // Handle other types of errors
-    if (err.message && (err.message.includes('ECONNREFUSED') || err.message.includes('fetch failed'))) {
-      console.log('❌ Connection failed to Lelu platform service');
-      console.log('');
-      console.log('🔧 Troubleshooting steps:');
-      console.log('1. Ensure the Lelu platform service is running');
-      console.log('2. Check the platform URL is correct');
-      console.log('3. Verify your network connection');
-      console.log('4. Check if firewall is blocking the connection');
+    const { LocalStorage } = await import('../dist/storage.js');
+    const platformUrl = process.env.LELU_PLATFORM_URL;
+
+    // Priority: 1. Platform URL, 2. Local SQLite
+    if (platformUrl) {
+      await executeOnPlatform(platformUrl, command, args);
     } else {
-      console.error('❌ Error:', err.message || err);
+      await executeOnLocal(command, args);
     }
+  } catch (err) {
+    console.error('❌ Error:', err.message || err);
     process.exit(1);
   }
 }
 
-async function listPolicies(lelu, tenantId) {
-  console.log(`Fetching policies from ${lelu.baseUrl}...`);
-  
-  const result = await lelu.listPolicies({ tenantId });
+async function executeOnPlatform(platformUrl, command, args) {
+  const { createClient } = await import('@lelu-auth/lelu');
+  const apiKey = process.env.LELU_PLATFORM_API_KEY || 'platform-dev-key';
+  const lelu = createClient({ baseUrl: platformUrl, apiKey });
+
+  console.log(`🌐 Using platform: ${platformUrl}`);
+  console.log('');
+
+  switch (command) {
+    case 'list':
+      await listPoliciesPlatform(lelu);
+      break;
+    case 'get':
+      await getPolicyPlatform(lelu, args[1]);
+      break;
+    case 'set':
+      await setPolicyPlatform(lelu, args[1], args[2]);
+      break;
+    case 'delete':
+      await deletePolicyPlatform(lelu, args[1]);
+      break;
+    default:
+      console.error(`Unknown command: ${command}`);
+      showHelp();
+      process.exit(1);
+  }
+}
+
+async function executeOnLocal(command, args) {
+  const { LocalStorage } = await import('../dist/storage.js');
+  const storage = new LocalStorage();
+
+  console.log(`📂 Using local storage: ${storage.getDbPath()}`);
+  console.log('');
+
+  switch (command) {
+    case 'list':
+      await listPoliciesLocal(storage);
+      break;
+    case 'get':
+      await getPolicyLocal(storage, args[1]);
+      break;
+    case 'set':
+      await setPolicyLocal(storage, args[1], args[2]);
+      break;
+    case 'delete':
+      await deletePolicyLocal(storage, args[1]);
+      break;
+    default:
+      console.error(`Unknown command: ${command}`);
+      showHelp();
+      process.exit(1);
+  }
+
+  storage.close();
+}
+
+// ─── Platform Operations ──────────────────────────────────────────────────────
+
+async function listPoliciesPlatform(lelu) {
+  const result = await lelu.listPolicies({});
   
   if (!result.policies.length) {
     console.log('📋 No policies found.');
-    console.log('');
-    console.log('This could mean:');
-    console.log('- No policies have been created yet');
-    console.log('- You are looking at the wrong tenant');
-    console.log('- The policies are stored elsewhere');
     return;
   }
-  
-  console.log(`\n📊 Policies (${result.count} total)`);
+
+  console.log(`📜 Policies (${result.count} total):`);
   console.log('─'.repeat(80));
   
   for (const policy of result.policies) {
-    const createdAt = new Date(policy.createdAt).toLocaleString();
-    const updatedAt = new Date(policy.updatedAt).toLocaleString();
-    
-    console.log(`📄 ${policy.name} (v${policy.version})`);
-    console.log(`  ID: ${policy.id}`);
-    console.log(`  Created: ${createdAt}`);
-    console.log(`  Updated: ${updatedAt}`);
-    console.log(`  Content: ${policy.content.length} characters`);
-    console.log('');
-  }
-}
-
-async function getPolicy(lelu, name, tenantId) {
-  console.log(`Fetching policy "${name}"...`);
-  
-  try {
-    const policy = await lelu.getPolicy({ name, tenantId });
-    
-    console.log(`\n📄 Policy: ${policy.name} (v${policy.version})`);
-    console.log('─'.repeat(80));
-    console.log(`ID: ${policy.id}`);
-    console.log(`Tenant: ${policy.tenantId}`);
-    console.log(`Created: ${new Date(policy.createdAt).toLocaleString()}`);
-    console.log(`Updated: ${new Date(policy.updatedAt).toLocaleString()}`);
-    console.log(`HMAC: ${policy.hmacSha256}`);
-    console.log('');
-    console.log('Content:');
-    console.log('─'.repeat(40));
-    console.log(policy.content);
-    
-  } catch (err) {
-    if (err.status === 404) {
-      console.log(`❌ Policy "${name}" not found`);
-      console.log('');
-      console.log('💡 Use "lelu policies list" to see available policies');
-    } else {
-      throw err;
-    }
-  }
-}
-
-async function setPolicy(lelu, name, filePath, tenantId) {
-  const fs = await import('fs/promises');
-  
-  try {
-    const content = await fs.readFile(filePath, 'utf8');
-    
-    console.log(`Setting policy "${name}" from ${filePath}...`);
-    
-    const policy = await lelu.upsertPolicy({
-      name,
-      content,
-      tenantId
-    });
-    
-    console.log(`✅ Policy "${name}" saved successfully`);
-    console.log(`  ID: ${policy.id}`);
-    console.log(`  Version: ${policy.version}`);
+    console.log(`\n${policy.name} (v${policy.version})`);
+    console.log(`  Created: ${new Date(policy.createdAt).toLocaleString()}`);
     console.log(`  Updated: ${new Date(policy.updatedAt).toLocaleString()}`);
-    console.log(`  Content: ${content.length} characters`);
-    
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      console.log(`❌ File not found: ${filePath}`);
-    } else if (err.code === 'EACCES') {
-      console.log(`❌ Permission denied reading file: ${filePath}`);
-    } else {
-      throw err;
-    }
+    console.log(`  HMAC: ${policy.hmacSha256.substring(0, 16)}...`);
   }
 }
 
-async function deletePolicy(lelu, name, tenantId) {
-  console.log(`Deleting policy "${name}"...`);
+async function getPolicyPlatform(lelu, name) {
+  if (!name) {
+    console.error('❌ Policy name required');
+    console.log('Usage: lelu policies get <name>');
+    process.exit(1);
+  }
+
+  const policy = await lelu.getPolicy({ name });
   
-  try {
-    const result = await lelu.deletePolicy({ name, tenantId });
-    
-    if (result.deleted) {
-      console.log(`✅ Policy "${name}" deleted successfully`);
-    } else {
-      console.log(`❌ Failed to delete policy "${name}"`);
-    }
-    
-  } catch (err) {
-    if (err.status === 404) {
-      console.log(`❌ Policy "${name}" not found`);
-      console.log('');
-      console.log('💡 Use "lelu policies list" to see available policies');
-    } else {
-      throw err;
-    }
+  console.log(`📜 Policy: ${policy.name} (v${policy.version})`);
+  console.log('─'.repeat(80));
+  console.log(policy.content);
+}
+
+async function setPolicyPlatform(lelu, name, filePath) {
+  if (!name || !filePath) {
+    console.error('❌ Policy name and file path required');
+    console.log('Usage: lelu policies set <name> <file>');
+    process.exit(1);
+  }
+
+  const content = readFileSync(filePath, 'utf-8');
+  await lelu.upsertPolicy({ name, content });
+  
+  console.log(`✅ Policy '${name}' saved successfully`);
+}
+
+async function deletePolicyPlatform(lelu, name) {
+  if (!name) {
+    console.error('❌ Policy name required');
+    console.log('Usage: lelu policies delete <name>');
+    process.exit(1);
+  }
+
+  const result = await lelu.deletePolicy({ name });
+  
+  if (result.deleted) {
+    console.log(`✅ Policy '${name}' deleted successfully`);
+  } else {
+    console.log(`⚠️  Policy '${name}' not found`);
+  }
+}
+
+// ─── Local Operations ─────────────────────────────────────────────────────────
+
+async function listPoliciesLocal(storage) {
+  const policies = storage.listPolicies();
+  
+  if (!policies.length) {
+    console.log('📋 No policies found in local storage.');
+    console.log('');
+    console.log('💡 Add a policy:');
+    console.log('   lelu policies set my-policy policy.rego');
+    return;
+  }
+
+  console.log(`📜 Policies (${policies.length} total):`);
+  console.log('─'.repeat(80));
+  
+  for (const policy of policies) {
+    console.log(`\n${policy.name} (v${policy.version})`);
+    console.log(`  Created: ${new Date(policy.createdAt).toLocaleString()}`);
+    console.log(`  Updated: ${new Date(policy.updatedAt).toLocaleString()}`);
+    console.log(`  HMAC: ${policy.hmacSha256.substring(0, 16)}...`);
+  }
+}
+
+async function getPolicyLocal(storage, name) {
+  if (!name) {
+    console.error('❌ Policy name required');
+    console.log('Usage: lelu policies get <name>');
+    process.exit(1);
+  }
+
+  const policy = storage.getPolicy(name);
+  
+  if (!policy) {
+    console.error(`❌ Policy '${name}' not found`);
+    process.exit(1);
+  }
+
+  console.log(`📜 Policy: ${policy.name} (v${policy.version})`);
+  console.log('─'.repeat(80));
+  console.log(policy.content);
+}
+
+async function setPolicyLocal(storage, name, filePath) {
+  if (!name || !filePath) {
+    console.error('❌ Policy name and file path required');
+    console.log('Usage: lelu policies set <name> <file>');
+    process.exit(1);
+  }
+
+  const content = readFileSync(filePath, 'utf-8');
+  storage.upsertPolicy({ name, content });
+  
+  console.log(`✅ Policy '${name}' saved to local storage`);
+}
+
+async function deletePolicyLocal(storage, name) {
+  if (!name) {
+    console.error('❌ Policy name required');
+    console.log('Usage: lelu policies delete <name>');
+    process.exit(1);
+  }
+
+  const deleted = storage.deletePolicy(name);
+  
+  if (deleted) {
+    console.log(`✅ Policy '${name}' deleted from local storage`);
+  } else {
+    console.log(`⚠️  Policy '${name}' not found`);
   }
 }
 
 function showHelp() {
-  console.log(`
-Lelu Policies CLI
-
-Usage:
-  lelu policies list                    List all policies
-  lelu policies get <name>              Get a specific policy
-  lelu policies set <name> <file>       Create or update a policy from file
-  lelu policies delete <name>           Delete a policy
-  lelu policies help                    Show this help
-
-Environment Variables:
-  LELU_PLATFORM_URL       Platform API URL (default: http://localhost:9091)
-  LELU_PLATFORM_API_KEY   Platform API key (default: platform-dev-key)
-  LELU_TENANT_ID          Tenant ID (default: default)
-
-Examples:
-  lelu policies list                           # List all policies
-  lelu policies get auth                       # View the "auth" policy
-  lelu policies set auth ./auth.rego           # Create/update auth policy from file
-  lelu policies delete old-policy              # Delete a policy
-  LELU_TENANT_ID=prod lelu policies list       # List policies for prod tenant
-`);
+  console.log('Lelu Policies CLI');
+  console.log('');
+  console.log('Usage:');
+  console.log('  lelu policies list              List all policies');
+  console.log('  lelu policies get <name>        Get policy content');
+  console.log('  lelu policies set <name> <file> Create or update policy');
+  console.log('  lelu policies delete <name>     Delete policy');
+  console.log('');
+  console.log('Storage:');
+  console.log('  Default: Local SQLite (~/.lelu/lelu.db)');
+  console.log('  Remote:  Set LELU_PLATFORM_URL environment variable');
+  console.log('');
+  console.log('Examples:');
+  console.log('  lelu policies list');
+  console.log('  lelu policies set auth-policy ./auth.rego');
+  console.log('  LELU_PLATFORM_URL=https://lelu.example.com lelu policies list');
 }
 
 main();
