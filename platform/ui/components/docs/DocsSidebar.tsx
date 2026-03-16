@@ -28,7 +28,9 @@ const sections: NavSection[] = [
     ),
     items: [
       { href: "/docs", label: "Introduction" },
+      { href: "/docs/quickstart", label: "Quickstart" },
       { href: "/docs/installation", label: "Installation" },
+      { href: "/docs/docker", label: "Docker Deployment" },
       { href: "/llms.txt", label: "LLMs.txt" },
     ],
   },
