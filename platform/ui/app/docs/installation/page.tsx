@@ -6,11 +6,12 @@ export default function DocsInstallation() {
   const [packageTab, setPackageTab] = useState<"npm" | "pnpm" | "yarn" | "bun">("npm");
 
   const steps = [
-    { num: 1, title: "Install the Package" },
-    { num: 2, title: "CLI Commands" },
-    { num: 3, title: "Set Environment Variables" },
-    { num: 4, title: "Configure Lelu Client" },
-    { num: 5, title: "That's it!" },
+    { num: 1, title: "Choose Installation Method" },
+    { num: 2, title: "Install the Package" },
+    { num: 3, title: "CLI Commands" },
+    { num: 4, title: "Set Environment Variables" },
+    { num: 5, title: "Configure Lelu Client" },
+    { num: 6, title: "That's it!" },
   ];
 
   const packageCommands: Record<typeof packageTab, string> = {
@@ -53,11 +54,120 @@ export default function DocsInstallation() {
 
       <div className="space-y-16">
 
-        {/* Step 1 */}
+        {/* Step 1 - Choose Installation Method */}
         <section id="step-1">
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               1
+            </span>
+            Choose Installation Method
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-6">
+            Lelu can be installed in two ways: using Docker (recommended for quick start) or by installing SDKs directly.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Docker Option */}
+            <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                    <path d="M20 7h-9"/>
+                    <path d="M14 17H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h9"/>
+                    <path d="M15 7v10"/>
+                    <path d="M20 7v10a2 2 0 0 1-2 2h-2"/>
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Docker (Recommended)</h3>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                Get Lelu running in minutes with pre-built Docker images. Includes the engine, platform, UI, and MCP server.
+              </p>
+              <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                  <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                </div>
+                <pre className="p-3 font-mono text-xs text-zinc-300">
+{`# Pull and run all services
+docker pull leluauth/lelu-engine:latest
+curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.production.yml
+docker-compose -f docker-compose.production.yml up -d`}
+                </pre>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4"/>
+                  <circle cx="12" cy="12" r="10"/>
+                </svg>
+                <span>Complete stack ready in 2 minutes</span>
+              </div>
+            </div>
+
+            {/* SDK Option */}
+            <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-zinc-600 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">SDK Integration</h3>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                Install Lelu SDKs directly into your application. Requires running the Lelu engine separately.
+              </p>
+              <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                  <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                </div>
+                <pre className="p-3 font-mono text-xs text-zinc-300">
+{`# TypeScript/JavaScript
+npm install @lelu-auth/lelu
+
+# Python
+pip install auth-pe`}
+                </pre>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                <span>More configuration required</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <div className="text-sm text-blue-800 dark:text-blue-300">
+              <p className="mb-2">
+                <strong>New to Lelu?</strong> We recommend starting with Docker to get familiar with the system.
+              </p>
+              <p>
+                The Docker setup includes all components and a web UI for monitoring. You can switch to SDK integration later for production deployments.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Step 2 */}
+        <section id="step-2">
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
+              2
             </span>
             Install the Package
           </h2>
@@ -121,11 +231,11 @@ export default function DocsInstallation() {
           </div>
         </section>
 
-        {/* Step 2 */}
-        <section id="step-2">
+        {/* Step 3 */}
+        <section id="step-3">
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
-              2
+              3
             </span>
             CLI Commands
           </h2>
@@ -211,11 +321,11 @@ go build -o lelu
           </div>
         </section>
 
-        {/* Step 3 */}
-        <section id="step-3">
+        {/* Step 4 */}
+        <section id="step-4">
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
-              3
+              4
             </span>
             Set Environment Variables
           </h2>
@@ -301,11 +411,11 @@ go build -o lelu
           </div>
         </section>
 
-        {/* Step 4 */}
-        <section id="step-4">
+        {/* Step 5 */}
+        <section id="step-5">
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
-              4
+              5
             </span>
             Configure Lelu Client
           </h2>
@@ -385,8 +495,8 @@ elif decision.allowed:
           </div>
         </section>
 
-        {/* Step 5 */}
-        <section id="step-4">
+        {/* Step 6 */}
+        <section id="step-6">
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-green-600 text-white text-sm font-bold">
               ✓

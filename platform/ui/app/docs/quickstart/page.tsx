@@ -21,17 +21,23 @@ export default function DocsQuickStart() {
             <div className="flex-1 pb-8">
               <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Start the engine</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-                The easiest way to run Lelu locally is using Docker Compose. This will spin up the Lelu Engine, the Platform API, and a PostgreSQL database.
+                The fastest way to get Lelu running is with Docker. This starts the engine, platform, UI, and database in one command.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                  <code>npx @lelu-auth/lelu dashboard</code>
+                  <pre><code>{`# Pull and start all services
+docker pull leluauth/lelu-engine:latest
+curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.production.yml
+docker-compose -f docker-compose.production.yml up -d`}</code></pre>
                 </div>
-                <div className="p-4 font-mono text-xs text-blue-400">
-                  <span>Opens the dashboard at <b>http://localhost:3002/audit</b></span>
+                <div className="p-4 font-mono text-xs text-blue-400 border-t border-zinc-800">
+                  <div>Services available at:</div>
+                  <div>• Engine API: <b>http://localhost:8083</b></div>
+                  <div>• Web UI: <b>http://localhost:3002</b></div>
+                  <div>• Platform API: <b>http://localhost:9091</b></div>
                 </div>
               </div>
             </div>
