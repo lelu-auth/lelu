@@ -49,10 +49,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <img src="/logo.svg" alt="Lelu logo" className="w-6 h-6 rounded" />
                 Lelu Engine
               </div>
-              <div className="flex gap-6 text-sm text-zinc-500">
+              <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-zinc-500 justify-center">
                 <a href="/docs" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">Documentation</a>
-                <a href="https://github.com/lelu-auth/lelu" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">GitHub</a>
-                <a href="#" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">Twitter</a>
+                <a href="https://github.com/lelu-auth/lelu" target="_blank" rel="noreferrer" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">GitHub</a>
+                <a href="https://x.com/LeluAuth" target="_blank" rel="noreferrer" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">X (Twitter)</a>
+                <a href="https://discord.gg/bSPWAUSf" target="_blank" rel="noreferrer" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">Discord</a>
+                <a href="https://www.linkedin.com/company/leluauth" target="_blank" rel="noreferrer" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">LinkedIn</a>
               </div>
             </div>
           </footer>

@@ -8,17 +8,17 @@
 
 :root {
   --bg-base: #ffffff;
-  --bg-surface: #f4f4f5;
-  --bg-surface-hover: #e4e4e7;
+  --bg-surface: #fafafa;
+  --bg-surface-hover: #f4f4f5;
   --border-subtle: #e4e4e7;
   --border-strong: #d4d4d8;
   
-  --text-primary: #18181b;
+  --text-primary: #09090b;
   --text-secondary: #52525b;
-  --text-tertiary: #71717a;
+  --text-tertiary: #a1a1aa;
   
-  --accent-primary: #3b82f6;
-  --accent-primary-hover: #2563eb;
+  --accent-primary: #000000;
+  --accent-primary-hover: #27272a;
   --accent-purple: #8b5cf6;
   
   --status-success-bg: rgba(34, 197, 94, 0.1);
@@ -31,18 +31,18 @@
 
 .dark {
   --bg-base: #000000;
-  --bg-surface: #0a0a0a;
-  --bg-surface-hover: #141414;
-  --border-subtle: #1f1f1f;
-  --border-strong: #333333;
+  --bg-surface: #09090b;
+  --bg-surface-hover: #18181b;
+  --border-subtle: #27272a;
+  --border-strong: #3f3f46;
   
-  --text-primary: #ededed;
+  --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   --text-tertiary: #71717a;
   
-  --accent-primary: #3b82f6;
-  --accent-primary-hover: #2563eb;
-  --accent-purple: #8b5cf6;
+  --accent-primary: #ffffff;
+  --accent-primary-hover: #e4e4e7;
+  --accent-purple: #a78bfa;
   
   --status-success-bg: rgba(34, 197, 94, 0.1);
   --status-success-text: #4ade80;
