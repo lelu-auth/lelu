@@ -21,7 +21,7 @@ func main() {
 
 	// Initialize OpenTelemetry with no-op exporter for testing
 	ctx := context.Background()
-	
+
 	// Create resource
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
@@ -81,7 +81,7 @@ func main() {
 }
 
 func testBasicAgentSpan(ctx context.Context, tracer *observability.AgentTracer) {
-	ctx, span := tracer.StartAuthorizationSpan(ctx, "financial_bot", "generate_report", 0.94)
+	_, span := tracer.StartAuthorizationSpan(ctx, "financial_bot", "generate_report", 0.94)
 	defer span.End()
 
 	// Simulate authorization process
@@ -143,7 +143,7 @@ func testSwarmOrchestration(ctx context.Context, tracer *observability.AgentTrac
 
 	ctx, span := tracer.StartSwarmSpan(ctx, swarmID, "orchestrator")
 	defer span.End()
-	
+
 	// Add swarm-specific attributes
 	span.SetAttributes(
 		attribute.StringSlice("ai.swarm.agents", agents),
@@ -182,7 +182,7 @@ func testMetricsRecording() {
 }
 
 func testPolicyEvaluation(ctx context.Context, tracer *observability.AgentTracer) {
-	ctx, span := tracer.StartAgentSpan(ctx, "ai.policy.evaluation", "policy_engine")
+	_, span := tracer.StartAgentSpan(ctx, "ai.policy.evaluation", "policy_engine")
 	defer span.End()
 
 	// Simulate policy evaluation
