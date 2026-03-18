@@ -27,8 +27,7 @@ except ImportError:
         ERROR = "ERROR"
     
     otel_trace = OtelTrace()
-    OtelStatus = OtelStatus  # type: ignore
-    OtelStatusCode = OtelStatusCode  # type: ignore
+    # Use the stub classes when OpenTelemetry is not available
 
 
 class NoOpSpan:
@@ -187,6 +186,7 @@ class AgentTracer:
         return self.start_agent_span(
             "ai.agent.authorize",
             agent_id,
+            AgentTypes.AUTONOMOUS,
             **{
                 AIAgentAttributes.REQUEST_INTENT: action,
                 AIAgentAttributes.REQUEST_CONFIDENCE: confidence,
@@ -203,6 +203,7 @@ class AgentTracer:
         return self.start_agent_span(
             "ai.agent.delegate",
             delegator,
+            AgentTypes.AUTONOMOUS,
             **{
                 AIAgentAttributes.PARENT_AGENT: delegator,
                 AIAgentAttributes.CHILD_AGENT: delegatee,
