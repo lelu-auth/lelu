@@ -2,6 +2,7 @@ package observability
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 )
@@ -363,13 +364,4 @@ func TestPredictionPerformance(t *testing.T) {
 			t.Errorf("Prediction too slow: %v (expected < 10ms)", avgLatency)
 		}
 	})
-}
-
-// Helper function to set up test database
-func setupTestDB(t *testing.T) *sql.DB {
-	// This would create an in-memory SQLite database for testing
-	// Implementation depends on your database setup
-	t.Helper()
-	// Placeholder - actual implementation would create test DB
-	return nil
 }
