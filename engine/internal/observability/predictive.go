@@ -76,8 +76,8 @@ type HumanReviewPredictionModel struct {
 // PolicyOptimizationModel suggests policy improvements
 type PolicyOptimizationModel struct {
 	// Policy effectiveness tracking
-	PolicyScores   map[string]float64 `json:"policy_scores"`
-	LastOptimized  time.Time          `json:"last_optimized"`
+	PolicyScores    map[string]float64 `json:"policy_scores"`
+	LastOptimized   time.Time          `json:"last_optimized"`
 	Recommendations []string           `json:"recommendations"`
 }
 
