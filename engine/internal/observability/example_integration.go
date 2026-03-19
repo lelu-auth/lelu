@@ -88,7 +88,7 @@ func (io *IntegratedObservability) ProcessAuthorizationRequest(
 	allowed := true
 	requiresHumanReview := reviewPrediction != nil && reviewPrediction.NeedsReview
 	outcome := "approved"
-	
+
 	io.Tracer.RecordDecision(span, allowed, requiresHumanReview,
 		confidence, riskScore, outcome)
 
