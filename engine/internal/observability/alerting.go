@@ -241,6 +241,7 @@ func (am *AlertManager) CheckReputationAlert(ctx context.Context, agentID string
 			"calibration":      reputation.CalibrationScore,
 		},
 		
+		Context:  map[string]interface{}{},
 		Status:   "active",
 		Channels: []string{"slack", "email"},
 		Tags: map[string]string{
@@ -426,23 +427,32 @@ func (am *AlertManager) ResolveAlert(ctx context.Context, alertID string) error 
 
 // GetActiveAlerts retrieves currently active alerts
 func (am *AlertManager) GetActiveAlerts(ctx context.Context, agentID string) ([]*Alert, error) {
-	query := `
-		SELECT id, rule_id, agent_id, timestamp, title, description, severity, priority,
-			   trigger_data, context, status, acked_by, acked_at, resolved_at,
-			   group_id, group_count, tags, channels
-		FROM alerts 
-		WHERE status IN ('active', 'acknowledged')
-	`
+	var query string
+	var rows *sql.Rows
+	var err error
 	
-	args := []interface{}{}
 	if agentID != "" {
-		query += " AND agent_id = ?"
-		args = append(args, agentID)
+		query = `
+			SELECT id, rule_id, agent_id, timestamp, title, description, severity, priority,
+				   trigger_data, context, status, acked_by, acked_at, resolved_at,
+				   group_id, group_count, tags, channels
+			FROM alerts 
+			WHERE status IN ('active', 'acknowledged') AND agent_id = ?
+			ORDER BY timestamp DESC
+		`
+		rows, err = am.db.QueryContext(ctx, query, agentID)
+	} else {
+		query = `
+			SELECT id, rule_id, agent_id, timestamp, title, description, severity, priority,
+				   trigger_data, context, status, acked_by, acked_at, resolved_at,
+				   group_id, group_count, tags, channels
+			FROM alerts 
+			WHERE status IN ('active', 'acknowledged')
+			ORDER BY timestamp DESC
+		`
+		rows, err = am.db.QueryContext(ctx, query)
 	}
 	
-	query += " ORDER BY timestamp DESC"
-	
-	rows, err := am.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get active alerts: %w", err)
 	}
@@ -455,6 +465,11 @@ func (am *AlertManager) GetActiveAlerts(ctx context.Context, agentID string) ([]
 			continue
 		}
 		alerts = append(alerts, alert)
+	}
+	
+	// Return empty slice instead of nil if no alerts
+	if alerts == nil {
+		alerts = []*Alert{}
 	}
 	
 	return alerts, nil
@@ -535,6 +550,14 @@ func (am *AlertManager) storeAlert(ctx context.Context, alert *Alert) error {
 	tagsJSON, _ := json.Marshal(alert.Tags)
 	channelsJSON, _ := json.Marshal(alert.Channels)
 	
+	// Set defaults for optional fields
+	if alert.GroupID == "" {
+		alert.GroupID = ""
+	}
+	if alert.GroupCount == 0 {
+		alert.GroupCount = 1
+	}
+	
 	query := `
 		INSERT INTO alerts (
 			id, rule_id, agent_id, timestamp, title, description, severity, priority,
@@ -548,7 +571,11 @@ func (am *AlertManager) storeAlert(ctx context.Context, alert *Alert) error {
 		alert.Status, alert.GroupID, alert.GroupCount, string(tagsJSON), string(channelsJSON),
 	)
 	
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to store alert: %w", err)
+	}
+	
+	return nil
 }
 
 func (am *AlertManager) scanAlert(rows *sql.Rows) (*Alert, error) {
