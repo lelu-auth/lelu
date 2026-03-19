@@ -138,6 +138,7 @@ func (rm *ReputationManager) RecordDecision(ctx context.Context, agentID, agentT
 			correct_decisions = correct_decisions + ?,
 			high_conf_errors = high_conf_errors + ?,
 			low_conf_correct = low_conf_correct + ?,
+			accuracy_rate = CAST(correct_decisions + ? AS FLOAT) / (decision_count + 1),
 			last_updated = ?
 	`
 	
@@ -157,14 +158,14 @@ func (rm *ReputationManager) RecordDecision(ctx context.Context, agentID, agentT
 	}
 	
 	now := time.Now()
-	accuracyRate := 1.0
+	initialAccuracyRate := 1.0
 	if !wasCorrect {
-		accuracyRate = 0.0
+		initialAccuracyRate = 0.0
 	}
 	
 	_, err := rm.db.ExecContext(ctx, query,
-		agentID, accuracyRate, now, confidence, correctInt, highConfError, lowConfCorrect,
-		confidence, correctInt, highConfError, lowConfCorrect, now)
+		agentID, initialAccuracyRate, now, confidence, correctInt, highConfError, lowConfCorrect,
+		confidence, correctInt, highConfError, lowConfCorrect, correctInt, now)
 	
 	if err != nil {
 		return fmt.Errorf("failed to record decision: %w", err)

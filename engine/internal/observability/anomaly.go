@@ -646,5 +646,10 @@ func (ad *AnomalyDetector) GetRecentAnomalies(ctx context.Context, agentID strin
 		results = append(results, &result)
 	}
 	
+	// Return empty slice instead of nil if no results
+	if results == nil {
+		results = []*AnomalyResult{}
+	}
+	
 	return results, nil
 }
