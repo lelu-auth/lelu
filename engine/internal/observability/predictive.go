@@ -500,11 +500,11 @@ func (pa *PredictiveAnalytics) identifyRiskFactors(features map[string]float64, 
 
 // PolicyStats represents policy effectiveness statistics
 type PolicyStats struct {
-	PolicyName   string
-	Effectiveness float64
+	PolicyName     string
+	Effectiveness  float64
 	TotalDecisions int
-	SuccessRate   float64
-	AvgLatency    float64
+	SuccessRate    float64
+	AvgLatency     float64
 }
 
 // analyzePolicyEffectiveness analyzes how well policies are performing
