@@ -297,7 +297,7 @@ func (bm *BaselineManager) RefreshBaseline(ctx context.Context, agentID string) 
 }
 
 // UpdateBaseline updates baseline with a single decision data point
-func (bm *BaselineManager) UpdateBaseline(_ context.Context, _, action, outcome string, confidence float64, latency time.Duration) error {
+func (bm *BaselineManager) UpdateBaseline(_ context.Context, _, _, outcome string, confidence float64, latency time.Duration) error {
 	// For now, we'll just trigger a refresh if enough time has passed
 	// In a production system, this could incrementally update the baseline
 	// or queue the data for batch processing
@@ -526,7 +526,7 @@ func (bm *BaselineManager) analyzeLatencyDrift(_ *BehavioralBaseline, _ []*Behav
 	return DriftMetric{MetricName: "latency"}
 }
 
-func (bm *BaselineManager) analyzePatternDrift(_ *BehavioralBaseline, recentData []*BehaviorData) DriftMetric {
+func (bm *BaselineManager) analyzePatternDrift(_ *BehavioralBaseline, _ []*BehaviorData) DriftMetric {
 	// Implementation would analyze pattern drift
 	return DriftMetric{MetricName: "pattern"}
 }
@@ -566,7 +566,7 @@ func (bm *BaselineManager) saveBaseline(_ context.Context, _ *BehavioralBaseline
 	return nil
 }
 
-func (bm *BaselineManager) getBaselineFromDB(_ context.Context, agentID string) (*BehavioralBaseline, error) {
+func (bm *BaselineManager) getBaselineFromDB(_ context.Context, _ string) (*BehavioralBaseline, error) {
 	// Implementation would retrieve baseline from database
 	return nil, nil
 }
