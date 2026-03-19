@@ -651,7 +651,10 @@ func (ad *AnomalyDetector) GetRecentAnomalies(ctx context.Context, agentID strin
 		}
 
 		result.Latency = time.Duration(latencyMs) * time.Millisecond
-		json.Unmarshal([]byte(featuresJSON), &result.Features)
+		if err := json.Unmarshal([]byte(featuresJSON), &result.Features); err != nil {
+			// Log error but continue processing other results
+			continue
+		}
 
 		results = append(results, &result)
 	}
