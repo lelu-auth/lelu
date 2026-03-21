@@ -37,6 +37,21 @@ This helps teams avoid over-permissive agent behavior while keeping developer wo
 
 
 
+## Documentation
+
+For comprehensive guides, API references, and examples, visit:
+
+**[https://lelu-ai.com/](https://lelu-ai.com/)**
+
+Topics covered:
+- Getting started and installation
+- SDK usage (TypeScript, Python, Go)
+- Policy configuration (YAML and Rego)
+- Authorization flow and architecture
+- Observability and monitoring
+- Production deployment guides
+- API reference
+
 ## Contribution
 
 Lelu is free and open source under the MIT License.
@@ -54,9 +69,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.
 
 If you discover a security issue, please report it privately to:
 
-`abenezergetachew0923@gmail.com`
+`security@lelu-ai.com`
 
 Reports will be reviewed promptly and handled responsibly.
+
+## Support
+
+- Documentation: [https://lelu-ai.com/](https://lelu-ai.com/)
+- GitHub Issues: [https://github.com/lelu-auth/lelu/issues](https://github.com/lelu-auth/lelu/issues)
+- Discussions: [https://github.com/lelu-auth/lelu/discussions](https://github.com/lelu-auth/lelu/discussions)
+- Email: support@lelu-ai.com
 
 ## License
 
