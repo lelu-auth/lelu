@@ -127,6 +127,23 @@ const sections: NavSection[] = [
     ],
   },
   {
+    title: "Advanced Features",
+    defaultOpen: false,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    ),
+    items: [
+      { href: "/docs/observability", label: "Observability & Tracing" },
+      { href: "/docs/behavioral-analytics", label: "Behavioral Analytics" },
+      { href: "/docs/risk-assessment", label: "Risk Assessment" },
+      { href: "/docs/multi-agent", label: "Multi-Agent Coordination" },
+      { href: "/docs/prompt-injection", label: "Prompt Injection Detection" },
+      { href: "/docs/predictive-analytics", label: "Predictive Analytics" },
+    ],
+  },
+  {
     title: "Guides",
     defaultOpen: false,
     icon: (

@@ -53,8 +53,16 @@ export default function DocsPage() {
           <p className="text-sm text-zinc-600 dark:text-zinc-400">Automatically queue risky operations for reviewers before execution.</p>
         </div>
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
-          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Token lifecycle control</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Mint short-lived tokens for approved actions and revoke them when needed.</p>
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Behavioral analytics</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Track agent reputation, detect anomalies, and monitor behavioral patterns.</p>
+        </div>
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Observability & tracing</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">OpenTelemetry integration with AI agent semantic conventions.</p>
+        </div>
+        <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
+          <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Multi-agent coordination</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Support for delegation chains and swarm operations.</p>
         </div>
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50">
           <h3 className="font-semibold text-zinc-900 dark:text-white mb-1">Audit-ready trail</h3>
