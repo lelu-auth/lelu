@@ -66,9 +66,49 @@ export default function DocsInstallation() {
             Lelu can be installed in two ways: using Docker (recommended for quick start) or by installing SDKs directly.
           </p>
 
+          {/* Featured: One-Command Setup */}
+          <div className="mb-6 relative overflow-hidden rounded-2xl border-2 border-indigo-500/50 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6">
+            <div className="absolute top-3 right-3">
+              <span className="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1 text-xs font-medium text-white">
+                ⚡ Recommended
+              </span>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">One-Command Setup</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                  Install SDK and automatically start all services with Docker. Includes engine, platform, UI, and database. Perfect for getting started quickly.
+                </p>
+                <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                    <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                  </div>
+                  <pre className="p-3 font-mono text-sm text-zinc-300">
+{`npm install @lelu-auth/lelu
+npx @lelu-auth/lelu init`}
+                  </pre>
+                </div>
+                <div className="mt-3 flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 12l2 2 4-4"/>
+                    <circle cx="12" cy="12" r="10"/>
+                  </svg>
+                  <span>Opens browser to http://localhost:3002 when ready</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mb-4">Alternative Installation Methods</p>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Docker Option */}
-            <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+            <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
@@ -78,10 +118,10 @@ export default function DocsInstallation() {
                     <path d="M20 7v10a2 2 0 0 1-2 2h-2"/>
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Docker (Recommended)</h3>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Manual Docker Setup</h3>
               </div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Get Lelu running in minutes with pre-built Docker images. Includes the engine, platform, UI, and MCP server.
+                Pull and run Docker images manually. For users who prefer more control over the setup process.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
@@ -94,13 +134,6 @@ curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.pro
 docker-compose -f docker-compose.production.yml up -d`}
                 </pre>
               </div>
-              <div className="mt-4 flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 12l2 2 4-4"/>
-                  <circle cx="12" cy="12" r="10"/>
-                </svg>
-                <span>Complete stack ready in 2 minutes</span>
-              </div>
             </div>
 
             {/* SDK Option */}
@@ -112,10 +145,10 @@ docker-compose -f docker-compose.production.yml up -d`}
                     <polyline points="14,2 14,8 20,8"/>
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">SDK Integration</h3>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">SDK Only (CLI Mode)</h3>
               </div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Install Lelu SDKs directly into your application. Requires running the Lelu engine separately.
+                Install SDK without Docker for CLI-only usage. No UI, but full CLI tools and SDK integration available.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
@@ -126,14 +159,8 @@ docker-compose -f docker-compose.production.yml up -d`}
 npm install @lelu-auth/lelu
 
 # Python
-pip install auth-pe`}
+pip install lelu-agent-auth-sdk`}
                 </pre>
-              </div>
-              <div className="mt-4 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                </svg>
-                <span>More configuration required</span>
               </div>
             </div>
           </div>

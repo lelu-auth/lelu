@@ -118,7 +118,48 @@ export default function Home() {
         {/* Quick Install Section */}
         <div className="mt-16 flex justify-center w-full opacity-0 animate-[fadeInUp_0.8s_ease-out_0.15s_forwards]">
           <div className="w-full max-w-3xl">
-            <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mb-4">Quick Install</p>
+            <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mb-4">Get Started in 2 Minutes</p>
+            
+            {/* Primary Install Method - Featured */}
+            <div className="mb-6 relative overflow-hidden rounded-2xl border-2 border-indigo-500/50 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6">
+              <div className="absolute top-2 right-2">
+                <span className="inline-flex items-center rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-medium text-white">
+                  Recommended
+                </span>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">One-Command Setup</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                    Install SDK and start all services with Docker automatically. Includes engine, platform, UI, and database.
+                  </p>
+                  <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                    <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                      <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                    </div>
+                    <pre className="p-3 font-mono text-sm text-zinc-300">
+{`npm install @lelu-auth/lelu
+npx @lelu-auth/lelu init`}
+                    </pre>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 12l2 2 4-4"/>
+                      <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    <span>Opens browser to http://localhost:3002 when ready</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Alternative Methods */}
+            <p className="text-center text-xs text-zinc-500 dark:text-zinc-400 mb-3">Or install SDK only</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-black/50 hover:border-zinc-300 dark:hover:border-white/20 transition-colors">
                 <div className="p-4">
