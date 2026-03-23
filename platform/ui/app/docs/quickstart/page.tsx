@@ -19,26 +19,36 @@ export default function DocsQuickStart() {
           <div className="relative flex gap-6">
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 z-10 ring-4 ring-white dark:ring-black">1</div>
             <div className="flex-1 pb-8">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Start the engine</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Install and start Lelu</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-                The fastest way to get Lelu running is with Docker. This starts the engine, platform, UI, and database in one command.
+                The fastest way to get Lelu running is with our one-command setup. This installs the SDK and automatically starts all services with Docker.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                  <pre><code>{`# Pull and start all services
-docker pull leluauth/lelu-engine:latest
-curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.production.yml
-docker-compose -f docker-compose.production.yml up -d`}</code></pre>
+                  <pre><code>{`# Install SDK and start all services
+npm install @lelu-auth/lelu
+npx @lelu-auth/lelu init`}</code></pre>
                 </div>
                 <div className="p-4 font-mono text-xs text-blue-400 border-t border-zinc-800">
-                  <div>Services available at:</div>
-                  <div>• Engine API: <b>http://localhost:8083</b></div>
-                  <div>• Web UI: <b>http://localhost:3002</b></div>
-                  <div>• Platform API: <b>http://localhost:9091</b></div>
+                  <div>✨ This command will:</div>
+                  <div>• Check if Docker is installed</div>
+                  <div>• Download docker-compose.yml</div>
+                  <div>• Start all services (engine, platform, UI, database)</div>
+                  <div>• Open browser to <b>http://localhost:3002</b></div>
                 </div>
+              </div>
+              <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 flex gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <p className="text-xs text-blue-800 dark:text-blue-300">
+                  Don't have Docker? The init command will guide you to install it or use CLI-only mode.
+                </p>
               </div>
             </div>
           </div>
@@ -109,23 +119,33 @@ docker-compose -f docker-compose.production.yml up -d`}</code></pre>
           <div className="relative flex gap-6">
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 z-10 ring-4 ring-white dark:ring-black">4</div>
             <div className="flex-1 pb-8">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">View audit logs</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">View audit logs and manage policies</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-                Use the built-in CLI to view audit logs and manage policies directly from your terminal.
+                Use the built-in CLI to view audit logs and manage policies directly from your terminal. The SDK was already installed in step 1.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5 flex items-center gap-2">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <div className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                  <pre><code>{`# Install and view audit logs
-npm install -g @lelu-auth/lelu
+                  <pre><code>{`# View audit logs
 npx @lelu-auth/lelu audit-log
 
 # Manage policies
 npx @lelu-auth/lelu policies list
-npx @lelu-auth/lelu policies get auth`}</code></pre>
+npx @lelu-auth/lelu policies get auth
+npx @lelu-auth/lelu policies set auth ./auth.rego`}</code></pre>
                 </div>
+              </div>
+              <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 flex gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <p className="text-xs text-blue-800 dark:text-blue-300">
+                  You can also view audit logs and manage policies in the Web UI at http://localhost:3002
+                </p>
               </div>
             </div>
           </div>
