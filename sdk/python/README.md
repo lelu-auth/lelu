@@ -2,6 +2,8 @@
 
 Python client for [Lelu](https://github.com/lelu-auth/lelu) — the confidence-aware authorization engine for autonomous AI agents.
 
+**Author:** Abenezer Melkamu
+
 ## Installation
 
 ```bash

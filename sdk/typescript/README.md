@@ -1,8 +1,10 @@
-[![Lelu logo](https://ui-seven-amber.vercel.app/logo.svg)](https://ui-seven-amber.vercel.app/)
+[![Lelu logo](https://lelu-ai.com/logo.svg)](https://lelu-ai.com/)
 
 # Lelu
 
 The TypeScript SDK for Lelu — the confidence-aware authorization engine for autonomous AI agents.
+
+**Author:** Abenezer Getachew
 
 Lelu provides confidence-aware access control, human-in-the-loop approvals, and SOC 2-ready audit trails for your autonomous agents.
 

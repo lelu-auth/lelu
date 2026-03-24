@@ -2,6 +2,8 @@
 
 Go client for [Lelu](https://github.com/lelu-auth/lelu) — confidence-aware authorization for AI agents.
 
+**Author:** Abenezer Getachew
+
 ## Install
 
 ```bash
