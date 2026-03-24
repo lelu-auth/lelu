@@ -35,17 +35,31 @@ function showPolicies() {
   run("node", [policiesScript, ...args]);
 }
 
+function showStudio() {
+  const studioScript = path.join(__dirname, "studio.js");
+  const args = process.argv.slice(3); // Pass remaining args to studio script
+  run("node", [studioScript, ...args]);
+}
+
 function printHelp() {
   console.log(`
 Lelu CLI
 
 Usage:
+  lelu studio            Launch visual UI for managing policies and audit logs
   lelu audit-log         View recent audit events from the platform
   lelu policies          Manage authorization policies
   lelu help              Show this help
 
 Commands:
+  studio                 Launch Lelu Studio (visual UI)
+    -p, --port <number>  Port number (default: 3002)
+    --no-browser         Don't open browser automatically
+    --docker             Force Docker mode
+    --no-docker          Force standalone mode
+
   audit-log              View audit trail and authorization events
+
   policies list          List all policies
   policies get <name>    Get a specific policy
   policies set <name> <file>  Create or update a policy from file
@@ -54,10 +68,15 @@ Commands:
 Environment Variables:
   LELU_PLATFORM_URL       Platform API URL (default: http://localhost:9091)
   LELU_PLATFORM_API_KEY   Platform API key (default: platform-dev-key)
+  LELU_ENGINE_URL         Engine API URL (default: http://localhost:8083)
   LELU_TENANT_ID          Tenant ID (default: default)
   LELU_AUDIT_LIMIT        Number of events to fetch (default: 20)
+  BROWSER                 Browser to open Studio in (chrome, firefox, safari)
 
 Examples:
+  lelu studio                                 # Launch visual UI
+  lelu studio -p 4000                         # Launch on custom port
+  lelu studio --no-browser                    # Launch without opening browser
   lelu audit-log                              # View recent audit events
   lelu policies list                          # List all policies
   lelu policies get auth                      # View the "auth" policy
@@ -68,6 +87,11 @@ Examples:
 
 function main() {
   const command = process.argv[2] || "help";
+
+  if (command === "studio") {
+    showStudio();
+    return;
+  }
 
   if (command === "audit-log") {
     showAuditLog();
