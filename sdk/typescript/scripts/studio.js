@@ -19,6 +19,7 @@ const options = {
   browser: process.env.BROWSER || null,
   noBrowser: false,
   docker: null, // auto-detect
+  useBundle: true, // Use bundled UI by default
 };
 
 for (let i = 0; i < args.length; i++) {
@@ -31,6 +32,7 @@ for (let i = 0; i < args.length; i++) {
     options.noBrowser = true;
   } else if (arg === "--docker") {
     options.docker = true;
+    options.useBundle = false;
   } else if (arg === "--no-docker") {
     options.docker = false;
   } else if (arg === "-h" || arg === "--help") {
@@ -184,6 +186,78 @@ function checkPlatformAPI(url) {
   });
 }
 
+async function startBundledUI() {
+  console.log("🚀 Starting Lelu Studio...\n");
+  
+  // Check if bundled UI exists
+  const uiServerPath = path.join(__dirname, '../ui-server/start.js');
+  
+  if (!existsSync(uiServerPath)) {
+    console.log("⚠️  Bundled UI not found in this package");
+    console.log("   This might be a development installation\n");
+    console.log("💡 Use Docker mode instead:");
+    console.log("   lelu studio --docker\n");
+    process.exit(1);
+  }
+  
+  // Check Platform API
+  const platformUrl = process.env.LELU_PLATFORM_URL || 'http://localhost:9091';
+  console.log(`🔍 Checking Platform API at ${platformUrl}...`);
+  
+  const platformAvailable = await checkPlatformAPI(platformUrl);
+  
+  if (!platformAvailable) {
+    console.log("⚠️  Platform API not accessible\n");
+    console.log("Lelu Studio UI will start, but you'll need the Platform API for full functionality.\n");
+    console.log("Quick setup:");
+    console.log("  docker-compose up -d platform\n");
+  } else {
+    console.log("✅ Platform API is accessible\n");
+  }
+  
+  // Start UI server
+  console.log(`🎨 Starting UI server on port ${options.port}...`);
+  
+  const uiServer = spawn('node', [uiServerPath], {
+    env: {
+      ...process.env,
+      PORT: options.port.toString(),
+      PLATFORM_URL: platformUrl,
+      PLATFORM_API_KEY: process.env.LELU_PLATFORM_API_KEY || 'platform-dev-key',
+      LELU_ENGINE_URL: process.env.LELU_ENGINE_URL || 'http://localhost:8083',
+    },
+    stdio: 'inherit'
+  });
+  
+  // Wait for UI to be ready
+  console.log("⏳ Waiting for UI to be ready...");
+  await waitForService(`http://localhost:${options.port}`, () => {
+    console.log("✅ UI is ready!\n");
+    
+    if (!options.noBrowser) {
+      openBrowser(`http://localhost:${options.port}`);
+    }
+    
+    console.log(`🌐 Lelu Studio running at http://localhost:${options.port}`);
+    console.log("   Press Ctrl+C to stop\n");
+    
+    if (!platformAvailable) {
+      console.log("💡 To enable full features, start the Platform API:");
+      console.log("   docker-compose up -d platform\n");
+    }
+  });
+  
+  // Handle shutdown
+  process.on('SIGINT', () => {
+    console.log('\n\n👋 Shutting down Lelu Studio...');
+    uiServer.kill();
+    process.exit(0);
+  });
+  
+  // Keep process alive
+  await new Promise(() => {});
+}
+
 async function startStandalone() {
   console.log("📦 Lelu Studio - Standalone Mode\n");
   
@@ -194,25 +268,43 @@ async function startStandalone() {
   
   if (!isAvailable) {
     console.log("❌ Platform API not accessible\n");
-    console.log("Lelu Studio requires the Platform API to be running.");
-    console.log("The Platform API manages policies and audit logs.\n");
+    
+    // Check if this is first-time use
+    const isFirstTime = !existsSync(path.join(process.cwd(), 'docker-compose.yml')) && 
+                        !existsSync(path.join(process.cwd(), '.lelu'));
+    
+    if (isFirstTime) {
+      console.log("👋 Looks like this is your first time using Lelu Studio!\n");
+      console.log("Let's get you set up. Choose an option:\n");
+      
+      console.log("1️⃣  Quick Start (Recommended)");
+      console.log("   Run: npx @lelu-auth/lelu init");
+      console.log("   → Downloads docker-compose.yml and starts everything\n");
+      
+      console.log("2️⃣  Manual Setup");
+      console.log("   → See options below\n");
+    } else {
+      console.log("Lelu Studio requires the Platform API to be running.\n");
+    }
     
     console.log("📋 Setup Options:\n");
     
-    console.log("Option 1: Quick Start with Docker (Recommended)");
+    console.log("Option A: Use Docker (Easiest - Full Stack)");
     console.log("  docker-compose up -d");
-    console.log("  → Starts Platform API, Engine, Database, and Redis\n");
+    console.log("  → Starts Platform API, Engine, Database, Redis, and UI");
+    console.log("  → Then run: lelu studio\n");
     
-    console.log("Option 2: Run Platform API Locally");
+    console.log("Option B: Platform API Only (Lightweight)");
     console.log("  cd platform");
     console.log("  DATABASE_URL=sqlite:./lelu.db go run cmd/api/main.go");
-    console.log("  → Starts Platform API with SQLite (no Docker needed)\n");
+    console.log("  → Starts Platform API with SQLite (no Docker needed)");
+    console.log("  → Then run: lelu studio\n");
     
-    console.log("Option 3: Connect to Remote API");
+    console.log("Option C: Connect to Remote API");
     console.log("  LELU_PLATFORM_URL=https://your-api.com lelu studio");
-    console.log("  → Connect to existing Platform API\n");
+    console.log("  → Connect to existing Platform API (team setup)\n");
     
-    console.log("💡 After starting the Platform API, run 'lelu studio' again\n");
+    console.log("💡 Recommended: Run 'npx @lelu-auth/lelu init' for guided setup\n");
     process.exit(1);
   }
   
@@ -316,14 +408,13 @@ function main() {
     return;
   }
   
-  // Check if user explicitly wants no-Docker mode
-  if (options.docker === false) {
-    startStandalone();
+  // Default: Use bundled UI (Prisma-like experience)
+  if (options.useBundle) {
+    startBundledUI();
     return;
   }
   
-  // Auto-detect: prefer standalone mode (like Prisma)
-  // Docker is optional, not required
+  // Fallback: Check Platform API and provide guidance
   startStandalone();
 }
 
