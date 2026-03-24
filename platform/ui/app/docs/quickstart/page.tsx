@@ -46,9 +46,10 @@ npx @lelu-auth/lelu init`}</code></pre>
                   <line x1="12" y1="16" x2="12" y2="12" />
                   <line x1="12" y1="8" x2="12.01" y2="8" />
                 </svg>
-                <p className="text-xs text-blue-800 dark:text-blue-300">
-                  Don't have Docker? The init command will guide you to install it or use CLI-only mode.
-                </p>
+                <div className="text-xs text-blue-800 dark:text-blue-300">
+                  <p className="mb-1">Don't have Docker? The init command will guide you to install it or use CLI-only mode.</p>
+                  <p className="font-medium">💡 Tip: Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">lelu studio</code> to launch the visual UI anytime!</p>
+                </div>
               </div>
             </div>
           </div>

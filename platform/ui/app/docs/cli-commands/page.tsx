@@ -8,7 +8,13 @@ export default function DocsCliCommands() {
   const cliExamples: Record<typeof sdkTab, { install: string; commands: string }> = {
     TypeScript: {
       install: "npm install -g @lelu-auth/lelu",
-      commands: `# View audit logs
+      commands: `# Launch visual UI (Lelu Studio)
+npx @lelu-auth/lelu studio
+
+# Launch on custom port
+npx @lelu-auth/lelu studio -p 4000
+
+# View audit logs
 npx @lelu-auth/lelu audit-log
 
 # List all policies
@@ -28,7 +34,13 @@ npx @lelu-auth/lelu help`
     },
     Python: {
       install: "pip install lelu-agent-auth-sdk",
-      commands: `# View audit logs
+      commands: `# Launch visual UI (Lelu Studio)
+lelu studio
+
+# Launch on custom port
+lelu studio -p 4000
+
+# View audit logs
 lelu audit-log
 
 # List all policies
@@ -49,7 +61,13 @@ lelu help`
     Go: {
       install: `go get github.com/lelu-auth/lelu/sdk/go
 cd sdk/go/cmd/lelu && go build -o lelu`,
-      commands: `# View audit logs
+      commands: `# Launch visual UI (Lelu Studio)
+./lelu studio
+
+# Launch on custom port
+./lelu studio -p 4000
+
+# View audit logs
 ./lelu audit-log
 
 # List all policies
@@ -145,6 +163,49 @@ cd sdk/go/cmd/lelu && go build -o lelu`,
           
           <div className="space-y-8">
             <div>
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Visual UI Command</h3>
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-500/5 dark:to-purple-500/5 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M3 9h18M9 21V9"/>
+                  </svg>
+                  <div>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Lelu Studio</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
+                      Launch a visual UI for managing policies and viewing audit logs. Similar to Prisma Studio, this command automatically starts all services with Docker or provides CLI-only mode as fallback.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/10 mb-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5">
+                      <th className="text-left px-4 py-3 font-semibold text-zinc-900 dark:text-white">Command</th>
+                      <th className="text-left px-4 py-3 font-semibold text-zinc-900 dark:text-white">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
+                    {[
+                      ["studio", "Launch visual UI (auto-starts with Docker)"],
+                      ["studio -p <port>", "Launch on custom port (default: 3002)"],
+                      ["studio --no-browser", "Launch without opening browser"],
+                      ["studio -b <browser>", "Open in specific browser (chrome, firefox, safari)"],
+                      ["studio --docker", "Force Docker mode"],
+                      ["studio --no-docker", "Force CLI-only mode"],
+                    ].map(([command, desc]) => (
+                      <tr key={command}>
+                        <td className="px-4 py-3 font-mono text-blue-600 dark:text-blue-400 whitespace-nowrap">{command}</td>
+                        <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Audit Log Commands</h3>
               <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/10 mb-4">
                 <table className="w-full text-sm">
@@ -212,8 +273,10 @@ cd sdk/go/cmd/lelu && go build -o lelu`,
                 {[
                   ["LELU_PLATFORM_URL", "http://localhost:9091", "Platform API URL"],
                   ["LELU_PLATFORM_API_KEY", "platform-dev-key", "Platform API key for authentication"],
+                  ["LELU_ENGINE_URL", "http://localhost:8083", "Engine API URL"],
                   ["LELU_TENANT_ID", "default", "Tenant ID for multi-tenant setups"],
                   ["LELU_AUDIT_LIMIT", "20", "Number of audit events to fetch"],
+                  ["BROWSER", "-", "Browser to open Studio in (chrome, firefox, safari)"],
                 ].map(([variable, defaultVal, desc]) => (
                   <tr key={variable}>
                     <td className="px-4 py-3 font-mono text-blue-600 dark:text-blue-400 whitespace-nowrap">{variable}</td>
@@ -230,6 +293,29 @@ cd sdk/go/cmd/lelu && go build -o lelu`,
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Examples</h2>
           
           <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Launch Visual UI</h3>
+              <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
+                <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                  <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                </div>
+                <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+                  {`# Launch Lelu Studio (auto-starts with Docker)
+lelu studio
+
+# Launch on custom port
+lelu studio -p 4000
+
+# Launch without opening browser
+lelu studio --no-browser
+
+# Open in specific browser
+lelu studio -b firefox
+BROWSER=chrome lelu studio`}
+                </pre>
+              </div>
+            </div>
+
             <div>
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Basic Usage</h3>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
