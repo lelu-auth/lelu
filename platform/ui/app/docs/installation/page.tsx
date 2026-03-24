@@ -145,10 +145,10 @@ docker-compose -f docker-compose.production.yml up -d`}
                     <polyline points="14,2 14,8 20,8"/>
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">SDK Only (CLI Mode)</h3>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">SDK with Bundled UI</h3>
               </div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Install SDK without Docker for CLI-only usage. No UI, but full CLI tools and SDK integration available.
+                Install SDK with bundled UI (like Prisma Studio). Run <code className="bg-zinc-100 dark:bg-zinc-800 px-1 rounded font-mono text-xs">lelu studio</code> to launch the visual interface instantly - no Docker required!
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
@@ -157,9 +157,11 @@ docker-compose -f docker-compose.production.yml up -d`}
                 <pre className="p-3 font-mono text-xs text-zinc-300">
 {`# TypeScript/JavaScript
 npm install @lelu-auth/lelu
+npx lelu studio
 
 # Python
-pip install lelu-agent-auth-sdk`}
+pip install lelu-agent-auth-sdk
+lelu studio`}
                 </pre>
               </div>
             </div>
@@ -181,10 +183,10 @@ pip install lelu-agent-auth-sdk`}
             </svg>
             <div className="text-sm text-blue-800 dark:text-blue-300">
               <p className="mb-2">
-                <strong>New to Lelu?</strong> We recommend starting with Docker to get familiar with the system.
+                <strong>New to Lelu?</strong> We recommend starting with the one-command setup for the quickest start.
               </p>
               <p>
-                The Docker setup includes all components and a web UI for monitoring. You can switch to SDK integration later for production deployments.
+                The SDK includes a bundled UI (like Prisma Studio) that works without Docker. Just run <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded font-mono">lelu studio</code> to launch the visual interface instantly!
               </p>
             </div>
           </div>
@@ -267,8 +269,41 @@ pip install lelu-agent-auth-sdk`}
             CLI Commands
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            After installing, you can use the built-in CLI commands to view audit logs and manage policies directly from your terminal:
+            After installing, you can use the built-in CLI commands to view audit logs, manage policies, and launch the visual UI directly from your terminal:
           </p>
+
+          {/* Lelu Studio - Featured */}
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-500/5 dark:to-purple-500/5 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M3 9h18M9 21V9"/>
+                </svg>
+                <div>
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Lelu Studio (Visual UI)</h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
+                    Launch a visual UI for managing policies and viewing audit logs. Works like Prisma Studio - the UI is bundled in the npm package and starts immediately. No Docker required!
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
+              <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                <span className="text-xs text-zinc-500 font-mono">terminal</span>
+              </div>
+              <pre className="p-4 font-mono text-sm text-blue-300">
+                {`# Launch visual UI (bundled in package)
+npx @lelu-auth/lelu studio
+
+# Launch on custom port
+npx @lelu-auth/lelu studio -p 4000
+
+# Launch without opening browser
+npx @lelu-auth/lelu studio --no-browser`}
+              </pre>
+            </div>
+          </div>
           
           {/* TypeScript/Node.js */}
           <div className="mb-8">
@@ -298,6 +333,7 @@ npx @lelu-auth/lelu policies set auth ./auth.rego`}
               </div>
               <pre className="p-4 font-mono text-sm text-blue-300">
                 {`# After installing: pip install lelu-agent-auth-sdk
+lelu studio
 lelu audit-log
 lelu policies list
 lelu policies get auth
@@ -317,6 +353,7 @@ lelu policies set auth ./auth.rego`}
                 {`# Build and run CLI
 cd sdk/go/cmd/lelu
 go build -o lelu
+./lelu studio
 ./lelu audit-log
 ./lelu policies list`}
               </pre>
