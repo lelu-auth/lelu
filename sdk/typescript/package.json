@@ -38,17 +38,21 @@
   },
   "files": [
     "dist",
-    "scripts"
+    "scripts",
+    "ui-server"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "npm run build:sdk",
+    "build:sdk": "tsup",
+    "build:ui": "node scripts/build-ui.js",
+    "build:all": "npm run build:sdk && npm run build:ui",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build:all"
   },
   "keywords": [
     "auth",
