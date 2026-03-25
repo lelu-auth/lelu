@@ -183,8 +183,28 @@ export function DocsSidebar() {
   };
 
   return (
-    <aside className="hidden md:block w-64 lg:w-72 shrink-0 border-r border-zinc-200 dark:border-white/[0.05] bg-zinc-50/30 dark:bg-[#09090B]">
-      <div ref={scrollRef} className="docs-sidebar-scroll sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto overscroll-contain py-8 pl-4 pr-3 lg:pl-8 lg:pr-4 no-scrollbar">
+    <aside className="hidden md:block w-64 shrink-0 border-r border-zinc-200/80 dark:border-white/[0.06] bg-white dark:bg-[#09090B]">
+      <div ref={scrollRef} className="docs-sidebar-scroll sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto overscroll-contain py-6 px-4 no-scrollbar">
+        {/* Logo/Brand */}
+        <div className="mb-6">
+          <a href="/" className="flex items-center gap-2 font-semibold text-base text-zinc-900 dark:text-white hover:opacity-80 transition-opacity">
+            <img src="/logo.svg" alt="Lelu" className="w-6 h-6 rounded" />
+            Lelu
+          </a>
+        </div>
+
+        {/* Search Bar */}
+        <button className="w-full mb-6 flex items-center gap-2 px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 rounded-lg transition-colors group">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400 dark:text-zinc-500">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium text-zinc-400 dark:text-zinc-500 bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded">
+            ⌘K
+          </kbd>
+        </button>
+
         <nav className="space-y-4">
           {sections.map((section) => {
             const isOpen = openSections[section.title];
@@ -193,24 +213,24 @@ export function DocsSidebar() {
               <div key={section.title} className="flex flex-col">
                 <button
                   onClick={() => toggleSection(section.title)}
-                  className="group flex items-center justify-between py-1 text-[13px] font-semibold tracking-wide text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer w-full text-left"
+                  className="group flex items-center justify-between py-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer w-full text-left"
                 >
                   <span className="flex items-center gap-2">
-                    <span className="text-zinc-400 group-hover:text-indigo-500 transition-colors">
+                    <span className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                       {section.icon}
                     </span>
                     {section.title}
                   </span>
                   <svg
-                    width="14"
-                    height="14"
+                    width="12"
+                    height="12"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className={`text-zinc-400 transition-transform duration-200 ${isOpen ? "rotate-90" : "rotate-0"}`}
+                    className={`text-zinc-400 dark:text-zinc-500 transition-transform duration-200 ${isOpen ? "rotate-90" : "rotate-0"}`}
                   >
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
@@ -223,7 +243,7 @@ export function DocsSidebar() {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2, ease: "easeInOut" }}
-                      className="flex flex-col ml-[11px] pl-3 border-l border-zinc-200 dark:border-zinc-800/80 space-y-1 mt-1.5 overflow-hidden"
+                      className="flex flex-col space-y-0.5 mt-2 overflow-hidden"
                     >
                       {section.items.map((item) => {
                         const active = pathname === item.href;
@@ -232,16 +252,16 @@ export function DocsSidebar() {
                             <a
                               href={item.href}
                               className={[
-                                "docs-sidebar-link relative flex items-center py-1.5 px-3 rounded-md text-[13px] font-medium transition-all duration-200",
+                                "docs-sidebar-link relative flex items-center py-1.5 px-2.5 rounded-md text-sm transition-all duration-150",
                                 active
-                                  ? "is-active text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10"
-                                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50",
+                                  ? "is-active text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 font-medium"
+                                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-white/5",
                               ].join(" ")}
                             >
                               {active && (
                                 <motion.div 
                                   layoutId="active-indicator"
-                                  className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-500 rounded-r-full -ml-[13px]" 
+                                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-zinc-900 dark:bg-white rounded-r-full -ml-4" 
                                 />
                               )}
                               {item.label}

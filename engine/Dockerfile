@@ -5,12 +5,13 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Builder ───────────────────────────────────────────────────────────────────
-FROM golang:1.24-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Install git + ca-certs (needed for go module downloads over HTTPS)
 RUN apk add --no-cache git ca-certificates tzdata
 
 ENV GOPROXY=https://proxy.golang.org,direct
+ENV GOTOOLCHAIN=auto
 
 WORKDIR /build
 

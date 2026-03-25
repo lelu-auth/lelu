@@ -16,7 +16,7 @@ export default function DocsPromptInjection() {
 
       <div className="space-y-12">
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Overview</h2>
+          <h2 id="overview" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Overview</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Prompt injection detection is a lightweight security layer that scans authorization requests for known jailbreak patterns and malicious instructions. It runs before policy evaluation and blocks suspicious requests immediately.
           </p>
@@ -49,7 +49,7 @@ export default function DocsPromptInjection() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Detection Patterns</h2>
+          <h2 id="detection-patterns" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Detection Patterns</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             The detector scans both the action field and all resource values for known injection patterns. All patterns are case-insensitive.
           </p>
@@ -131,7 +131,7 @@ export default function DocsPromptInjection() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Detection Response</h2>
+          <h2 id="detection-response" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Detection Response</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             When a prompt injection pattern is detected, the request is immediately denied with a security alert. The detection result includes the matched pattern and where it was found.
           </p>
@@ -163,7 +163,7 @@ export default function DocsPromptInjection() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">SDK Integration</h2>
+          <h2 id="sdk-integration" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">SDK Integration</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Prompt injection detection runs automatically on every authorization request. No additional configuration is required.
           </p>
@@ -208,7 +208,7 @@ const cleanResult = await lelu.agentAuthorize({
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Security Alerts</h2>
+          <h2 id="security-alerts" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Security Alerts</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Detected prompt injection attempts trigger security alerts that can be sent to incident response systems like PagerDuty, Slack, or email.
           </p>
@@ -232,7 +232,7 @@ INJECTION_RATE_LIMIT=10      # Max detections per minute per agent`}</pre>
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Monitoring & Metrics</h2>
+          <h2 id="monitoring-metrics" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Monitoring & Metrics</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Track prompt injection detection rates and patterns with Prometheus metrics.
           </p>
@@ -258,7 +258,7 @@ ai_agent_security_alerts_total{type, severity}`}</code></pre>
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Best Practices</h2>
+          <h2 id="best-practices" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Best Practices</h2>
           
           <div className="space-y-4">
             <div className="border-l-4 border-red-500 pl-4">
@@ -292,7 +292,7 @@ ai_agent_security_alerts_total{type, severity}`}</code></pre>
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Limitations</h2>
+          <h2 id="limitations" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Limitations</h2>
           
           <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
             <ul className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">

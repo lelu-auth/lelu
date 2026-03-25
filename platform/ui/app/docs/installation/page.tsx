@@ -56,7 +56,7 @@ export default function DocsInstallation() {
 
         {/* Step 1 - Choose Installation Method */}
         <section id="step-1">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2 id="choose-installation-method" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               1
             </span>
@@ -194,7 +194,7 @@ lelu audit-log`}
 
         {/* Step 2 */}
         <section id="step-2">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2 id="install-package" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               2
             </span>
@@ -262,7 +262,7 @@ lelu audit-log`}
 
         {/* Step 3 */}
         <section id="step-3">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2 id="cli-commands" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               3
             </span>
@@ -304,7 +304,7 @@ docker run -p 3002:3002 abenezer0923/lelu-platform:latest
           
           {/* TypeScript/Node.js */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">TypeScript/Node.js</h3>
+            <h3 id="typescript-cli" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">TypeScript/Node.js</h3>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -323,7 +323,7 @@ npx @lelu-auth/lelu policies set auth ./auth.rego`}
 
           {/* Python */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Python</h3>
+            <h3 id="python-cli" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Python</h3>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -340,7 +340,7 @@ lelu policies set auth ./auth.rego`}
 
           {/* Go */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Go</h3>
+            <h3 id="go-cli" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Go</h3>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -382,7 +382,7 @@ go build -o lelu
 
         {/* Step 4 */}
         <section id="step-4">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2 id="environment-variables" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               4
             </span>
@@ -395,7 +395,7 @@ go build -o lelu
           <div className="space-y-6">
             {/* Secret Key */}
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
+              <h3 id="engine-url" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">
                   1
                 </span>
@@ -423,7 +423,7 @@ go build -o lelu
 
             {/* API Key */}
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
+              <h3 id="api-key" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">
                   2
                 </span>
@@ -472,7 +472,7 @@ go build -o lelu
 
         {/* Step 5 */}
         <section id="step-5">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2 id="configure-client" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               5
             </span>
@@ -556,7 +556,7 @@ elif decision.allowed:
 
         {/* Step 6 */}
         <section id="step-6">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2 id="complete" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-green-600 text-white text-sm font-bold">
               ✓
             </span>

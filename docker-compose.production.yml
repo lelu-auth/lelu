@@ -6,14 +6,14 @@ name: lelu
 # Usage:
 #   docker-compose -f docker-compose.production.yml up -d
 #
-# Replace 'leluauth' with your actual Docker Hub username
+# All images are published to Docker Hub under the 'leluauth' organization
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
 
   # ── Lelu Authorization Engine ──────────────────────────────────────────────────
   engine:
-    image: leluauth/lelu-engine:latest  # TODO: Replace 'leluauth'
+    image: leluauth/lelu-engine:latest
     container_name: lelu-engine
     restart: unless-stopped
     ports:
@@ -108,7 +108,7 @@ services:
 
   # ── Lelu Control Plane ──────────────────────────────────────────────────────
   platform:
-    image: leluauth/lelu-platform:latest  # TODO: Replace 'leluauth'
+    image: leluauth/lelu-platform:latest
     container_name: lelu-platform
     restart: unless-stopped
     ports:
@@ -132,7 +132,7 @@ services:
 
   # ── Trace Explorer UI ──────────────────────────────────────────────────────
   ui:
-    image: leluauth/lelu-ui:latest  # TODO: Replace 'leluauth'
+    image: leluauth/lelu-ui:latest
     container_name: lelu-ui
     restart: unless-stopped
     ports:
@@ -156,7 +156,7 @@ services:
 
   # ── Lelu MCP Server ──────────────────────────────────────────────────────────
   mcp:
-    image: leluauth/lelu-mcp:latest  # TODO: Replace 'leluauth'
+    image: leluauth/lelu-mcp:latest
     container_name: lelu-mcp
     restart: unless-stopped
     ports:
