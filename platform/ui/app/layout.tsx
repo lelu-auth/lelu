@@ -6,11 +6,11 @@ import { Navigation } from "@/components/Navigation";
 
 export const metadata: Metadata = {
   title: {
-    default: "Lelu Engine",
-    template: "%s | Lelu Engine",
+    default: "Lelu - Authorization Engine for AI Agents",
+    template: "%s | Lelu",
   },
-  description: "Confidence-Aware Auth audit trail",
-  applicationName: "Lelu Engine",
+  description: "Authorization and security platform for AI agents. Control what your agents can do with confidence-aware gating, human oversight, and complete audit trails.",
+  applicationName: "Lelu",
   icons: {
     icon: "/logo.svg",
     shortcut: "/logo.svg",
@@ -53,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Lelu Engine
               </div>
               <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-zinc-500 justify-center">
+                <a href="/about" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">About</a>
                 <a href="/docs" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">Documentation</a>
                 <a href="https://github.com/lelu-auth/lelu" target="_blank" rel="noreferrer" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">GitHub</a>
                 <a href="https://x.com/LeluAuth" target="_blank" rel="noreferrer" className="hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">X (Twitter)</a>

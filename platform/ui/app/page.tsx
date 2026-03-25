@@ -94,12 +94,27 @@ export default function Home() {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-black to-zinc-600 dark:from-white dark:to-zinc-500 max-w-4xl">
-            The authorization layer <br className="hidden md:block" /> for AI Agents.
+            Authorization & Security <br className="hidden md:block" /> for AI Agents
           </h1>
 
           <p className="max-w-2xl text-lg md:text-xl text-zinc-600 dark:text-zinc-400">
-            Control what your agents can do. Lelu brings confidence-aware gating, interactive human-review, and tamper-proof auditing to your autonomous AI workflows.
+            Lelu helps companies safely deploy autonomous AI systems. Control what agents can do, route risky actions to humans, and maintain complete audit trails—all in real-time.
           </p>
+          
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-zinc-600 dark:text-zinc-400 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>For development teams building AI agents</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Open source & production-ready</span>
+            </div>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
             <Link href="/docs/quickstart" className="inline-flex items-center justify-center rounded-full bg-black px-8 py-3.5 text-sm font-medium text-white shadow-lg transition-transform hover:scale-105 hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200">
