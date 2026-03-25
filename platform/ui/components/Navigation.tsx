@@ -15,6 +15,16 @@ export function Navigation() {
   return (
     <div className="hidden md:flex items-center gap-1 text-sm font-medium">
       <a
+        href="/about"
+        className={`px-3 py-2 transition-colors rounded-md ${
+          isActive("/about")
+            ? "text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-white/10"
+            : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5"
+        }`}
+      >
+        About
+      </a>
+      <a
         href="/docs"
         className={`px-3 py-2 transition-colors rounded-md ${
           isActive("/docs")
