@@ -22,7 +22,7 @@ export default function DocsDocker() {
       <div className="space-y-12">
         {/* Available Images */}
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Available Docker Images</h2>
+          <h2 id="available-images" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Available Docker Images</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
@@ -113,11 +113,11 @@ export default function DocsDocker() {
 
         {/* Quick Start */}
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Quick Start</h2>
+          <h2 id="quick-start" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Quick Start</h2>
           
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">1. Pull Images</h3>
+              <h3 id="pull-images" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">1. Pull Images</h3>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -132,7 +132,7 @@ docker pull leluauth/lelu-mcp:latest`}
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">2. Download Compose File</h3>
+              <h3 id="download-compose" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">2. Download Compose File</h3>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -144,7 +144,7 @@ docker pull leluauth/lelu-mcp:latest`}
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">3. Start Services</h3>
+              <h3 id="start-services" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">3. Start Services</h3>
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -169,7 +169,7 @@ docker pull leluauth/lelu-mcp:latest`}
 
         {/* Environment Variables */}
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Environment Configuration</h2>
+          <h2 id="environment-configuration" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Environment Configuration</h2>
           
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Create a <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">.env</code> file to customize your deployment:
@@ -214,11 +214,11 @@ RISK_REVIEW_THRESHOLD_LOW=0.55`}
 
         {/* Production Deployment */}
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Production Deployment</h2>
+          <h2 id="production-deployment" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Production Deployment</h2>
           
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Resource Requirements</h3>
+              <h3 id="resource-requirements" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Resource Requirements</h3>
               <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
@@ -242,7 +242,7 @@ RISK_REVIEW_THRESHOLD_LOW=0.55`}
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Health Checks</h3>
+              <h3 id="health-checks" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Health Checks</h3>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
                 All containers include health checks. Monitor service status:
               </p>
@@ -261,7 +261,7 @@ docker-compose -f docker-compose.production.yml logs -f engine`}
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Backup & Persistence</h3>
+              <h3 id="backup-persistence" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Backup & Persistence</h3>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
                 Data is persisted in Docker volumes. Back up your data regularly:
               </p>
@@ -283,7 +283,7 @@ docker exec lelu-redis redis-cli BGSAVE`}
 
         {/* Troubleshooting */}
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Troubleshooting</h2>
+          <h2 id="troubleshooting" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Troubleshooting</h2>
           
           <div className="space-y-4">
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">

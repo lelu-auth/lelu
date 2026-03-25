@@ -21,22 +21,29 @@ jobs:
             context: .
             dockerfile: engine/Dockerfile
             image: lelu-engine
+            description: "Core authorization engine with policy evaluation"
           - name: platform
             context: platform
             dockerfile: platform/Dockerfile
             image: lelu-platform
+            description: "Control plane API for policies and audit logs"
           - name: ui
             context: platform/ui
             dockerfile: platform/ui/Dockerfile
             image: lelu-ui
+            description: "Web dashboard for monitoring and management"
           - name: mcp
             context: sdk/mcp
             dockerfile: sdk/mcp/Dockerfile
             image: lelu-mcp
+            description: "Model Context Protocol server"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -61,25 +68,34 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('docker.io/{0}/{1}', secrets.DOCKERHUB_USERNAME, matrix.image) || '' }}
+            leluauth/${{ matrix.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix={{branch}}-
+          labels: |
+            org.opencontainers.image.title=${{ matrix.image }}
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.vendor=Lelu
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          provenance: false
 
       - name: Image digest
-        run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+        run: |
+          echo "✅ ${{ matrix.name }} image pushed successfully"
+          echo "📦 Image: leluauth/${{ matrix.image }}"
+          echo "🔖 Tags: ${{ steps.meta.outputs.tags }}"
+          echo "🏗️  Platforms: linux/amd64, linux/arm64"

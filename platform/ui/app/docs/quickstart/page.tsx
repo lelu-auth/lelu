@@ -19,7 +19,7 @@ export default function DocsQuickStart() {
           <div className="relative flex gap-6">
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 z-10 ring-4 ring-white dark:ring-black">1</div>
             <div className="flex-1 pb-8">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Install and start Lelu</h2>
+              <h2 id="install-and-start" className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Install and start Lelu</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
                 The fastest way to get Lelu running is with our one-command setup. This installs the SDK and automatically starts all services with Docker.
               </p>
@@ -61,7 +61,7 @@ npx @lelu-auth/lelu init`}</code></pre>
           <div className="relative flex gap-6">
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 z-10 ring-4 ring-white dark:ring-black">2</div>
             <div className="flex-1 pb-8">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Call the API</h2>
+              <h2 id="call-the-api" className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Call the API</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
                 Use the agent authorization endpoint and include a confidence score. In this example, the agent is 85% confident it should delete an S3 object.
               </p>
@@ -92,7 +92,7 @@ npx @lelu-auth/lelu init`}</code></pre>
           <div className="relative flex gap-6">
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 z-10 ring-4 ring-white dark:ring-black">3</div>
             <div className="flex-1 pb-8">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Inspect the decision</h2>
+              <h2 id="inspect-the-decision" className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Inspect the decision</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
                 The engine evaluates the request against your Rego policies. If the confidence meets the threshold, it's allowed. Otherwise, it might require human review.
               </p>
@@ -120,7 +120,7 @@ npx @lelu-auth/lelu init`}</code></pre>
           <div className="relative flex gap-6">
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 z-10 ring-4 ring-white dark:ring-black">4</div>
             <div className="flex-1 pb-8">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">View audit logs and manage policies</h2>
+              <h2 id="view-audit-logs" className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">View audit logs and manage policies</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
                 Use the built-in CLI to view audit logs and manage policies directly from your terminal. The SDK was already installed in step 1.
               </p>
@@ -157,7 +157,7 @@ npx @lelu-auth/lelu policies set auth ./auth.rego`}</code></pre>
           <div className="relative flex gap-6">
             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 z-10 ring-4 ring-white dark:ring-black">5</div>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Use the SDK</h2>
+              <h2 id="use-the-sdk" className="text-xl font-semibold text-zinc-900 dark:text-white mb-3">Use the SDK</h2>
               <p className="text-zinc-600 dark:text-zinc-400 mb-4">
                 For production applications, use our official SDKs to integrate Lelu directly into your codebase.
               </p>

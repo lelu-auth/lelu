@@ -16,7 +16,7 @@ export default function DocsRiskAssessment() {
 
       <div className="space-y-12">
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Overview</h2>
+          <h2 id="overview" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Overview</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Risk assessment runs on every authorization request, calculating a risk score from 0 (no risk) to 1 (maximum risk). This score influences the final authorization decision alongside confidence gates and policy evaluation.
           </p>
@@ -33,7 +33,7 @@ export default function DocsRiskAssessment() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Risk Components</h2>
+          <h2 id="risk-components" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Risk Components</h2>
           
           <div className="space-y-6">
             <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
@@ -111,7 +111,7 @@ export default function DocsRiskAssessment() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Risk Bands & Thresholds</h2>
+          <h2 id="risk-bands" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Risk Bands & Thresholds</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Different action criticality levels have different risk thresholds. High-criticality actions require lower risk scores to be approved.
           </p>
@@ -155,7 +155,7 @@ export default function DocsRiskAssessment() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Example Calculations</h2>
+          <h2 id="example-calculations" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Example Calculations</h2>
           
           <div className="space-y-6">
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
@@ -218,7 +218,7 @@ export default function DocsRiskAssessment() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Configuration</h2>
+          <h2 id="configuration" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Configuration</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Risk thresholds can be customized via environment variables to match your organization's risk tolerance.
           </p>
@@ -251,7 +251,7 @@ RISK_CRITICALITY_MID_MIN=0.50`}</code></pre>
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Best Practices</h2>
+          <h2 id="best-practices" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Best Practices</h2>
           
           <div className="space-y-4">
             <div className="border-l-4 border-blue-500 pl-4">
