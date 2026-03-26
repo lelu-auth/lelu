@@ -5,7 +5,7 @@ services:
     env: docker
     dockerfilePath: ./engine/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     healthCheckPath: /healthz
     envVars:
       - key: LISTEN_ADDR
