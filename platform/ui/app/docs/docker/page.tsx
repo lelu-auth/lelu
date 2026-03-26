@@ -115,53 +115,125 @@ export default function DocsDocker() {
         <section>
           <h2 id="quick-start" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Quick Start</h2>
           
-          <div className="space-y-6">
-            <div>
-              <h3 id="pull-images" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">1. Pull Images</h3>
-              <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
-                <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-                  <span className="text-xs text-zinc-500 font-mono">terminal</span>
+          <div className="mb-6">
+            <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+              You can run Lelu using Docker in two ways:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Option 1: Build from Source (Recommended)</h3>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  Clone the repository and build Docker images locally. Best for development and customization.
+                </p>
+              </div>
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+                <h3 className="font-semibold text-zinc-900 dark:text-white mb-2">Option 2: Use Pre-built Images</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  Pull pre-built images from Docker Hub. Quick start for production deployments.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            {/* Option 1: Build from Source */}
+            <div className="border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6 bg-blue-50/50 dark:bg-blue-900/10">
+              <h3 className="text-xl font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-sm font-bold">1</span>
+                Build from Source
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">Step 1: Clone Repository</h4>
+                  <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                    <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                      <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                    </div>
+                    <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+{`git clone https://github.com/lelu-auth/lelu.git
+cd lelu`}
+                    </pre>
+                  </div>
                 </div>
-                <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-{`docker pull leluauth/lelu-engine:latest
-docker pull leluauth/lelu-platform:latest
-docker pull leluauth/lelu-ui:latest
-docker pull leluauth/lelu-mcp:latest`}
-                </pre>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">Step 2: Start Services</h4>
+                  <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                    <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                      <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                    </div>
+                    <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+{`# Build and start all services
+docker compose up -d --build
+
+# Or without building (if images exist)
+docker compose up -d`}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg p-3">
+                  <p className="text-sm text-blue-900 dark:text-blue-100">
+                    <strong>Note:</strong> The <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded font-mono">docker-compose.yml</code> file automatically builds images from local Dockerfiles in the repository.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div>
-              <h3 id="download-compose" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">2. Download Compose File</h3>
-              <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
-                <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-                  <span className="text-xs text-zinc-500 font-mono">terminal</span>
-                </div>
-                <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+            {/* Option 2: Pre-built Images */}
+            <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-600 text-white text-sm font-bold">2</span>
+                Use Pre-built Images
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white mb-2">Step 1: Download Production Compose File</h4>
+                  <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                    <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                      <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                    </div>
+                    <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
 {`curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.production.yml`}
-                </pre>
-              </div>
-            </div>
-
-            <div>
-              <h3 id="start-services" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">3. Start Services</h3>
-              <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
-                <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-                  <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                    </pre>
+                  </div>
                 </div>
-                <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-{`docker-compose -f docker-compose.production.yml up -d`}
-                </pre>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white mb-2">Step 2: Pull Images (Optional)</h4>
+                  <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                    <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                      <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                    </div>
+                    <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+{`docker compose -f docker-compose.production.yml pull`}
+                    </pre>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white mb-2">Step 3: Start Services</h4>
+                  <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
+                    <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                      <span className="text-xs text-zinc-500 font-mono">terminal</span>
+                    </div>
+                    <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
+{`docker compose -f docker-compose.production.yml up -d`}
+                    </pre>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="mt-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-4">
-            <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">Services Available</h4>
+            <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">✅ Services Available</h4>
             <div className="text-sm text-green-700 dark:text-green-400 space-y-1">
+              <div>• <strong>Web UI:</strong> <a href="http://localhost:3002" className="underline hover:text-green-900 dark:hover:text-green-200">http://localhost:3002</a></div>
               <div>• <strong>Engine API:</strong> http://localhost:8083</div>
               <div>• <strong>Platform API:</strong> http://localhost:9091</div>
-              <div>• <strong>Web UI:</strong> http://localhost:3002</div>
               <div>• <strong>MCP Server:</strong> http://localhost:3003</div>
             </div>
           </div>
