@@ -39,3 +39,6 @@ engine/.gomodcache/
 # OS
 .DS_Store
 Thumbs.db
+
+# Deployment docs (keep local only)
+DEPLOY_*.md

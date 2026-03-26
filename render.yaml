@@ -1,29 +1,33 @@
 services:
-  # Lelu UI - Web Dashboard (Main Entry Point)
+  # Lelu Engine - Authorization Engine (Main API for SDKs)
   - type: web
-    name: lelu-ui
+    name: lelu-engine
     env: docker
-    dockerfilePath: ./platform/ui/Dockerfile
-    dockerContext: ./platform/ui
+    dockerfilePath: ./engine/Dockerfile
+    dockerContext: .
     plan: starter
-    healthCheckPath: /
+    healthCheckPath: /healthz
     envVars:
-      - key: PLATFORM_URL
-        value: https://lelu-platform.onrender.com
-      - key: PLATFORM_API_KEY
-        generateValue: true
-      - key: LELU_ENGINE_URL
-        value: https://lelu-engine.onrender.com
-      - key: LELU_API_KEY
-        generateValue: true
-      - key: NODE_ENV
-        value: production
+      - key: LISTEN_ADDR
+        value: ":8080"
       - key: PORT
-        value: 3000
+        value: "8080"
+      - key: POLICY_PATH
+        value: /etc/lelu/auth.yaml
+      - key: REDIS_ADDR
+        fromService:
+          type: redis
+          name: lelu-redis
+          property: host
+      - key: JWT_SIGNING_KEY
+        generateValue: true
+      - key: API_KEY
+        generateValue: true
+      - key: LELU_MODE
+        value: enforce
 
 databases:
-  # PostgreSQL Database
-  - name: lelu-postgres
-    databaseName: lelu
-    user: lelu
+  # Redis for token store and queue
+  - name: lelu-redis
     plan: free
+    maxmemoryPolicy: allkeys-lru
