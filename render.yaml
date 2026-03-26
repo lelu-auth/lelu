@@ -1,0 +1,29 @@
+services:
+  # Lelu UI - Web Dashboard (Main Entry Point)
+  - type: web
+    name: lelu-ui
+    env: docker
+    dockerfilePath: ./platform/ui/Dockerfile
+    dockerContext: ./platform/ui
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: PLATFORM_URL
+        value: https://lelu-platform.onrender.com
+      - key: PLATFORM_API_KEY
+        generateValue: true
+      - key: LELU_ENGINE_URL
+        value: https://lelu-engine.onrender.com
+      - key: LELU_API_KEY
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+
+databases:
+  # PostgreSQL Database
+  - name: lelu-postgres
+    databaseName: lelu
+    user: lelu
+    plan: free
