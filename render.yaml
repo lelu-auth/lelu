@@ -30,4 +30,3 @@ databases:
   # Redis for token store and queue
   - name: lelu-redis
     plan: free
-    maxmemoryPolicy: allkeys-lru
