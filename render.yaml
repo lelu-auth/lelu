@@ -1,4 +1,10 @@
 services:
+  # Redis for token store and queue
+  - type: redis
+    name: lelu-redis
+    plan: free
+    ipAllowList: []
+
   # Lelu Engine - Authorization Engine (Main API for SDKs)
   - type: web
     name: lelu-engine
@@ -25,8 +31,3 @@ services:
         generateValue: true
       - key: LELU_MODE
         value: enforce
-
-databases:
-  # Redis for token store and queue
-  - name: lelu-redis
-    plan: free
