@@ -1,6 +1,6 @@
 {
   "name": "@lelu-auth/lelu",
-  "version": "0.2.5",
+  "version": "0.2.7",
   "description": "TypeScript SDK for Lelu — the authorization engine for autonomous AI agents",
   "author": "Abenezer Getachew",
   "homepage": "https://lelu-ai.com/",
@@ -38,8 +38,7 @@
   },
   "files": [
     "dist",
-    "scripts",
-    "ui-server"
+    "scripts"
   ],
   "scripts": {
     "build": "npm run build:sdk",
@@ -52,7 +51,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "npm run build:all"
+    "prepublishOnly": "npm run build:sdk"
   },
   "keywords": [
     "auth",

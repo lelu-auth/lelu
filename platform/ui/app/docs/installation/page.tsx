@@ -402,7 +402,7 @@ go build -o lelu
                 Lelu Engine URL
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                The URL where your Lelu Engine is running. This should point to your deployed Lelu Engine instance.
+                Use the hosted Lelu Engine for instant setup, or point to your self-hosted instance.
               </p>
               
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
@@ -410,7 +410,11 @@ go build -o lelu
                   <span className="text-xs text-zinc-500 font-mono">.env</span>
                 </div>
                 <pre className="p-4 font-mono text-sm text-zinc-300">
-                  LELU_ENGINE_URL=https://your-lelu-engine.example.com
+                  {`# Option 1: Use hosted engine (recommended)
+LELU_ENGINE_URL=https://lelu-engine.onrender.com
+
+# Option 2: Self-hosted
+# LELU_ENGINE_URL=https://your-lelu-engine.example.com`}
                 </pre>
                 <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
