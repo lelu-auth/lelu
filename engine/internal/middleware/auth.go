@@ -21,9 +21,9 @@ const (
 
 // AuthMiddleware validates API keys and injects tenant_id into request context
 type AuthMiddleware struct {
-	apiKeySvc      *apikeys.Service
-	requireAuth    bool
-	publicPaths    map[string]bool
+	apiKeySvc   *apikeys.Service
+	requireAuth bool
+	publicPaths map[string]bool
 }
 
 // AuthConfig configures the authentication middleware
@@ -146,7 +146,7 @@ func GetAPIKey(ctx context.Context) string {
 func writeJSONError(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write([]byte(`{"error":"` + message + `"}`))
+	_, _ = w.Write([]byte(`{"error":"` + message + `"}`))
 }
 
 
