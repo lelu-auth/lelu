@@ -20,11 +20,11 @@ const (
 	PrefixLive = "lelu_live_"
 	PrefixTest = "lelu_test_"
 	PrefixAnon = "lelu_anon_"
-	
+
 	// Redis key prefix for API key storage
 	redisKeyPrefix = "lelu:apikey:"
 	redisIPPrefix  = "lelu:ip:"
-	
+
 	// Default key length (random portion)
 	defaultKeyLength = 32
 )
@@ -288,9 +288,9 @@ func extractJSONField(jsonStr, field string) string {
 
 // IsValidKeyFormat checks if a string matches the API key format
 func IsValidKeyFormat(key string) bool {
-	return strings.HasPrefix(key, PrefixLive) || 
-	       strings.HasPrefix(key, PrefixTest) || 
-	       strings.HasPrefix(key, PrefixAnon)
+	return strings.HasPrefix(key, PrefixLive) ||
+		strings.HasPrefix(key, PrefixTest) ||
+		strings.HasPrefix(key, PrefixAnon)
 }
 
 // ExtractEnv returns the environment from an API key
