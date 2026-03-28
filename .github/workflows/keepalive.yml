@@ -1,0 +1,39 @@
+name: Keep Render Services Warm
+
+on:
+  schedule:
+    # Run every 10 minutes
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Engine Health Endpoint
+        run: |
+          echo "Pinging Lelu Engine..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://lelu-engine.onrender.com/healthz)
+          if [ $response -eq 200 ]; then
+            echo "✅ Engine is healthy (HTTP $response)"
+          else
+            echo "⚠️ Engine returned HTTP $response"
+            exit 1
+          fi
+      
+      - name: Ping Platform Health Endpoint
+        run: |
+          echo "Pinging Lelu Platform..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://lelu-platform.onrender.com/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Platform is healthy (HTTP $response)"
+          else
+            echo "⚠️ Platform returned HTTP $response"
+            # Don't fail if platform is down, engine is more critical
+          fi
+      
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "🚨 Keepalive check failed!"
+          echo "Services may be experiencing issues."

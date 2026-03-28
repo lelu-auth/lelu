@@ -386,42 +386,48 @@ go build -o lelu
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               4
             </span>
-            Set Environment Variables
+            Generate API Key & Set Environment Variables
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Create a <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">.env</code> file in the root of your project and add the following environment variables:
+            First, generate an API key to authenticate with the Lelu engine. Then create a <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">.env</code> file with your configuration.
           </p>
 
           <div className="space-y-6">
-            {/* Secret Key */}
+            {/* API Key Generation */}
             <div>
-              <h3 id="engine-url" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">
+              <h3 id="generate-api-key" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
+                <span className="flex items-center justify-center w-6 h-6 rounded bg-blue-600 text-white text-xs font-bold">
                   1
                 </span>
-                Lelu Engine URL
+                Generate API Key
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Use the hosted Lelu Engine for instant setup, or point to your self-hosted instance.
+                API keys authenticate your requests and identify your tenant. Choose one of the following methods:
               </p>
-              
-              <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
-                <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-                  <span className="text-xs text-zinc-500 font-mono">.env</span>
-                </div>
-                <pre className="p-4 font-mono text-sm text-zinc-300">
-                  {`# Option 1: Use hosted engine (recommended)
-LELU_ENGINE_URL=https://lelu-engine.onrender.com
 
-# Option 2: Self-hosted
-# LELU_ENGINE_URL=https://your-lelu-engine.example.com`}
-                </pre>
-                <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                  </svg>
-                </button>
+              {/* Method 1: PowerShell Script */}
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Method 1: PowerShell Script (Recommended for Self-Hosted)</h4>
+                <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
+                  <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
+                    <span className="text-xs text-zinc-500 font-mono">powershell</span>
+                  </div>
+                  <pre className="p-4 font-mono text-sm text-zinc-300">
+{`# Generate and store API key automatically
+./generate-api-key.ps1
+
+# Your key will be:
+# - Generated with secure random bytes
+# - Stored in Redis
+# - Added to your .env file automatically`}
+                  </pre>
+                  <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
