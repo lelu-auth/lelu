@@ -139,7 +139,6 @@ func (b *bucket) allow() bool {
 	return true
 }
 
-
 // AnonymousLimits describes stricter limits for anonymous beta keys
 type AnonymousLimits struct {
 	// RequestsPerDay is the max requests per day for anonymous keys
@@ -156,14 +155,14 @@ func (l *Limiter) AllowAuthAnonymous(tenantID string, limits AnonymousLimits) bo
 	if l == nil {
 		return true
 	}
-	
+
 	// Check per-minute limit
 	if limits.RequestsPerMinute > 0 {
 		if !l.getBucket(tenantID, "auth:minute", limits.RequestsPerMinute).allow() {
 			return false
 		}
 	}
-	
+
 	// Check daily limit
 	if limits.RequestsPerDay > 0 {
 		dayKey := fmt.Sprintf("%s:auth:day:%s", tenantID, time.Now().Format("2006-01-02"))
@@ -175,12 +174,12 @@ func (l *Limiter) AllowAuthAnonymous(tenantID string, limits AnonymousLimits) bo
 			l.buckets[dayKey] = b
 		}
 		l.mu.Unlock()
-		
+
 		if !b.allow() {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -189,11 +188,11 @@ func (l *Limiter) AllowMintAnonymous(tenantID string, limits AnonymousLimits) bo
 	if l == nil {
 		return true
 	}
-	
+
 	if limits.TokenMintsPerDay <= 0 {
 		return true
 	}
-	
+
 	// Check daily token mint limit
 	dayKey := fmt.Sprintf("%s:mint:day:%s", tenantID, time.Now().Format("2006-01-02"))
 	l.mu.Lock()
@@ -203,6 +202,6 @@ func (l *Limiter) AllowMintAnonymous(tenantID string, limits AnonymousLimits) bo
 		l.buckets[dayKey] = b
 	}
 	l.mu.Unlock()
-	
+
 	return b.allow()
 }
