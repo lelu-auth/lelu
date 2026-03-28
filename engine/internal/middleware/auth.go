@@ -39,11 +39,11 @@ func NewAuthMiddleware(cfg AuthConfig) *AuthMiddleware {
 	for _, path := range cfg.PublicPaths {
 		publicPaths[path] = true
 	}
-	
+
 	// Always allow health check and metrics
 	publicPaths["/healthz"] = true
 	publicPaths["/metrics"] = true
-	
+
 	return &AuthMiddleware{
 		apiKeySvc:   cfg.APIKeyService,
 		requireAuth: cfg.RequireAuth,
@@ -59,7 +59,7 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// Extract API key from Authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -71,25 +71,25 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// Parse Bearer token
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
 			writeJSONError(w, http.StatusUnauthorized, "invalid authorization header format")
 			return
 		}
-		
+
 		apiKey := parts[1]
-		
+
 		// Validate API key format
 		if !apikeys.IsValidKeyFormat(apiKey) {
 			writeJSONError(w, http.StatusUnauthorized, "invalid API key format")
 			return
 		}
-		
+
 		// Get client IP for anonymous key binding
 		clientIP := getClientIP(r)
-		
+
 		// For anonymous keys, bind to IP on first use
 		if apikeys.IsAnonymousKey(apiKey) {
 			if err := m.apiKeySvc.BindIPToKey(r.Context(), apiKey, clientIP); err != nil {
@@ -98,7 +98,7 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 				return
 			}
 		}
-		
+
 		// Validate API key and get tenant_id
 		tenantID, err := m.apiKeySvc.ValidateKey(r.Context(), apiKey)
 		if err != nil {
@@ -115,12 +115,12 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 			}
 			return
 		}
-		
+
 		// Inject tenant_id, api_key, and client_ip into context
 		ctx := context.WithValue(r.Context(), ContextKeyTenantID, tenantID)
 		ctx = context.WithValue(ctx, ContextKeyAPIKey, apiKey)
 		ctx = context.WithValue(ctx, ContextKeyClientIP, clientIP)
-		
+
 		// Continue with enriched context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -171,23 +171,23 @@ func getClientIP(r *http.Request) string {
 		ips := strings.Split(xff, ",")
 		return strings.TrimSpace(ips[0])
 	}
-	
+
 	// Check X-Real-IP header
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return xri
 	}
-	
+
 	// Check CF-Connecting-IP (Cloudflare)
 	if cfip := r.Header.Get("CF-Connecting-IP"); cfip != "" {
 		return cfip
 	}
-	
+
 	// Fallback to RemoteAddr
 	ip := r.RemoteAddr
 	// Remove port if present
 	if idx := strings.LastIndex(ip, ":"); idx != -1 {
 		ip = ip[:idx]
 	}
-	
+
 	return ip
 }

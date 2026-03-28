@@ -30,24 +30,24 @@ const (
 )
 
 var (
-	ErrInvalidKey    = errors.New("invalid API key format")
-	ErrKeyNotFound   = errors.New("API key not found")
-	ErrKeyExpired    = errors.New("API key has expired")
-	ErrKeyRevoked    = errors.New("API key has been revoked")
+	ErrInvalidKey  = errors.New("invalid API key format")
+	ErrKeyNotFound = errors.New("API key not found")
+	ErrKeyExpired  = errors.New("API key has expired")
+	ErrKeyRevoked  = errors.New("API key has been revoked")
 )
 
 // KeyMetadata contains information about an API key
 type KeyMetadata struct {
-	TenantID  string    `json:"tenant_id"`
-	KeyID     string    `json:"key_id"`
-	CreatedAt time.Time `json:"created_at"`
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-	Revoked   bool      `json:"revoked"`
-	Name      string    `json:"name,omitempty"`
-	Env       string    `json:"env"` // "live", "test", or "anon"
-	CreatedIP string    `json:"created_ip,omitempty"` // For anonymous keys
-	BoundIP   string    `json:"bound_ip,omitempty"`   // IP binding for anonymous keys
-	IsAnonymous bool    `json:"is_anonymous"`
+	TenantID    string     `json:"tenant_id"`
+	KeyID       string     `json:"key_id"`
+	CreatedAt   time.Time  `json:"created_at"`
+	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
+	Revoked     bool       `json:"revoked"`
+	Name        string     `json:"name,omitempty"`
+	Env         string     `json:"env"`                  // "live", "test", or "anon"
+	CreatedIP   string     `json:"created_ip,omitempty"` // For anonymous keys
+	BoundIP     string     `json:"bound_ip,omitempty"`   // IP binding for anonymous keys
+	IsAnonymous bool       `json:"is_anonymous"`
 }
 
 // Service manages API keys and tenant resolution
