@@ -7,6 +7,33 @@ export default function ApiKeysPage() {
         Learn how to generate, manage, and use API keys to authenticate with the Lelu Authorization Engine.
       </p>
 
+      <div className="not-prose mb-8">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2 mt-0">Get Your Free Beta API Key</h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                No registration required! Generate an anonymous API key instantly and start testing Lelu in under 60 seconds.
+              </p>
+              <a 
+                href="/beta" 
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors no-underline"
+              >
+                Generate Beta Key
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <h2>Overview</h2>
       <p>
         Lelu uses API keys for authentication. Each API key is associated with a tenant and environment (test or live).
@@ -31,11 +58,23 @@ export default function ApiKeysPage() {
         </div>
       </div>
 
-      <h2>Generating API Keys</h2>
+      <h2>Getting API Keys</h2>
 
-      <h3>Method 1: Using PowerShell Script (Recommended)</h3>
+      <h3>Option 1: Anonymous Beta Key (Recommended for Testing)</h3>
       <p>
-        We provide a convenient PowerShell script that generates a key and stores it in Redis automatically.
+        The fastest way to get started! Visit the <a href="/beta">beta page</a> to generate an anonymous API key instantly:
+      </p>
+      <ul>
+        <li>✅ No registration or email required</li>
+        <li>✅ Instant generation (under 5 seconds)</li>
+        <li>✅ 500 requests per day</li>
+        <li>✅ Perfect for testing and development</li>
+        <li>✅ 30-day expiration (extends with use)</li>
+      </ul>
+
+      <h3>Option 2: Using PowerShell Script (Self-Hosted)</h3>
+      <p>
+        For self-hosted deployments, we provide a convenient PowerShell script that generates a key and stores it in Redis automatically.
       </p>
 
       <div className="not-prose">
