@@ -1,0 +1,55 @@
+{{- if .Values.ui.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lelu-ui
+spec:
+  replicas: {{ .Values.ui.replicaCount }}
+  selector:
+    matchLabels:
+      app: lelu-ui
+  template:
+    metadata:
+      labels:
+        app: lelu-ui
+    spec:
+      containers:
+        - name: ui
+          image: {{ .Values.ui.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.ui.port }}
+          env:
+            - name: PLATFORM_URL
+              value: {{ .Values.ui.env.PLATFORM_URL | quote }}
+            - name: PLATFORM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lelu-secrets
+                  key: uiPlatformApiKey
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.ui.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.ui.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+{{ toYaml .Values.ui.resources | indent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lelu-ui
+spec:
+  selector:
+    app: lelu-ui
+  ports:
+    - port: {{ .Values.ui.servicePort }}
+      targetPort: {{ .Values.ui.port }}
+{{- end }}

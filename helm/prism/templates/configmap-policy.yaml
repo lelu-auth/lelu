@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lelu-policy
+  labels:
+    app.kubernetes.io/name: lelu
+    app.kubernetes.io/component: engine
+data:
+  auth.yaml: |
+    version: "1.0"
+    roles:
+      finance_manager:
+        allow: [view_invoices, approve_refunds]
+    agent_scopes:
+      invoice_bot:
+        inherits: finance_manager
+        constraints:
+          - require_human_approval_if_confidence_below: 0.9
+          - downgrade_to_read_only_if_confidence_below: 0.7
+          - hard_deny_if_confidence_below: 0.5
+        deny: [delete_invoices]

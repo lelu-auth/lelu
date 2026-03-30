@@ -1,0 +1,41 @@
+# Binaries
+bin/
+*.exe
+
+# Go
+engine/gen/
+coverage.out
+*.test
+
+# Node
+node_modules/
+**/node_modules/
+**/.next/
+*.tsbuildinfo
+sdk/typescript/node_modules/
+sdk/typescript/dist/
+platform/ui/node_modules/
+platform/ui/.next/
+
+# Python
+sdk/python/__pycache__/
+sdk/python/*.egg-info/
+sdk/python/.pytest_cache/
+sdk/python/.mypy_cache/
+__pycache__/
+*.pyc
+
+# Docker
+.docker/
+
+# Local caches
+engine/.gomodcache/
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

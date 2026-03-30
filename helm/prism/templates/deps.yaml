@@ -1,0 +1,79 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lelu-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lelu-redis
+  template:
+    metadata:
+      labels:
+        app: lelu-redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          args: ["redis-server", "--appendonly", "yes"]
+          ports:
+            - containerPort: {{ .Values.redis.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lelu-redis
+spec:
+  selector:
+    app: lelu-redis
+  ports:
+    - port: {{ .Values.redis.port }}
+      targetPort: {{ .Values.redis.port }}
+{{- end }}
+
+{{- if .Values.postgres.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lelu-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lelu-postgres
+  template:
+    metadata:
+      labels:
+        app: lelu-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.postgres.port }}
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.db | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lelu-secrets
+                  key: postgresPassword
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lelu-postgres
+spec:
+  selector:
+    app: lelu-postgres
+  ports:
+    - port: {{ .Values.postgres.port }}
+      targetPort: {{ .Values.postgres.port }}
+{{- end }}

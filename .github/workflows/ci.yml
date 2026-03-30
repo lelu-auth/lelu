@@ -1,0 +1,272 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Jobs
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ── Go Engine ───────────────────────────────────────────────────────────────
+  go-engine:
+    name: "Go Engine — test & lint"
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: engine/go.sum
+
+      - name: Download dependencies
+        working-directory: engine
+        run: go mod download
+
+      - name: Verify go.sum
+        working-directory: engine
+        run: go mod verify
+
+      - name: Build binary
+        working-directory: engine
+        run: go build ./...
+
+      - name: Run tests (race detector)
+        working-directory: engine
+        env:
+          REDIS_ADDR: "localhost:6379"
+        run: go test -race -v -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: engine/coverage.out
+          flags: go-engine
+        continue-on-error: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: engine
+          args: --timeout=5m
+
+  # ── Docker build check ───────────────────────────────────────────────────────
+  docker-build:
+    name: "Docker — build check"
+    runs-on: ubuntu-latest
+    needs: go-engine
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: engine/Dockerfile
+          push: false
+          tags: lelu/engine:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── TypeScript SDK ───────────────────────────────────────────────────────────
+  sdk-typescript:
+    name: "TypeScript SDK — test"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: sdk/typescript/package-lock.json
+
+      - name: Install dependencies
+        working-directory: sdk/typescript
+        run: npm ci
+
+      - name: Type-check
+        working-directory: sdk/typescript
+        run: npm run typecheck
+
+      - name: Run tests
+        working-directory: sdk/typescript
+        run: npm test
+
+      - name: Build SDK
+        working-directory: sdk/typescript
+        run: npm run build
+
+  # ── Python SDK ───────────────────────────────────────────────────────────────
+  sdk-python:
+    name: "Python SDK — test"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: sdk/python/pyproject.toml
+
+      - name: Install SDK + dev deps
+        working-directory: sdk/python
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        working-directory: sdk/python
+        run: pytest -v --tb=short
+
+      - name: Type-check (mypy)
+        working-directory: sdk/python
+        run: mypy auth_pe --ignore-missing-imports
+
+  # ── Go Platform (control plane) ─────────────────────────────────────────────
+  go-platform:
+    name: "Go Platform — build & lint"
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB:       lelu
+          POSTGRES_USER:     lelu
+          POSTGRES_PASSWORD: lelu-ci-secret
+        options: >-
+          --health-cmd "pg_isready -U lelu"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: platform/go.sum
+
+      - name: Download dependencies
+        working-directory: platform
+        run: go mod download
+
+      - name: Build binary
+        working-directory: platform
+        run: go build ./...
+
+      - name: Run tests
+        working-directory: platform
+        env:
+          DATABASE_URL: "postgres://lelu:lelu-ci-secret@localhost:5432/lelu?sslmode=disable"
+          PLATFORM_API_KEY: "ci-key"
+        run: go test -race -v ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: platform
+          args: --timeout=5m
+
+  # ── Next.js Trace Explorer UI ────────────────────────────────────────────────
+  ui-trace-explorer:
+    name: "UI — Trace Explorer type-check"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: platform/ui/package-lock.json
+
+      - name: Install dependencies
+        working-directory: platform/ui
+        run: npm install
+
+      - name: Type-check
+        working-directory: platform/ui
+        run: npx tsc --noEmit
+
+  # ── Helm chart validation ──────────────────────────────────────────────────
+  helm-chart:
+    name: "Helm — lint & template"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Helm lint
+        run: helm lint ./helm/prism
+
+      - name: Helm template (default values)
+        run: helm template prism ./helm/prism > /tmp/prism-default.yaml
+
+      - name: Helm template (production values)
+        run: helm template prism ./helm/prism -f ./helm/prism/values-production.yaml > /tmp/prism-prod.yaml
+
+  # ── Security scan ────────────────────────────────────────────────────────────
+  security:
+    name: "Security — Trivy scan"
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy (filesystem)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          severity: "CRITICAL"
+          exit-code: "1"
+          ignore-unfixed: true

@@ -1,0 +1,74 @@
+global:
+  imagePullPolicy: IfNotPresent
+
+secrets:
+  engine:
+    jwtSigningKey: change-me-in-production
+    cpHmacSecret: ""
+  platform:
+    apiKey: platform-dev-key
+    databaseUrl: postgres://lelu:lelu-dev-secret@lelu-postgres:5432/lelu?sslmode=disable
+  ui:
+    platformApiKey: platform-dev-key
+  postgres:
+    password: lelu-dev-secret
+
+engine:
+  enabled: true
+  replicaCount: 1
+  image: lelu/engine:local
+  port: 8080
+  servicePort: 8082
+  resources: {}
+  env:
+    POLICY_PATH: /etc/lelu/auth.yaml
+    REDIS_ADDR: lelu-redis:6379
+    CONTROL_PLANE_URL: ""
+    REGO_POLICY_PATH: ""
+    REGO_POLICY_QUERY: data.lelu.authz
+    INCIDENT_WEBHOOK_URL: ""
+    INCIDENT_WEBHOOK_TIMEOUT_MS: "2000"
+
+platform:
+  enabled: true
+  replicaCount: 1
+  image: lelu/platform:local
+  port: 9090
+  servicePort: 9090
+  resources: {}
+  env:
+    OIDC_ISSUER_URL: ""
+    OIDC_AUDIENCE: ""
+    SSO_TRUSTED_HEADER: ""
+    SSO_TRUSTED_EMAIL_DOMAIN: ""
+    EVIDENCE_SIGNING_KEY: ""
+
+ui:
+  enabled: true
+  replicaCount: 1
+  image: lelu/ui:local
+  port: 3000
+  servicePort: 3000
+  resources: {}
+  env:
+    PLATFORM_URL: http://lelu-platform:9090
+
+redis:
+  enabled: true
+  image: redis:7-alpine
+  port: 6379
+
+postgres:
+  enabled: true
+  image: postgres:15
+  port: 5432
+  db: lelu
+  user: lelu
+
+ingress:
+  enabled: false
+  className: ""
+  host: lelu.local
+  tls:
+    enabled: false
+    secretName: lelu-tls

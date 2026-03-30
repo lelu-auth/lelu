@@ -1,0 +1,81 @@
+{{- if .Values.engine.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prizm-engine
+spec:
+  replicas: {{ .Values.engine.replicaCount }}
+  selector:
+    matchLabels:
+      app: prizm-engine
+  template:
+    metadata:
+      labels:
+        app: prizm-engine
+    spec:
+      containers:
+        - name: engine
+          image: {{ .Values.engine.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.engine.port }}
+          env:
+            - name: LISTEN_ADDR
+              value: ":{{ .Values.engine.port }}"
+            - name: POLICY_PATH
+              value: {{ .Values.engine.env.POLICY_PATH | quote }}
+            - name: REDIS_ADDR
+              value: {{ .Values.engine.env.REDIS_ADDR | quote }}
+            - name: JWT_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lelu-secrets
+                  key: engineJwtSigningKey
+            - name: CONTROL_PLANE_URL
+              value: {{ .Values.engine.env.CONTROL_PLANE_URL | quote }}
+            - name: CP_HMAC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: lelu-secrets
+                  key: engineCpHmacSecret
+            - name: REGO_POLICY_PATH
+              value: {{ .Values.engine.env.REGO_POLICY_PATH | quote }}
+            - name: REGO_POLICY_QUERY
+              value: {{ .Values.engine.env.REGO_POLICY_QUERY | quote }}
+            - name: INCIDENT_WEBHOOK_URL
+              value: {{ .Values.engine.env.INCIDENT_WEBHOOK_URL | quote }}
+            - name: INCIDENT_WEBHOOK_TIMEOUT_MS
+              value: {{ .Values.engine.env.INCIDENT_WEBHOOK_TIMEOUT_MS | quote }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.engine.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.engine.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          resources:
+{{ toYaml .Values.engine.resources | indent 12 }}
+          volumeMounts:
+            - name: policy
+              mountPath: /etc/lelu
+      volumes:
+        - name: policy
+          configMap:
+            name: lelu-policy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prizm-engine
+spec:
+  selector:
+    app: prizm-engine
+  ports:
+    - port: {{ .Values.engine.servicePort }}
+      targetPort: {{ .Values.engine.port }}
+{{- end }}
