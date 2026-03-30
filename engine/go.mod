@@ -3,6 +3,7 @@ module github.com/lelu/engine
 go 1.23
 
 require (
+	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
