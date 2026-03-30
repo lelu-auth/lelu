@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,6 +25,10 @@ type ReputationManager struct {
 	accuracyGauge    prometheus.GaugeVec
 	calibrationGauge prometheus.GaugeVec
 	decisionCounter  prometheus.CounterVec
+	
+	// Shutdown handling
+	shutdown chan struct{}
+	done     chan struct{}
 }
 
 // AgentReputation represents an agent's reputation metrics
@@ -69,9 +74,11 @@ func DefaultReputationConfig() ReputationConfig {
 // NewReputationManager creates a new reputation manager
 func NewReputationManager(db *sql.DB, config ReputationConfig) *ReputationManager {
 	rm := &ReputationManager{
-		db:     db,
-		cache:  make(map[string]*AgentReputation),
-		config: config,
+		db:       db,
+		cache:    make(map[string]*AgentReputation),
+		config:   config,
+		shutdown: make(chan struct{}),
+		done:     make(chan struct{}),
 
 		reputationGauge: *promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -377,16 +384,49 @@ func (rm *ReputationManager) getConfidenceBucket(confidence float64) string {
 func (rm *ReputationManager) startReputationUpdater() {
 	ticker := time.NewTicker(rm.config.UpdateInterval)
 	defer ticker.Stop()
+	defer close(rm.done)
 
-	for range ticker.C {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		err := rm.UpdateAllReputations(ctx)
-		if err != nil {
-			// Log error but continue
-			fmt.Printf("Error updating reputations: %v\n", err)
+	for {
+		select {
+		case <-rm.shutdown:
+			// Shutdown requested, exit gracefully
+			return
+		case <-ticker.C:
+			// Check if database is still available
+			rm.mutex.RLock()
+			dbClosed := rm.db == nil
+			rm.mutex.RUnlock()
+			
+			if dbClosed {
+				// Database closed, stop updating
+				return
+			}
+			
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			err := rm.UpdateAllReputations(ctx)
+			if err != nil {
+				// Check if error is due to closed database
+				if strings.Contains(err.Error(), "database is closed") || 
+				   strings.Contains(err.Error(), "sql: database is closed") {
+					cancel()
+					return
+				}
+				// Log other errors but continue
+				fmt.Printf("Error updating reputations: %v\n", err)
+			}
+			cancel()
 		}
-		cancel()
 	}
+}
+
+// Shutdown gracefully stops the reputation updater
+func (rm *ReputationManager) Shutdown() {
+	close(rm.shutdown)
+	<-rm.done // Wait for updater to finish
+	
+	rm.mutex.Lock()
+	rm.db = nil // Mark database as closed
+	rm.mutex.Unlock()
 }
 
 // GetTopAgents returns agents with highest reputation scores
