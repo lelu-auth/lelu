@@ -140,7 +140,7 @@ func (s *Service) GenerateKey(ctx context.Context, tenantID, env, name string) (
 // ValidateKey checks if an API key is valid and returns the tenant ID
 func (s *Service) ValidateKey(ctx context.Context, apiKey string) (string, error) {
 	// Check key format
-	if !strings.HasPrefix(apiKey, PrefixLive) && !strings.HasPrefix(apiKey, PrefixTest) {
+	if !IsValidKeyFormat(apiKey) {
 		return "", ErrInvalidKey
 	}
 
@@ -214,16 +214,22 @@ func (s *Service) GetKeyMetadata(ctx context.Context, apiKey string) (*KeyMetada
 	revoked := extractJSONField(data, "revoked") == "true"
 	name := extractJSONField(data, "name")
 	env := extractJSONField(data, "env")
+	createdIP := extractJSONField(data, "created_ip")
+	boundIP := extractJSONField(data, "bound_ip")
+	isAnonymous := extractJSONField(data, "is_anonymous") == "true"
 
 	createdAt, _ := time.Parse(time.RFC3339, createdAtStr)
 
 	return &KeyMetadata{
-		TenantID:  tenantID,
-		KeyID:     keyID,
-		CreatedAt: createdAt,
-		Revoked:   revoked,
-		Name:      name,
-		Env:       env,
+		TenantID:    tenantID,
+		KeyID:       keyID,
+		CreatedAt:   createdAt,
+		Revoked:     revoked,
+		Name:        name,
+		Env:         env,
+		CreatedIP:   createdIP,
+		BoundIP:     boundIP,
+		IsAnonymous: isAnonymous,
 	}, nil
 }
 
@@ -288,9 +294,35 @@ func extractJSONField(jsonStr, field string) string {
 
 // IsValidKeyFormat checks if a string matches the API key format
 func IsValidKeyFormat(key string) bool {
-	return strings.HasPrefix(key, PrefixLive) ||
+	// Check for valid prefix
+	hasValidPrefix := strings.HasPrefix(key, PrefixLive) ||
 		strings.HasPrefix(key, PrefixTest) ||
 		strings.HasPrefix(key, PrefixAnon)
+	
+	if !hasValidPrefix {
+		return false
+	}
+	
+	// Check minimum length (prefix + at least some random data)
+	minLength := len(PrefixTest) + 8 // Shortest prefix + minimum random part
+	if len(key) < minLength {
+		return false
+	}
+	
+	// For anonymous keys, check format: lelu_anon_shortid_random
+	if strings.HasPrefix(key, PrefixAnon) {
+		parts := strings.Split(key, "_")
+		// Should have 4 parts: "lelu", "anon", "shortid", "random"
+		if len(parts) != 4 {
+			return false
+		}
+		// Short ID should be 8 chars, random should be 32 chars
+		if len(parts[2]) != 8 || len(parts[3]) != 32 {
+			return false
+		}
+	}
+	
+	return true
 }
 
 // ExtractEnv returns the environment from an API key
