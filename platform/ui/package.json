@@ -17,6 +17,7 @@
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",
+    "redis": "^4.7.0",
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
