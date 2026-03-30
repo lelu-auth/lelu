@@ -35,7 +35,15 @@ engine/.gomodcache/
 .env
 .env.*
 !.env.example
+!.env.vercel.example
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Deployment docs (keep local only)
+DEPLOY_*.md
+
+# Test scripts (keep local only)
+test-*.ps1
+test-*.sh

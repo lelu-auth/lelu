@@ -37,7 +37,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
           cache-dependency-path: engine/go.sum
 
       - name: Download dependencies
@@ -182,7 +182,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
           cache-dependency-path: platform/go.sum
 
       - name: Download dependencies
@@ -209,7 +209,7 @@ jobs:
 
   # ── Next.js Trace Explorer UI ────────────────────────────────────────────────
   ui-trace-explorer:
-    name: "UI — Trace Explorer type-check"
+    name: "UI — Trace Explorer build check"
     runs-on: ubuntu-latest
 
     steps:
@@ -224,11 +224,15 @@ jobs:
 
       - name: Install dependencies
         working-directory: platform/ui
-        run: npm install
+        run: npm ci
 
       - name: Type-check
         working-directory: platform/ui
         run: npx tsc --noEmit
+
+      - name: Build UI
+        working-directory: platform/ui
+        run: npm run build
 
   # ── Helm chart validation ──────────────────────────────────────────────────
   helm-chart:

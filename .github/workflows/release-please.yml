@@ -12,19 +12,68 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
+      - name: Resolve release-please token
+        id: rp_token
+        shell: bash
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          repo_api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+
+          token_can_access_repo() {
+            local token="$1"
+            local code
+            code=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer ${token}" \
+              -H "Accept: application/vnd.github+json" \
+              "${repo_api}")
+            [ "${code}" = "200" ]
+          }
+
+          if [ -n "$RELEASE_PLEASE_TOKEN" ]; then
+            if token_can_access_repo "$RELEASE_PLEASE_TOKEN"; then
+              echo "token=$RELEASE_PLEASE_TOKEN" >> "$GITHUB_OUTPUT"
+              echo "source=release_please_token" >> "$GITHUB_OUTPUT"
+              echo "Using RELEASE_PLEASE_TOKEN."
+              exit 0
+            fi
+            echo "::warning::RELEASE_PLEASE_TOKEN cannot access ${GITHUB_REPOSITORY}. Falling back to GITHUB_TOKEN."
+          fi
+
+          if token_can_access_repo "$GITHUB_TOKEN"; then
+            echo "token=$GITHUB_TOKEN" >> "$GITHUB_OUTPUT"
+            echo "source=github_token" >> "$GITHUB_OUTPUT"
+            echo "Using GITHUB_TOKEN."
+          else
+            echo "::error::Neither RELEASE_PLEASE_TOKEN nor GITHUB_TOKEN can access ${GITHUB_REPOSITORY}. Check PAT repo scope/owner and org SSO authorization."
+            exit 1
+          fi
+
+      - name: Require PAT for PR creation
+        if: ${{ steps.rp_token.outputs.source == 'github_token' }}
+        shell: bash
+        run: |
+          echo "::error::Release Please is using GITHUB_TOKEN. This repository/org currently blocks PR creation from GitHub Actions. Add RELEASE_PLEASE_TOKEN with repo contents+pull-requests write permissions (and org SSO authorization if required)."
+          exit 1
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.rp_token.outputs.token }}
           config-file: .github/release-please-config.json
           manifest-file: .github/release-please-manifest.json
 
-      # Publish TypeScript SDK to npm
       - name: Checkout
-        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         uses: actions/checkout@v4
 
+      # Publish TypeScript SDK to npm
       - name: Setup Node.js
         if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
         uses: actions/setup-node@v4
@@ -32,15 +81,38 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Resolve npm token
+        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
+        id: npm_token
+        shell: bash
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "token=$NPM_TOKEN" >> "$GITHUB_OUTPUT"
+          elif [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "token=$NODE_AUTH_TOKEN" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Missing npm secret. Set NPM_TOKEN (or NODE_AUTH_TOKEN) in repo Actions secrets."
+            exit 1
+          fi
+
+      - name: Configure npm auth
+        if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
+        shell: bash
+        run: |
+          printf "//registry.npmjs.org/:_authToken=%s\n" "${{ steps.npm_token.outputs.token }}" > "$HOME/.npmrc"
+
       - name: Build and Publish TypeScript SDK
         if: ${{ steps.release.outputs['sdk/typescript--release_created'] }}
         working-directory: sdk/typescript
         run: |
           npm ci
           npm run build
-          npm publish
+          npm publish --access public --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ steps.npm_token.outputs.token }}
 
       # Publish Python SDK to PyPI
       - name: Setup Python
@@ -49,13 +121,43 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Build and Publish Python SDK
+      - name: Build Python SDK
         if: ${{ steps.release.outputs['sdk/python--release_created'] }}
         working-directory: sdk/python
         run: |
           pip install build twine
           python -m build
-          twine upload dist/*
+
+      - name: Publish Python SDK to PyPI
+        if: ${{ steps.release.outputs['sdk/python--release_created'] }}
+        working-directory: sdk/python
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN || secrets.PYPI_TOKEN }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "::error::Missing PyPI secret. Set PYPI_API_TOKEN or PYPI_TOKEN in repo secrets."
+            exit 1
+          fi
+          twine upload dist/*
+
+      # Publish Go SDK (module release via git tag)
+      - name: Setup Go
+        if: ${{ steps.release.outputs['sdk/go--release_created'] }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Validate Go SDK module
+        if: ${{ steps.release.outputs['sdk/go--release_created'] }}
+        working-directory: sdk/go
+        run: |
+          go mod tidy
+          go test ./...
+          go list -m
+
+      - name: Go SDK publish note
+        if: ${{ steps.release.outputs['sdk/go--release_created'] }}
+        run: |
+          echo "Go module release created via tag: ${{ steps.release.outputs['sdk/go--tag_name'] }}"
+          echo "Consumers can install with: go get github.com/lelu-auth/lelu/sdk/go@latest"

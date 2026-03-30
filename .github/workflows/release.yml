@@ -43,10 +43,30 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker metadata
-        id: meta
+        id: ghcr_meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/prizm-engine
+          images: ghcr.io/${{ github.repository_owner }}/lelu-engine
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Log in to Docker Hub
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker Hub metadata
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        id: dockerhub_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/lelu-engine
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -56,14 +76,27 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build and push GHCR image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: engine/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.ghcr_meta.outputs.tags }}
+          labels: ${{ steps.ghcr_meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Docker Hub image
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: engine/Dockerfile
+          push: true
+          tags: ${{ steps.dockerhub_meta.outputs.tags }}
+          labels: ${{ steps.dockerhub_meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -83,25 +116,51 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Derive release version
+        id: npm_version
+        shell: bash
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set TypeScript SDK version
+        working-directory: sdk/typescript
+        run: npm version ${{ steps.npm_version.outputs.value }} --no-git-tag-version
+
       - name: Install & build
         working-directory: sdk/typescript
         run: npm ci && npm run build
+
+      - name: Resolve npm token
+        id: npm_token
+        shell: bash
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "token=$NPM_TOKEN" >> "$GITHUB_OUTPUT"
+          elif [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "token=$NODE_AUTH_TOKEN" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Missing npm secret. Set NPM_TOKEN (or NODE_AUTH_TOKEN) in repo Actions secrets."
+            exit 1
+          fi
+
+      - name: Configure npm auth
+        shell: bash
+        run: |
+          printf "//registry.npmjs.org/:_authToken=%s\n" "${{ steps.npm_token.outputs.token }}" > "$HOME/.npmrc"
 
       - name: Publish
         working-directory: sdk/typescript
         run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ steps.npm_token.outputs.token }}
 
   # ── Publish Python SDK to PyPI ───────────────────────────────────────────────
   pypi-publish:
     name: "PyPI — publish SDK"
     runs-on: ubuntu-latest
     needs: validate
-
-    environment:
-      name: pypi
-      url: https://pypi.org/p/prizm-engine
 
     steps:
       - uses: actions/checkout@v4
@@ -110,17 +169,44 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Derive release version
+        id: py_version
+        shell: bash
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set Python SDK version
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          version = "${{ steps.py_version.outputs.value }}"
+          path = Path("sdk/python/pyproject.toml")
+          text = path.read_text(encoding="utf-8")
+          updated = re.sub(r'(?m)^version\s*=\s*"[^"]+"$', f'version = "{version}"', text, count=1)
+          if updated == text:
+            raise SystemExit("Failed to update python SDK version in pyproject.toml")
+          path.write_text(updated, encoding="utf-8")
+          PY
+
       - name: Build distribution
         working-directory: sdk/python
         run: |
-          pip install build
+          pip install build twine
           python -m build
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: sdk/python/dist/
-          password: ${{ secrets.PYPI_API_TOKEN }}
+        working-directory: sdk/python
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN || secrets.PYPI_TOKEN }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "::error::Missing PyPI secret. Set PYPI_API_TOKEN or PYPI_TOKEN in repo secrets."
+            exit 1
+          fi
+          twine upload dist/*
 
   # ── GitHub Release ────────────────────────────────────────────────────────────
   github-release:

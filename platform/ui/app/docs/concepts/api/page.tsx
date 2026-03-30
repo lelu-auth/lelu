@@ -14,7 +14,7 @@ export default function DocsConceptApi() {
 
       <div className="space-y-12">
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Base URLs</h2>
+          <h2 id="base-urls" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Base URLs</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Use the Engine API for agent and human authorization decisions, and the Platform API for policy and audit management.
           </p>
@@ -43,7 +43,7 @@ export default function DocsConceptApi() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Authentication</h2>
+          <h2 id="authentication" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Authentication</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Most endpoints require <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">Authorization: Bearer &lt;API_KEY&gt;</code>. Health endpoints are public.
           </p>
@@ -67,7 +67,7 @@ export default function DocsConceptApi() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Engine Routes</h2>
+          <h2 id="engine-routes" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Engine Routes</h2>
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/10">
             <table className="w-full text-sm">
               <thead>
@@ -94,7 +94,7 @@ export default function DocsConceptApi() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Platform Routes</h2>
+          <h2 id="platform-routes" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Platform Routes</h2>
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/10">
             <table className="w-full text-sm">
               <thead>
@@ -119,7 +119,7 @@ export default function DocsConceptApi() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Standard Response Format</h2>
+          <h2 id="response-format" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Standard Response Format</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Lelu APIs return JSON responses. Successful requests return 2xx. Errors return 4xx/5xx with an error payload.
           </p>

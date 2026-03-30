@@ -14,7 +14,7 @@ export default function DocsConfidence() {
 
       <div className="space-y-12">
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">How it Works</h2>
+          <h2 id="how-it-works" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">How it Works</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             When an AI agent requests to perform an action, it must provide a confidence score between 0.0 and 1.0. This score represents the agent's certainty that the action is safe and correct.
           </p>
@@ -39,7 +39,7 @@ export default function DocsConfidence() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Defining Thresholds in Rego</h2>
+          <h2 id="defining-thresholds" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Defining Thresholds in Rego</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             You define the required confidence thresholds for different actions using Open Policy Agent (OPA) Rego policies. This allows you to set stricter requirements for sensitive actions.
           </p>
@@ -77,7 +77,7 @@ requires_approval {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Providing Confidence via SDK</h2>
+          <h2 id="providing-confidence" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Providing Confidence via SDK</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             When using the Lelu SDK, your AI agent must provide its confidence score when requesting authorization.
           </p>

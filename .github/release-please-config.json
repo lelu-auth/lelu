@@ -8,18 +8,25 @@
     },
     "sdk/typescript": {
       "component": "typescript-sdk",
-      "package-name": "lelu",
+      "package-name": "@lelu-auth/lelu",
       "changelog-path": "CHANGELOG.md",
       "release-type": "node"
     },
+    "sdk/go": {
+      "component": "go-sdk",
+      "package-name": "lelu-go-sdk",
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "go"
+    },
     "sdk/python": {
       "component": "python-sdk",
-      "package-name": "lelu",
+      "package-name": "lelu-agent-auth-sdk",
       "changelog-path": "CHANGELOG.md",
       "release-type": "python"
     }
   },
   "release-type": "simple",
+  "pull-request-title-pattern": "release${scope}: ${component} ${version}",
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "changelog-sections": [

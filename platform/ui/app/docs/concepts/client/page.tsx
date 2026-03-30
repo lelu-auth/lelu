@@ -34,7 +34,7 @@ export default function DocsConceptClient() {
               <span className="text-xs text-zinc-500 font-mono">Installation</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300">
-              {`npm install lelu`}
+              {`npm install @lelu-auth/lelu`}
             </pre>
           </div>
 
@@ -43,7 +43,7 @@ export default function DocsConceptClient() {
               <span className="text-xs text-zinc-500 font-mono">Usage</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              {`import { LeluClient } from "lelu";
+              {`import { LeluClient } from "@lelu-auth/lelu";
 
 const lelu = new LeluClient({
   baseUrl: "http://localhost:8082",
@@ -72,7 +72,7 @@ if (decision.allowed) {
               <span className="text-xs text-zinc-500 font-mono">Installation</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300">
-              {`pip install lelu`}
+              {`pip install lelu-agent-auth-sdk`}
             </pre>
           </div>
 
@@ -111,7 +111,7 @@ if decision.allowed:
               <span className="text-xs text-zinc-500 font-mono">Installation</span>
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-{`go get github.com/Abenezer0923/Lelu/sdk/go`}
+{`go get github.com/lelu-auth/lelu/sdk/go`}
             </pre>
           </div>
 
@@ -126,7 +126,7 @@ import (
   "context"
   "fmt"
 
-  lelu "github.com/Abenezer0923/Lelu/sdk/go"
+  lelu "github.com/lelu-auth/lelu/sdk/go"
 )
 
 func main() {

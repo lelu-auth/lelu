@@ -1,49 +1,57 @@
 {
-  "name": "lelu",
-  "version": "0.1.0",
+  "name": "@lelu-auth/lelu",
+  "version": "0.2.7",
   "description": "TypeScript SDK for Lelu — the authorization engine for autonomous AI agents",
-  "author": "Abenezer",
-  "homepage": "https://github.com/Abenezer0923/Lelu#readme",
+  "author": "Abenezer Getachew",
+  "homepage": "https://lelu-ai.com/",
   "bugs": {
-    "url": "https://github.com/Abenezer0923/Lelu/issues"
+    "url": "https://github.com/lelu-auth/lelu/issues"
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "bin": {
+    "lelu": "./scripts/lelu.js",
+    "lelu-init": "./scripts/init.js"
+  },
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./langchain": {
+      "types": "./dist/langchain/index.d.ts",
       "import": "./dist/langchain/index.mjs",
-      "require": "./dist/langchain/index.js",
-      "types": "./dist/langchain/index.d.ts"
+      "require": "./dist/langchain/index.js"
     },
     "./react": {
+      "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.mjs",
-      "require": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
+      "require": "./dist/react/index.js"
     },
     "./express": {
+      "types": "./dist/express/index.d.ts",
       "import": "./dist/express/index.mjs",
-      "require": "./dist/express/index.js",
-      "types": "./dist/express/index.d.ts"
+      "require": "./dist/express/index.js"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "scripts"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "npm run build:sdk",
+    "build:sdk": "tsup",
+    "build:ui": "node scripts/build-ui.js",
+    "build:all": "npm run build:sdk && npm run build:ui",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build:sdk"
   },
   "keywords": [
     "auth",
@@ -58,6 +66,7 @@
   "dependencies": {
     "@ai-sdk/react": "^3.0.99",
     "ai": "^6.0.97",
+    "better-sqlite3": "^11.0.0",
     "openai": "^6.22.0",
     "zod": "^3.23.0"
   },
@@ -74,6 +83,7 @@
     }
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
     "@types/express": "^4.17.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
@@ -89,7 +99,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Abenezer0923/Lelu.git",
+    "url": "git+https://github.com/lelu-auth/lelu.git",
     "directory": "sdk/typescript"
   }
 }

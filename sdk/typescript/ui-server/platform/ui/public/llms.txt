@@ -1,0 +1,25 @@
+# Lelu LLMs.txt
+
+Lelu is an authorization engine for AI agents with confidence-aware policy enforcement.
+
+## Canonical URLs
+- Docs: /docs
+- Introduction: /docs
+- Installation: /docs/installation
+- Architecture: /docs/concepts/architecture
+- API Reference: /docs/api/authorize
+- CLI & MCP: /docs/concepts/cli
+- Skills: /docs/concepts/skills
+
+## Product Summary
+- Rego-based authorization for human and AI actors.
+- Confidence-aware decisioning and human-in-the-loop approvals.
+- MCP tools for AI clients (Cursor, Claude Code, Open Code).
+- Audit trail and token lifecycle controls.
+
+## MCP Tools
+- lelu_agent_authorize
+- lelu_authorize
+- lelu_mint_token
+- lelu_revoke_token
+- lelu_health

@@ -12,7 +12,7 @@
     "url": "http://localhost:8082/openapi.json",
     "is_user_authenticated": false
   },
-  "logo_url": "https://raw.githubusercontent.com/Abenezer0923/Lelu/main/.github/assets/lelu-logo.png",
+  "logo_url": "https://raw.githubusercontent.com/lelu-auth/lelu/main/.github/assets/lelu-logo.png",
   "contact_email": "security@lelu.local",
-  "legal_info_url": "https://github.com/Abenezer0923/Lelu/blob/main/README.md"
+  "legal_info_url": "https://github.com/lelu-auth/lelu/blob/main/README.md"
 }

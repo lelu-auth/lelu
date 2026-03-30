@@ -14,7 +14,7 @@ export default function DocsConceptArchitecture() {
 
       <div className="space-y-12">
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">The Split Architecture</h2>
+          <h2 id="split-architecture" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">The Split Architecture</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             To ensure that authorization checks never block your AI agents, Lelu splits its responsibilities into two distinct services:
           </p>
@@ -43,7 +43,7 @@ export default function DocsConceptArchitecture() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Data Flow</h2>
+          <h2 id="data-flow" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Data Flow</h2>
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 p-6 overflow-hidden">
             <ol className="relative border-l-2 border-zinc-800 ml-3 space-y-6">
               <li className="pl-6">

@@ -1,14 +1,27 @@
 # Lelu Go SDK
 
-Go client for [Lelu](https://github.com/Abenezer0923/Lelu) — confidence-aware authorization for AI agents.
+Go client for [Lelu](https://github.com/lelu-auth/lelu) — confidence-aware authorization for AI agents.
+
+**Author:** Abenezer Getachew
 
 ## Install
 
 ```bash
-go get github.com/lelu/sdk/go
+go get github.com/lelu-auth/lelu/sdk/go
+```
+
+Or run the public Lelu engine image:
+
+```bash
+docker pull abenezer0923/lelu-engine:latest
+docker run --rm -p 8083:8080 abenezer0923/lelu-engine:latest
 ```
 
 ## Quick Start
+
+### Option 1: Use Hosted Engine (Recommended)
+
+Connect to the hosted Lelu engine for instant setup:
 
 ```go
 package main
@@ -18,13 +31,13 @@ import (
 	"fmt"
 	"log"
 
-	lelu "github.com/lelu/sdk/go"
+	lelu "github.com/lelu-auth/lelu/sdk/go"
 )
 
 func main() {
 	ctx := context.Background()
 	client := lelu.NewClient(lelu.ClientConfig{
-		BaseURL: "http://localhost:8080",
+		BaseURL: "https://lelu-engine.onrender.com",
 		APIKey:  "lelu-dev-key",
 	})
 
@@ -40,6 +53,35 @@ func main() {
 
 	fmt.Println("allowed:", decision.Allowed, "reason:", decision.Reason)
 }
+```
+
+### Option 2: Run Locally
+
+For development, you can run the engine locally:
+
+```go
+package main
+
+import (
+	"context"
+	lelu "github.com/lelu-auth/lelu/sdk/go"
+)
+
+func main() {
+	ctx := context.Background()
+	client := lelu.NewClient(lelu.ClientConfig{
+		BaseURL: "http://localhost:8080",
+		APIKey:  "lelu-dev-key",
+	})
+	
+	// ... rest of your code
+}
+```
+
+Start the local engine with Docker:
+
+```bash
+docker compose up -d
 ```
 
 ## API
