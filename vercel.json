@@ -1,6 +1,0 @@
-{
-  "buildCommand": "npm run build --prefix platform/ui",
-  "installCommand": "npm install --prefix platform/ui", 
-  "devCommand": "npm run dev --prefix platform/ui",
-  "outputDirectory": "platform/ui/.next"
-}
