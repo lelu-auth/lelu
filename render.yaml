@@ -1,0 +1,33 @@
+services:
+  # Redis for token store and queue
+  - type: redis
+    name: lelu-redis
+    plan: free
+    ipAllowList: []
+
+  # Lelu Engine - Authorization Engine (Main API for SDKs)
+  - type: web
+    name: lelu-engine
+    env: docker
+    dockerfilePath: ./engine/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: LISTEN_ADDR
+        value: ":8080"
+      - key: PORT
+        value: "8080"
+      - key: POLICY_PATH
+        value: /etc/lelu/auth.yaml
+      - key: REDIS_ADDR
+        fromService:
+          type: redis
+          name: lelu-redis
+          property: host
+      - key: JWT_SIGNING_KEY
+        generateValue: true
+      - key: API_KEY
+        value: ""
+      - key: LELU_MODE
+        value: enforce

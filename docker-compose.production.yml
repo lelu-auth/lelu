@@ -1,0 +1,191 @@
+name: lelu
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Production Docker Compose - Uses Published Images from Docker Hub
+# 
+# Usage:
+#   docker-compose -f docker-compose.production.yml up -d
+#
+# All images are published to Docker Hub under the 'leluauth' organization
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Lelu Authorization Engine ──────────────────────────────────────────────────
+  engine:
+    image: leluauth/lelu-engine:latest
+    container_name: lelu-engine
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    environment:
+      LISTEN_ADDR:       ":8080"
+      POLICY_PATH:       "/etc/lelu/auth.yaml"
+      REDIS_ADDR:        "redis:6379"
+      JWT_SIGNING_KEY:   "${JWT_SIGNING_KEY:-change-me-in-production}"
+      CONTROL_PLANE_URL: "${CONTROL_PLANE_URL:-}"
+      CP_HMAC_SECRET:    "${CP_HMAC_SECRET:-}"
+      API_KEY:           "${API_KEY}"
+      LELU_MODE:         "${LELU_MODE:-enforce}"
+      INCIDENT_WEBHOOK_URL: "${INCIDENT_WEBHOOK_URL:-}"
+      INCIDENT_WEBHOOK_TIMEOUT_MS: "${INCIDENT_WEBHOOK_TIMEOUT_MS:-2000}"
+      INCIDENT_WEBHOOK_SLACK_MODE: "${INCIDENT_WEBHOOK_SLACK_MODE:-}"
+      INCIDENT_WEBHOOK_TEAMS_MODE: "${INCIDENT_WEBHOOK_TEAMS_MODE:-}"
+      INCIDENT_WEBHOOK_PAGERDUTY_MODE: "${INCIDENT_WEBHOOK_PAGERDUTY_MODE:-}"
+      PAGERDUTY_ROUTING_KEY: "${PAGERDUTY_ROUTING_KEY:-}"
+      LELU_ENGINE_PUBLIC_URL: "${LELU_ENGINE_PUBLIC_URL:-}"
+      TENANT_AUTH_RATE_LIMIT: "${TENANT_AUTH_RATE_LIMIT:-0}"
+      TENANT_MINT_RATE_LIMIT: "${TENANT_MINT_RATE_LIMIT:-0}"
+      FALLBACK_REDIS_MODE: "${FALLBACK_REDIS_MODE:-closed}"
+      FALLBACK_CP_MODE: "${FALLBACK_CP_MODE:-closed}"
+      RISK_ALLOW_THRESHOLD_LOW: "${RISK_ALLOW_THRESHOLD_LOW:-0.30}"
+      RISK_REVIEW_THRESHOLD_LOW: "${RISK_REVIEW_THRESHOLD_LOW:-0.55}"
+      RISK_READONLY_THRESHOLD_LOW: "${RISK_READONLY_THRESHOLD_LOW:-0.75}"
+      RISK_ALLOW_THRESHOLD_MID: "${RISK_ALLOW_THRESHOLD_MID:-0.15}"
+      RISK_REVIEW_THRESHOLD_MID: "${RISK_REVIEW_THRESHOLD_MID:-0.35}"
+      RISK_READONLY_THRESHOLD_MID: "${RISK_READONLY_THRESHOLD_MID:-0.55}"
+      RISK_ALLOW_THRESHOLD_HIGH: "${RISK_ALLOW_THRESHOLD_HIGH:-0.08}"
+      RISK_REVIEW_THRESHOLD_HIGH: "${RISK_REVIEW_THRESHOLD_HIGH:-0.22}"
+      RISK_READONLY_THRESHOLD_HIGH: "${RISK_READONLY_THRESHOLD_HIGH:-0.40}"
+      RISK_CRITICALITY_MID_MIN: "${RISK_CRITICALITY_MID_MIN:-0.50}"
+      RISK_CRITICALITY_HIGH_MIN: "${RISK_CRITICALITY_HIGH_MIN:-0.80}"
+    volumes:
+      - ./config:/etc/lelu:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - lelu
+
+  # ── Redis — JIT token store & human-review queue ────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: lelu-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - lelu
+
+  # ── PostgreSQL — control plane store ─────────────────────────────────────────
+  postgres:
+    image: postgres:15
+    container_name: lelu-postgres
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB:       lelu
+      POSTGRES_USER:     lelu
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "lelu"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - lelu
+
+  # ── Lelu Control Plane ──────────────────────────────────────────────────────
+  platform:
+    image: leluauth/lelu-platform:latest
+    container_name: lelu-platform
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    environment:
+      LISTEN_ADDR:      ":9090"
+      DATABASE_URL:     "postgres://lelu:${POSTGRES_PASSWORD}@postgres:5432/lelu?sslmode=disable"
+      PLATFORM_API_KEY: "${PLATFORM_API_KEY}"
+      EVIDENCE_SIGNING_KEY: "${EVIDENCE_SIGNING_KEY:-}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - lelu
+
+  # ── Trace Explorer UI ──────────────────────────────────────────────────────
+  ui:
+    image: leluauth/lelu-ui:latest
+    container_name: lelu-ui
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      PLATFORM_URL:     "http://platform:9090"
+      PLATFORM_API_KEY: "${PLATFORM_API_KEY}"
+      LELU_ENGINE_URL:  "http://engine:8080"
+      LELU_API_KEY:     "${API_KEY}"
+    depends_on:
+      platform:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - lelu
+
+  # ── Lelu MCP Server ──────────────────────────────────────────────────────────
+  mcp:
+    image: leluauth/lelu-mcp:latest
+    container_name: lelu-mcp
+    restart: unless-stopped
+    ports:
+      - "3003:3001"
+    environment:
+      MCP_TRANSPORT:       "http"
+      MCP_PORT:            "3001"
+      LELU_ENGINE_URL:     "http://engine:8080"
+      LELU_API_KEY:        "${API_KEY}"
+    depends_on:
+      engine:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - lelu
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Volumes & Networks
+# ─────────────────────────────────────────────────────────────────────────────
+
+volumes:
+  redis-data:
+  postgres-data:
+
+networks:
+  lelu:
+    driver: bridge

@@ -16,7 +16,7 @@ secrets:
 engine:
   enabled: true
   replicaCount: 2
-  image: ghcr.io/abenezer0923/prizm-engine:latest
+  image: ghcr.io/lelu-auth/lelu-engine:latest
   resources:
     requests:
       cpu: 100m
@@ -36,7 +36,7 @@ engine:
 platform:
   enabled: true
   replicaCount: 2
-  image: ghcr.io/abenezer0923/lelu-platform:latest
+  image: ghcr.io/lelu-auth/lelu-platform:latest
   resources:
     requests:
       cpu: 150m
@@ -54,7 +54,7 @@ platform:
 ui:
   enabled: true
   replicaCount: 2
-  image: ghcr.io/abenezer0923/lelu-ui:latest
+  image: ghcr.io/lelu-auth/lelu-ui:latest
   resources:
     requests:
       cpu: 100m

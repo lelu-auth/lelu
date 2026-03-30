@@ -2,16 +2,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prizm-engine
+  name: lelu-engine
 spec:
   replicas: {{ .Values.engine.replicaCount }}
   selector:
     matchLabels:
-      app: prizm-engine
+      app: lelu-engine
   template:
     metadata:
       labels:
-        app: prizm-engine
+        app: lelu-engine
     spec:
       containers:
         - name: engine
@@ -71,10 +71,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prizm-engine
+  name: lelu-engine
 spec:
   selector:
-    app: prizm-engine
+    app: lelu-engine
   ports:
     - port: {{ .Values.engine.servicePort }}
       targetPort: {{ .Values.engine.port }}

@@ -20,7 +20,7 @@ export default function DocsIntegrationsNextjs() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">terminal</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300">{`npm install lelu`}</pre>
+            <pre className="p-4 font-mono text-sm text-zinc-300">{`npm install @lelu-auth/lelu`}</pre>
           </div>
         </section>
 
@@ -32,7 +32,7 @@ export default function DocsIntegrationsNextjs() {
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">app/api/agent-action/route.ts</span>
             </div>
-            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { LeluClient } from "lelu";
+            <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { LeluClient } from "@lelu-auth/lelu";
 import { NextResponse } from "next/server";
 
 const lelu = new LeluClient({
