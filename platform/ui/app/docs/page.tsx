@@ -36,6 +36,75 @@ export default function DocsPage() {
         </p>
       </div>
 
+      {/* Generate API Key CTA */}
+      <div className="mb-16 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-2 border-indigo-200 dark:border-indigo-800/50 rounded-2xl p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 blur-3xl"></div>
+        <div className="relative z-10">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shrink-0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Get Your Free API Key</h2>
+              <p className="text-base text-zinc-600 dark:text-zinc-400 mb-4">
+                Start testing Lelu instantly with no signup required. Generate an anonymous API key and get 500 requests per day.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a 
+                  href="/api-key" 
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  Generate API Key
+                </a>
+                <a 
+                  href="/docs/quickstart" 
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg font-semibold border-2 border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                >
+                  View Quickstart
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-indigo-200 dark:border-indigo-800/50">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                <span className="text-lg">⚡</span>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-zinc-900 dark:text-white">Instant Access</div>
+                <div className="text-xs text-zinc-600 dark:text-zinc-400">No email required</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <span className="text-lg">🔒</span>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-zinc-900 dark:text-white">Privacy First</div>
+                <div className="text-xs text-zinc-600 dark:text-zinc-400">Completely anonymous</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <span className="text-lg">🎯</span>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-zinc-900 dark:text-white">500 Requests/Day</div>
+                <div className="text-xs text-zinc-600 dark:text-zinc-400">Perfect for testing</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <h2 id="features" className="text-3xl font-bold text-zinc-900 dark:text-white mb-3">Features</h2>
       <p className="text-base text-zinc-600 dark:text-zinc-400 mb-8 leading-relaxed">
         Lelu includes the core building blocks needed to govern AI actions in production, with simple defaults for development and stronger controls for enterprise workloads.
