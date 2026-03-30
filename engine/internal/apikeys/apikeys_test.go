@@ -250,9 +250,9 @@ func TestGenerateAnonymousKey(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name      string
-		ip        string
-		wantErr   bool
+		name    string
+		ip      string
+		wantErr bool
 	}{
 		{
 			name:    "valid IP",
@@ -289,17 +289,21 @@ func TestGenerateAnonymousKey(t *testing.T) {
 			// Verify key structure: lelu_anon_{8chars}_{32chars}
 			parts := strings.Split(apiKey, "_")
 			if len(parts) != 4 {
-				t.Errorf("Expected 4 parts in anonymous key, got %d", len(parts))
+				t.Errorf("Expected 4 parts in anonymous key, got %d: %s", len(parts), apiKey)
 			}
 
-			shortID := parts[2]
-			if len(shortID) != 8 {
-				t.Errorf("Expected 8-char short ID, got %d chars", len(shortID))
+			if len(parts) >= 3 {
+				shortID := parts[2]
+				if len(shortID) != 8 {
+					t.Errorf("Expected 8-char short ID, got %d chars: %s", len(shortID), shortID)
+				}
 			}
 
-			randomPart := parts[3]
-			if len(randomPart) != 32 {
-				t.Errorf("Expected 32-char random part, got %d chars", len(randomPart))
+			if len(parts) >= 4 {
+				randomPart := parts[3]
+				if len(randomPart) != 32 {
+					t.Errorf("Expected 32-char random part, got %d chars: %s", len(randomPart), randomPart)
+				}
 			}
 
 			// Verify metadata
@@ -316,9 +320,12 @@ func TestGenerateAnonymousKey(t *testing.T) {
 				t.Errorf("Expected created_ip %s, got %s", tt.ip, metadata.CreatedIP)
 			}
 
-			expectedTenantID := "anon_" + shortID
-			if metadata.TenantID != expectedTenantID {
-				t.Errorf("Expected tenant_id %s, got %s", expectedTenantID, metadata.TenantID)
+			if len(parts) >= 3 {
+				shortID := parts[2]
+				expectedTenantID := "anon_" + shortID
+				if metadata.TenantID != expectedTenantID {
+					t.Errorf("Expected tenant_id %s, got %s", expectedTenantID, metadata.TenantID)
+				}
 			}
 		})
 	}
@@ -487,13 +494,15 @@ func TestIsValidKeyFormat(t *testing.T) {
 		key   string
 		valid bool
 	}{
-		{"lelu_test_abc123", true},
-		{"lelu_live_xyz789", true},
-		{"lelu_anon_short_random", true},
+		{"lelu_test_abc123defghijklmnop", true},
+		{"lelu_live_xyz789abcdefghijklm", true},
+		{"lelu_anon_12345678_abcdefghijklmnopqrstuvwxyz12", true},
 		{"invalid_key", false},
 		{"lelu_invalid_abc", false},
 		{"", false},
 		{"lelu_test_", false},
+		{"lelu_test_short", false}, // Too short
+		{"lelu_anon_short_random", false}, // Wrong format for anon key
 	}
 
 	for _, tt := range tests {
