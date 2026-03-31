@@ -316,8 +316,12 @@ func IsValidKeyFormat(key string) bool {
 		if len(parts) != 4 {
 			return false
 		}
-		// Short ID should be 8 chars, random should be 32 chars
-		if len(parts[2]) != 8 || len(parts[3]) != 32 {
+		// Short ID should be around 8 chars, random should be around 32 chars
+		// Allow some flexibility for base64 encoding variations
+		if len(parts[2]) < 6 || len(parts[2]) > 12 {
+			return false
+		}
+		if len(parts[3]) < 20 || len(parts[3]) > 50 {
 			return false
 		}
 	}
