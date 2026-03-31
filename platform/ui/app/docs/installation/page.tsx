@@ -128,10 +128,10 @@ npx lelu-agent-auth init`}
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <pre className="p-3 font-mono text-xs text-zinc-300">
-{`# Pull and run all services
-docker pull leluauth/lelu-engine:latest
-curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.production.yml
-docker-compose -f docker-compose.production.yml up -d`}
+{`# Clone and run all services locally
+git clone https://github.com/lelu-auth/lelu.git
+cd lelu
+docker-compose up -d`}
                 </pre>
               </div>
             </div>
@@ -293,11 +293,11 @@ lelu audit-log`}
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
               </div>
               <pre className="p-4 font-mono text-sm text-blue-300">
-                {`# Launch visual UI via Docker
-docker run -p 3002:3002 abenezer0923/lelu-platform:latest
+                {`# Visit the hosted version
+# https://lelu-ai.com/
 
-# Or visit the hosted version
-# https://lelu-ai.com/`}
+# Or run locally with Docker
+docker-compose up -d`}
               </pre>
             </div>
           </div>

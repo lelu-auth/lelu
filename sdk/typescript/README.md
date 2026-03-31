@@ -31,13 +31,6 @@ http://localhost:3002/audit
 
 This command clones/updates the Lelu stack in `~/.lelu-stack` and runs `docker compose up -d --build`.
 
-Or run the public Lelu engine image:
-
-```bash
-docker pull abenezer0923/lelu-engine:latest
-docker run --rm -p 8083:8080 abenezer0923/lelu-engine:latest
-```
-
 ## Docker Support
 
 Lelu works in Dockerized apps.
