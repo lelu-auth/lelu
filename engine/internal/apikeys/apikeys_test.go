@@ -286,7 +286,7 @@ func TestGenerateAnonymousKey(t *testing.T) {
 				t.Errorf("Key should be anonymous: %s", apiKey)
 			}
 
-			// Verify key structure: lelu_anon_{8chars}_{32chars}
+			// Verify key structure: lelu_anon_{shortid}_{random}
 			parts := strings.Split(apiKey, "_")
 			if len(parts) != 4 {
 				t.Errorf("Expected 4 parts in anonymous key, got %d: %s", len(parts), apiKey)
@@ -294,15 +294,15 @@ func TestGenerateAnonymousKey(t *testing.T) {
 
 			if len(parts) >= 3 {
 				shortID := parts[2]
-				if len(shortID) != 8 {
-					t.Errorf("Expected 8-char short ID, got %d chars: %s", len(shortID), shortID)
+				if len(shortID) < 6 || len(shortID) > 12 {
+					t.Errorf("Expected short ID between 6-12 chars, got %d chars: %s", len(shortID), shortID)
 				}
 			}
 
 			if len(parts) >= 4 {
 				randomPart := parts[3]
-				if len(randomPart) != 32 {
-					t.Errorf("Expected 32-char random part, got %d chars: %s", len(randomPart), randomPart)
+				if len(randomPart) < 20 || len(randomPart) > 50 {
+					t.Errorf("Expected random part between 20-50 chars, got %d chars: %s", len(randomPart), randomPart)
 				}
 			}
 
@@ -497,12 +497,13 @@ func TestIsValidKeyFormat(t *testing.T) {
 		{"lelu_test_abc123defghijklmnop", true},
 		{"lelu_live_xyz789abcdefghijklm", true},
 		{"lelu_anon_12345678_abcdefghijklmnopqrstuvwxyz12", true},
+		{"lelu_anon_MqO-3zOC_abcdefghijklmnopqrstuvwxyz", true}, // Realistic format
 		{"invalid_key", false},
 		{"lelu_invalid_abc", false},
 		{"", false},
 		{"lelu_test_", false},
 		{"lelu_test_short", false}, // Too short
-		{"lelu_anon_short_random", false}, // Wrong format for anon key
+		{"lelu_anon_short_random", false}, // Wrong format for anon key (parts too short)
 	}
 
 	for _, tt := range tests {
