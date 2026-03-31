@@ -15,10 +15,10 @@ export default function DocsInstallation() {
   ];
 
   const packageCommands: Record<typeof packageTab, string> = {
-    npm: "npm install @lelu-auth/lelu",
-    pnpm: "pnpm add @lelu-auth/lelu",
-    yarn: "yarn add @lelu-auth/lelu",
-    bun: "bun add @lelu-auth/lelu",
+    npm: "npm install lelu-agent-auth",
+    pnpm: "pnpm add lelu-agent-auth",
+    yarn: "yarn add lelu-agent-auth",
+    bun: "bun add lelu-agent-auth",
   };
 
   return (
@@ -89,8 +89,8 @@ export default function DocsInstallation() {
                     <span className="text-xs text-zinc-500 font-mono">terminal</span>
                   </div>
                   <pre className="p-3 font-mono text-sm text-zinc-300">
-{`npm install @lelu-auth/lelu
-npx @lelu-auth/lelu init`}
+{`npm install lelu-agent-auth
+npx lelu-agent-auth init`}
                   </pre>
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
@@ -156,7 +156,7 @@ docker-compose -f docker-compose.production.yml up -d`}
                 </div>
                 <pre className="p-3 font-mono text-xs text-zinc-300">
 {`# TypeScript/JavaScript
-npm install @lelu-auth/lelu
+npm install lelu-agent-auth
 npx lelu audit-log
 
 # Python

@@ -12,7 +12,7 @@ Lelu provides confidence-aware access control, human-in-the-loop approvals, and 
 ## Installation
 
 ```bash
-npm install @lelu-auth/lelu
+npm install lelu-agent-auth
 ```
 
 ## Start Dashboard (Localhost)
@@ -20,7 +20,7 @@ npm install @lelu-auth/lelu
 After installing the package, start the local dashboard stack with one command:
 
 ```bash
-npx @lelu-auth/lelu dashboard
+npx lelu-agent-auth dashboard
 ```
 
 Then open:
@@ -61,7 +61,7 @@ LELU_BASE_URL=http://host.docker.internal:8083
 Connect to the hosted Lelu engine for instant setup:
 
 ```typescript
-import { createClient } from "@lelu-auth/lelu";
+import { createClient } from "lelu-agent-auth";
 
 // Initialize with hosted engine
 const lelu = createClient({ 
@@ -92,7 +92,7 @@ async function runAgent() {
 For development, you can run the engine locally:
 
 ```typescript
-import { createClient } from "@lelu-auth/lelu";
+import { createClient } from "lelu-agent-auth";
 
 // Initialize with local engine
 const lelu = createClient({ 
@@ -103,7 +103,7 @@ const lelu = createClient({
 Start the local engine:
 
 ```bash
-npx @lelu-auth/lelu dashboard
+npx lelu-agent-auth dashboard
 ```
 
 Then open: `http://localhost:3002/audit`
