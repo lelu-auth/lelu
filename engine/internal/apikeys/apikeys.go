@@ -331,8 +331,8 @@ func IsValidKeyFormat(key string) bool {
 	// For anonymous keys, check format: lelu_anon_shortid_random
 	if strings.HasPrefix(key, PrefixAnon) {
 		parts := strings.Split(key, "_")
-		// Should have 4 parts: "lelu", "anon", "shortid", "random"
-		if len(parts) != 4 {
+		// Should have 4-5 parts: "lelu", "anon", "shortid", "random" (and possibly empty string from trailing _)
+		if len(parts) < 4 || len(parts) > 5 {
 			return false
 		}
 		// Short ID should be around 8 chars, random should be around 32 chars
