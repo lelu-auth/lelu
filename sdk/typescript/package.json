@@ -1,6 +1,6 @@
 {
   "name": "lelu-agent-auth",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "TypeScript SDK for Lelu — the authorization engine for autonomous AI agents",
   "author": "Abenezer Getachew",
   "contributors": [
@@ -62,13 +62,26 @@
     "prepublishOnly": "npm run build:sdk"
   },
   "keywords": [
-    "auth",
-    "authorization",
+    "ai",
+    "agent",
+    "agents",
     "ai-agents",
-    "langchain",
+    "authorization",
+    "auth",
+    "authentication",
+    "security",
     "permissions",
+    "access-control",
+    "langchain",
+    "openai",
+    "llm",
+    "confidence",
+    "confidence-aware",
     "jwt",
-    "confidence-aware"
+    "policy",
+    "rego",
+    "autonomous-agents",
+    "agentic"
   ],
   "license": "MIT",
   "dependencies": {
