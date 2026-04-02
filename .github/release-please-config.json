@@ -8,7 +8,7 @@
     },
     "sdk/typescript": {
       "component": "typescript-sdk",
-      "package-name": "@lelu-auth/lelu",
+      "package-name": "lelu-agent-auth",
       "changelog-path": "CHANGELOG.md",
       "release-type": "node"
     },

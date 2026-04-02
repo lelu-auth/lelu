@@ -140,7 +140,7 @@ func (s *Service) GenerateKey(ctx context.Context, tenantID, env, name string) (
 // ValidateKey checks if an API key is valid and returns the tenant ID
 func (s *Service) ValidateKey(ctx context.Context, apiKey string) (string, error) {
 	// Check key format
-	if !strings.HasPrefix(apiKey, PrefixLive) && !strings.HasPrefix(apiKey, PrefixTest) {
+	if !IsValidKeyFormat(apiKey) {
 		return "", ErrInvalidKey
 	}
 
@@ -214,16 +214,22 @@ func (s *Service) GetKeyMetadata(ctx context.Context, apiKey string) (*KeyMetada
 	revoked := extractJSONField(data, "revoked") == "true"
 	name := extractJSONField(data, "name")
 	env := extractJSONField(data, "env")
+	createdIP := extractJSONField(data, "created_ip")
+	boundIP := extractJSONField(data, "bound_ip")
+	isAnonymous := extractJSONField(data, "is_anonymous") == "true"
 
 	createdAt, _ := time.Parse(time.RFC3339, createdAtStr)
 
 	return &KeyMetadata{
-		TenantID:  tenantID,
-		KeyID:     keyID,
-		CreatedAt: createdAt,
-		Revoked:   revoked,
-		Name:      name,
-		Env:       env,
+		TenantID:    tenantID,
+		KeyID:       keyID,
+		CreatedAt:   createdAt,
+		Revoked:     revoked,
+		Name:        name,
+		Env:         env,
+		CreatedIP:   createdIP,
+		BoundIP:     boundIP,
+		IsAnonymous: isAnonymous,
 	}, nil
 }
 
@@ -270,27 +276,76 @@ func redisKey(apiKey string) string {
 
 // Simple JSON field extractor (avoids full JSON parsing for performance)
 func extractJSONField(jsonStr, field string) string {
-	// Look for "field":"value"
-	searchStr := `"` + field + `":"`
+	// Look for "field":"value" or "field":true/false
+	searchStr := `"` + field + `":`
 	start := strings.Index(jsonStr, searchStr)
 	if start == -1 {
 		return ""
 	}
 	start += len(searchStr)
 
-	end := strings.Index(jsonStr[start:], `"`)
-	if end == -1 {
+	// Skip whitespace
+	for start < len(jsonStr) && (jsonStr[start] == ' ' || jsonStr[start] == '\t') {
+		start++
+	}
+
+	if start >= len(jsonStr) {
 		return ""
 	}
 
-	return jsonStr[start : start+end]
+	// Check if value is a string (starts with ")
+	if jsonStr[start] == '"' {
+		start++ // Skip opening quote
+		end := strings.Index(jsonStr[start:], `"`)
+		if end == -1 {
+			return ""
+		}
+		return jsonStr[start : start+end]
+	}
+
+	// Check if value is a boolean or number
+	end := start
+	for end < len(jsonStr) && jsonStr[end] != ',' && jsonStr[end] != '}' && jsonStr[end] != ' ' {
+		end++
+	}
+	return jsonStr[start:end]
 }
 
 // IsValidKeyFormat checks if a string matches the API key format
 func IsValidKeyFormat(key string) bool {
-	return strings.HasPrefix(key, PrefixLive) ||
+	// Check for valid prefix
+	hasValidPrefix := strings.HasPrefix(key, PrefixLive) ||
 		strings.HasPrefix(key, PrefixTest) ||
 		strings.HasPrefix(key, PrefixAnon)
+	
+	if !hasValidPrefix {
+		return false
+	}
+	
+	// Check minimum length (prefix + at least some random data)
+	minLength := len(PrefixTest) + 8 // Shortest prefix + minimum random part
+	if len(key) < minLength {
+		return false
+	}
+	
+	// For anonymous keys, check format: lelu_anon_shortid_random
+	if strings.HasPrefix(key, PrefixAnon) {
+		parts := strings.Split(key, "_")
+		// Should have 4-5 parts: "lelu", "anon", "shortid", "random" (and possibly empty string from trailing _)
+		if len(parts) < 4 || len(parts) > 5 {
+			return false
+		}
+		// Short ID should be around 8 chars, random should be around 32 chars
+		// Allow some flexibility for base64 encoding variations
+		if len(parts[2]) < 6 || len(parts[2]) > 12 {
+			return false
+		}
+		if len(parts[3]) < 20 || len(parts[3]) > 50 {
+			return false
+		}
+	}
+	
+	return true
 }
 
 // ExtractEnv returns the environment from an API key
@@ -318,19 +373,27 @@ func (s *Service) GenerateAnonymousKey(ctx context.Context, createdIP string) (s
 		return "", err
 	}
 
-	// Generate 8-character short ID
+	// Generate 8-character short ID (remove underscores and hyphens from base64)
 	shortIDBytes := make([]byte, 6)
 	if _, err := rand.Read(shortIDBytes); err != nil {
 		return "", fmt.Errorf("failed to generate short ID: %w", err)
 	}
-	shortID := base64.RawURLEncoding.EncodeToString(shortIDBytes)[:8]
+	shortID := strings.ReplaceAll(base64.RawURLEncoding.EncodeToString(shortIDBytes), "_", "")
+	shortID = strings.ReplaceAll(shortID, "-", "")
+	if len(shortID) > 8 {
+		shortID = shortID[:8]
+	}
 
-	// Generate 32-character random part
+	// Generate 32-character random part (remove underscores and hyphens from base64)
 	randomBytes := make([]byte, 24)
 	if _, err := rand.Read(randomBytes); err != nil {
 		return "", fmt.Errorf("failed to generate random key: %w", err)
 	}
-	randomPart := base64.RawURLEncoding.EncodeToString(randomBytes)[:32]
+	randomPart := strings.ReplaceAll(base64.RawURLEncoding.EncodeToString(randomBytes), "_", "")
+	randomPart = strings.ReplaceAll(randomPart, "-", "")
+	if len(randomPart) > 32 {
+		randomPart = randomPart[:32]
+	}
 
 	apiKey := fmt.Sprintf("%s%s_%s", PrefixAnon, shortID, randomPart)
 	tenantID := fmt.Sprintf("anon_%s", shortID)

@@ -15,10 +15,10 @@ export default function DocsInstallation() {
   ];
 
   const packageCommands: Record<typeof packageTab, string> = {
-    npm: "npm install @lelu-auth/lelu",
-    pnpm: "pnpm add @lelu-auth/lelu",
-    yarn: "yarn add @lelu-auth/lelu",
-    bun: "bun add @lelu-auth/lelu",
+    npm: "npm install lelu-agent-auth",
+    pnpm: "pnpm add lelu-agent-auth",
+    yarn: "yarn add lelu-agent-auth",
+    bun: "bun add lelu-agent-auth",
   };
 
   return (
@@ -89,8 +89,8 @@ export default function DocsInstallation() {
                     <span className="text-xs text-zinc-500 font-mono">terminal</span>
                   </div>
                   <pre className="p-3 font-mono text-sm text-zinc-300">
-{`npm install @lelu-auth/lelu
-npx @lelu-auth/lelu init`}
+{`npm install lelu-agent-auth
+npx lelu-agent-auth init`}
                   </pre>
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
@@ -128,10 +128,10 @@ npx @lelu-auth/lelu init`}
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <pre className="p-3 font-mono text-xs text-zinc-300">
-{`# Pull and run all services
-docker pull leluauth/lelu-engine:latest
-curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.production.yml
-docker-compose -f docker-compose.production.yml up -d`}
+{`# Clone and run all services locally
+git clone https://github.com/lelu-auth/lelu.git
+cd lelu
+docker-compose up -d`}
                 </pre>
               </div>
             </div>
@@ -156,7 +156,7 @@ docker-compose -f docker-compose.production.yml up -d`}
                 </div>
                 <pre className="p-3 font-mono text-xs text-zinc-300">
 {`# TypeScript/JavaScript
-npm install @lelu-auth/lelu
+npm install lelu-agent-auth
 npx lelu audit-log
 
 # Python
@@ -293,11 +293,11 @@ lelu audit-log`}
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
               </div>
               <pre className="p-4 font-mono text-sm text-blue-300">
-                {`# Launch visual UI via Docker
-docker run -p 3002:3002 abenezer0923/lelu-platform:latest
+                {`# Visit the hosted version
+# https://lelu-ai.com/
 
-# Or visit the hosted version
-# https://lelu-ai.com/`}
+# Or run locally with Docker
+docker-compose up -d`}
               </pre>
             </div>
           </div>

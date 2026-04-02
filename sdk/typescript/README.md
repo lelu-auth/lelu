@@ -1,17 +1,22 @@
-[![Lelu logo](https://lelu-ai.com/logo.svg)](https://lelu-ai.com/)
+<div align="center">
+  <img src="https://lelu-ai.com/logo.svg" alt="Lelu logo" width="120" />
+</div>
 
 # Lelu
 
 The TypeScript SDK for Lelu — the confidence-aware authorization engine for autonomous AI agents.
 
-**Author:** Abenezer Getachew
+> **Package Renamed:** If you're looking for `@lelu-auth/lelu`, this is the new package name. Simply install `lelu-agent-auth` instead. [Migration guide](https://github.com/lelu-auth/lelu/blob/main/NPM_MIGRATION_STRATEGY.md)
+
+**Author:** Abenezer Getachew  
+**Contributors:** [Abenezer Getachew](https://github.com/Abenezer0923)
 
 Lelu provides confidence-aware access control, human-in-the-loop approvals, and SOC 2-ready audit trails for your autonomous agents.
 
 ## Installation
 
 ```bash
-npm install @lelu-auth/lelu
+npm install lelu-agent-auth
 ```
 
 ## Start Dashboard (Localhost)
@@ -19,7 +24,7 @@ npm install @lelu-auth/lelu
 After installing the package, start the local dashboard stack with one command:
 
 ```bash
-npx @lelu-auth/lelu dashboard
+npx lelu-agent-auth dashboard
 ```
 
 Then open:
@@ -29,13 +34,6 @@ http://localhost:3002/audit
 ```
 
 This command clones/updates the Lelu stack in `~/.lelu-stack` and runs `docker compose up -d --build`.
-
-Or run the public Lelu engine image:
-
-```bash
-docker pull abenezer0923/lelu-engine:latest
-docker run --rm -p 8083:8080 abenezer0923/lelu-engine:latest
-```
 
 ## Docker Support
 
@@ -57,41 +55,50 @@ LELU_BASE_URL=http://host.docker.internal:8083
 
 ### Option 1: Use Hosted Engine (Recommended)
 
-Connect to the hosted Lelu engine for instant setup:
+Connect to the hosted Lelu engine for instant setup with an API key:
 
 ```typescript
-import { createClient } from "@lelu-auth/lelu";
+import { createClient } from "lelu-agent-auth";
 
-// Initialize with hosted engine
+// Initialize with hosted engine and API key
 const lelu = createClient({ 
-  baseUrl: "https://lelu-engine.onrender.com"
+  baseUrl: "https://lelu-engine.onrender.com",
+  apiKey: process.env.LELU_API_KEY  // Get your key from the dashboard
 });
 
 // Authorize an agent action
 async function runAgent() {
-  const { allowed, reason } = await lelu.agentAuthorize({
-    agentId: "agent-123",
-    action: "read_database",
-    resource: "users_table",
+  const decision = await lelu.agentAuthorize({
+    actor: "billing-agent",
+    action: "refund:process",
+    resource: { orderId: "12345" },
     context: {
-      confidence: 0.95
+      confidence: 0.85
     }
   });
 
-  if (allowed) {
-    console.log("Action permitted!");
+  if (decision.allowed) {
+    console.log("✅ Action permitted!");
   } else {
-    console.log("Action denied:", reason);
+    console.log("❌ Action denied:", decision.reason);
+    if (decision.requiresHumanReview) {
+      console.log("⏳ Queued for human review");
+    }
   }
 }
 ```
+
+**Get Your API Key:**
+1. Visit the [Lelu Dashboard](https://lelu-engine.onrender.com)
+2. Generate a beta API key (free, no signup required)
+3. Set it as `LELU_API_KEY` environment variable
 
 ### Option 2: Run Locally
 
 For development, you can run the engine locally:
 
 ```typescript
-import { createClient } from "@lelu-auth/lelu";
+import { createClient } from "lelu-agent-auth";
 
 // Initialize with local engine
 const lelu = createClient({ 
@@ -102,7 +109,7 @@ const lelu = createClient({
 Start the local engine:
 
 ```bash
-npx @lelu-auth/lelu dashboard
+npx lelu-agent-auth dashboard
 ```
 
 Then open: `http://localhost:3002/audit`

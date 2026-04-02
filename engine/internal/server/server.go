@@ -290,6 +290,13 @@ func New(
 	}
 }
 
+// Shutdown gracefully shuts down the handler and its components
+func (h *Handler) Shutdown() {
+	if h.reputationMgr != nil {
+		h.reputationMgr.Shutdown()
+	}
+}
+
 // RegisterRoutes attaches all engine endpoints to mux.
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/authorize", h.handleAuthorize)
@@ -1461,10 +1468,46 @@ func (h *Handler) handleFallbackStatus(w http.ResponseWriter, _ *http.Request) {
 // ─── Health ───────────────────────────────────────────────────────────────────
 
 func (h *Handler) handleHealth(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	status := http.StatusOK
+	deps := map[string]any{}
+
+	if h.tokenSvc != nil {
+		if err := h.tokenSvc.HealthCheck(ctx); err != nil {
+			deps["redis"] = map[string]any{"status": "unhealthy", "error": err.Error()}
+			status = http.StatusServiceUnavailable
+		} else {
+			deps["redis"] = map[string]any{"status": "ok"}
+		}
+	}
+
+	if h.queue != nil {
+		if err := h.queue.HealthCheck(ctx); err != nil {
+			deps["queue"] = map[string]any{"status": "unhealthy", "error": err.Error()}
+			status = http.StatusServiceUnavailable
+		} else {
+			deps["queue"] = map[string]any{"status": "ok"}
+		}
+	}
+
+	if h.fallback != nil {
+		deps["fallback"] = h.fallback.Status()
+	}
+
+	payload := map[string]any{
 		"status":  "ok",
 		"service": "lelu-engine",
-	})
+	}
+	if len(deps) > 0 {
+		payload["dependencies"] = deps
+	}
+	if status != http.StatusOK {
+		payload["status"] = "degraded"
+	}
+
+	writeJSON(w, status, payload)
 }
 
 // ─── HTTP Server constructor ─────────────────────────────────────────────────
