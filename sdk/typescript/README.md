@@ -6,6 +6,8 @@
 
 The TypeScript SDK for Lelu — the confidence-aware authorization engine for autonomous AI agents.
 
+> **Package Renamed:** If you're looking for `@lelu-auth/lelu`, this is the new package name. Simply install `lelu-agent-auth` instead. [Migration guide](https://github.com/lelu-auth/lelu/blob/main/NPM_MIGRATION_STRATEGY.md)
+
 **Author:** Abenezer Getachew  
 **Contributors:** [Abenezer Getachew](https://github.com/Abenezer0923)
 
@@ -53,34 +55,43 @@ LELU_BASE_URL=http://host.docker.internal:8083
 
 ### Option 1: Use Hosted Engine (Recommended)
 
-Connect to the hosted Lelu engine for instant setup:
+Connect to the hosted Lelu engine for instant setup with an API key:
 
 ```typescript
 import { createClient } from "lelu-agent-auth";
 
-// Initialize with hosted engine
+// Initialize with hosted engine and API key
 const lelu = createClient({ 
-  baseUrl: "https://lelu-engine.onrender.com"
+  baseUrl: "https://lelu-engine.onrender.com",
+  apiKey: process.env.LELU_API_KEY  // Get your key from the dashboard
 });
 
 // Authorize an agent action
 async function runAgent() {
-  const { allowed, reason } = await lelu.agentAuthorize({
-    agentId: "agent-123",
-    action: "read_database",
-    resource: "users_table",
+  const decision = await lelu.agentAuthorize({
+    actor: "billing-agent",
+    action: "refund:process",
+    resource: { orderId: "12345" },
     context: {
-      confidence: 0.95
+      confidence: 0.85
     }
   });
 
-  if (allowed) {
-    console.log("Action permitted!");
+  if (decision.allowed) {
+    console.log("✅ Action permitted!");
   } else {
-    console.log("Action denied:", reason);
+    console.log("❌ Action denied:", decision.reason);
+    if (decision.requiresHumanReview) {
+      console.log("⏳ Queued for human review");
+    }
   }
 }
 ```
+
+**Get Your API Key:**
+1. Visit the [Lelu Dashboard](https://lelu-engine.onrender.com)
+2. Generate a beta API key (free, no signup required)
+3. Set it as `LELU_API_KEY` environment variable
 
 ### Option 2: Run Locally
 
