@@ -2,19 +2,13 @@
 
 Python client for [Lelu](https://github.com/lelu-auth/lelu) — the confidence-aware authorization engine for autonomous AI agents.
 
-**Author:** Abenezer Getachew
+**Author:** Abenezer Getachew  
+**Maintainer:** [Abenezer Getachew](https://github.com/Abenezer0923)
 
 ## Installation
 
 ```bash
 pip install lelu-agent-auth-sdk
-```
-
-Or run the public Lelu engine image:
-
-```bash
-docker pull abenezer0923/lelu-engine:latest
-docker run --rm -p 8083:8080 abenezer0923/lelu-engine:latest
 ```
 
 ## Quick start

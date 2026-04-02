@@ -167,8 +167,8 @@ export default function Home() {
                       <span className="text-xs text-zinc-500 font-mono">terminal</span>
                     </div>
                     <pre className="p-3 font-mono text-sm text-zinc-300">
-{`npm install @lelu-auth/lelu
-npx @lelu-auth/lelu init`}
+{`npm install lelu-agent-auth
+npx lelu-agent-auth init`}
                     </pre>
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
@@ -191,7 +191,7 @@ npx @lelu-auth/lelu init`}
                     <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">TypeScript</span>
                     <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M0 12v12h24V0H0zm19.341-.956c.61.152 1.074.423 1.501.865.221.236.549.666.575.77.008.03-1.036.73-1.668 1.123-.023.015-.115-.084-.217-.236-.31-.45-.633-.644-1.128-.678-.728-.05-1.196.331-1.192.967a.88.88 0 00.102.45c.16.331.458.53 1.39.934 1.719.74 2.454 1.227 2.911 1.92.51.773.625 2.008.278 2.926-.38.998-1.325 1.676-2.655 1.9-.411.07-1.384.054-1.82-.03-1.007-.193-1.962-.68-2.573-1.311-.244-.252-.708-.894-.676-.935.013-.013.185-.125.382-.248l.717-.448.362-.226.244.354c.334.485.748.79 1.298.956.813.246 1.926.12 2.426-.273a.89.89 0 00.378-.852c-.024-.35-.16-.53-.645-.848-.348-.228-1.116-.58-1.711-.784-1.71-.588-2.446-1.224-2.788-2.408-.096-.333-.108-1.15-.024-1.51.308-1.32 1.37-2.23 2.832-2.426.433-.058 1.443-.024 1.858.063zM13.116 7.945l.004 1.66h-2.802v7.61H8.235v-7.61H5.433v-1.66l.004-.003h7.679z"/></svg>
                   </div>
-                  <code className="text-xs font-mono text-zinc-700 dark:text-zinc-300">npm install @lelu-auth/lelu</code>
+                  <code className="text-xs font-mono text-zinc-700 dark:text-zinc-300">npm install lelu-agent-auth</code>
                 </div>
               </div>
               <div className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-black/50 hover:border-zinc-300 dark:hover:border-white/20 transition-colors">
@@ -230,11 +230,12 @@ npx @lelu-auth/lelu init`}
             <div className="p-6 overflow-x-auto text-sm">
               <pre className="font-mono leading-relaxed">
                 <code className="text-zinc-800 dark:text-zinc-200">
-                  <span className="text-purple-600 dark:text-purple-400">import</span> {"{ "}LeluClient{" }"} <span className="text-purple-600 dark:text-purple-400">from</span> <span className="text-emerald-600 dark:text-emerald-400">'@lelu-auth/lelu'</span>;<br />
+                  <span className="text-purple-600 dark:text-purple-400">import</span> {"{ "}LeluClient{" }"} <span className="text-purple-600 dark:text-purple-400">from</span> <span className="text-emerald-600 dark:text-emerald-400">'lelu-agent-auth'</span>;<br />
                   <span className="text-purple-600 dark:text-purple-400">import</span> {"{ "}OpenAI{" }"} <span className="text-purple-600 dark:text-purple-400">from</span> <span className="text-emerald-600 dark:text-emerald-400">'openai'</span>;<br /><br />
-                  <span className="text-zinc-500 dark:text-zinc-500">// Initialize Lelu client</span><br />
+                  <span className="text-zinc-500 dark:text-zinc-500">// Initialize Lelu client with API key</span><br />
                   <span className="text-blue-600 dark:text-blue-400">const</span> lelu = <span className="text-blue-600 dark:text-blue-400">new</span> LeluClient({"{"}<br />
-                  {"  "}baseUrl: <span className="text-emerald-600 dark:text-emerald-400">'http://localhost:8080'</span><br />
+                  {"  "}baseUrl: <span className="text-emerald-600 dark:text-emerald-400">'https://lelu-engine.onrender.com'</span>,<br />
+                  {"  "}apiKey: process.env.<span className="text-amber-600 dark:text-amber-400">LELU_API_KEY</span><br />
                   {"}"});<br /><br />
                   <span className="text-zinc-500 dark:text-zinc-500">// Secure your agent actions</span><br />
                   <span className="text-blue-600 dark:text-blue-400">const</span> decision = <span className="text-blue-600 dark:text-blue-400">await</span> lelu.agentAuthorize({"{"}<br />
