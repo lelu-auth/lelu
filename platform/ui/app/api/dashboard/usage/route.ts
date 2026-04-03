@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     // TODO: Get user/tenant from session
     // TODO: Fetch usage stats from Redis/database
-    
+
     const usage = {
       authRequests: 1234,
       tokenMints: 56,
@@ -19,9 +19,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(usage);
   } catch (error) {
     console.error("Failed to fetch usage stats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch usage stats" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch usage stats" }, { status: 500 });
   }
 }
