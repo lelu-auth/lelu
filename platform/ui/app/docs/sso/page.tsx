@@ -23,10 +23,9 @@ export default function DocsSso() {
           SSO &amp; Authentication
         </h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Lelu supports three authentication modes for accessing the Platform
-          API and UI: static API keys for machine-to-machine calls, enterprise
-          OIDC SSO for your team, and trusted-header SSO for deployments behind
-          a reverse proxy.
+          Lelu supports three authentication modes for accessing the Platform API and UI: static API
+          keys for machine-to-machine calls, enterprise OIDC SSO for your team, and trusted-header
+          SSO for deployments behind a reverse proxy.
         </p>
       </div>
 
@@ -61,24 +60,19 @@ export default function DocsSso() {
                 m.color === "indigo"
                   ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
                   : m.color === "blue"
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                    : "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
               }`}
             >
               {m.tag}
             </div>
-            <h3 className="font-semibold text-zinc-900 dark:text-white text-sm mb-2">
-              {m.label}
-            </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-500 leading-relaxed">
-              {m.desc}
-            </p>
+            <h3 className="font-semibold text-zinc-900 dark:text-white text-sm mb-2">{m.label}</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-500 leading-relaxed">{m.desc}</p>
           </div>
         ))}
       </div>
 
       <div className="space-y-16">
-
         {/* Mode 1: API Key */}
         <section id="api-key">
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">
@@ -93,8 +87,8 @@ export default function DocsSso() {
             <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">
               Authorization
             </code>{" "}
-            header for all requests to the Platform API. This is also how the
-            engine syncs policies with the platform.
+            header for all requests to the Platform API. This is also how the engine syncs policies
+            with the platform.
           </p>
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 flex gap-3 mb-6">
             <svg
@@ -133,9 +127,7 @@ export default function DocsSso() {
             </div>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-                <span className="text-xs text-zinc-500 font-mono">
-                  Example request
-                </span>
+                <span className="text-xs text-zinc-500 font-mono">Example request</span>
               </div>
               <pre className="p-4 font-mono text-sm text-zinc-300 leading-relaxed overflow-x-auto">
                 {`curl http://localhost:9090/api/v1/policies \\\n  -H "Authorization: Bearer $PLATFORM_API_KEY"`}
@@ -150,19 +142,17 @@ export default function DocsSso() {
             Mode 2 — OIDC SSO (Enterprise)
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-500 font-mono mb-6">
-            Supported: Okta, Azure AD, Auth0, Google Workspace, Keycloak, and
-            any OIDC-compliant IdP.
+            Supported: Okta, Azure AD, Auth0, Google Workspace, Keycloak, and any OIDC-compliant
+            IdP.
           </p>
           <p className="text-zinc-600 dark:text-zinc-400 mb-8">
-            Enable OIDC SSO to let your team log in using your existing identity
-            provider. Lelu acts as an OIDC relying party — it validates access
-            tokens on every request using the provider&apos;s JWKS endpoint.
+            Enable OIDC SSO to let your team log in using your existing identity provider. Lelu acts
+            as an OIDC relying party — it validates access tokens on every request using the
+            provider&apos;s JWKS endpoint.
           </p>
 
           {/* Flow */}
-          <h3 className="text-lg font-medium text-zinc-900 dark:text-white mb-4">
-            How it works
-          </h3>
+          <h3 className="text-lg font-medium text-zinc-900 dark:text-white mb-4">How it works</h3>
           <div className="relative border-l-2 border-zinc-200 dark:border-zinc-800 ml-4 space-y-6 pb-4 mb-8">
             {[
               {
@@ -191,9 +181,7 @@ export default function DocsSso() {
                 <h4 className="font-medium text-zinc-900 dark:text-white text-sm mb-1">
                   {step.title}
                 </h4>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {step.desc}
-                </p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -203,9 +191,8 @@ export default function DocsSso() {
           </h3>
           <ol className="list-decimal list-inside space-y-2 text-sm text-zinc-600 dark:text-zinc-400 mb-8 ml-2">
             <li>
-              Create a new web application in your identity provider (or
-              &ldquo;API&rdquo; in Auth0, &ldquo;App registration&rdquo; in
-              Azure AD).
+              Create a new web application in your identity provider (or &ldquo;API&rdquo; in Auth0,
+              &ldquo;App registration&rdquo; in Azure AD).
             </li>
             <li>
               Note the <strong>Issuer URL</strong> (e.g.{" "}
@@ -222,8 +209,8 @@ export default function DocsSso() {
               .
             </li>
             <li>
-              No redirect URI is needed — Lelu validates tokens, it does not
-              initiate the OAuth flow.
+              No redirect URI is needed — Lelu validates tokens, it does not initiate the OAuth
+              flow.
             </li>
           </ol>
 
@@ -274,8 +261,7 @@ export default function DocsSso() {
               <code className="bg-blue-100 dark:bg-blue-800/50 px-1 rounded font-mono">
                 PLATFORM_API_KEY
               </code>{" "}
-              for machine-to-machine calls (e.g. from the engine). Both methods
-              work simultaneously.
+              for machine-to-machine calls (e.g. from the engine). Both methods work simultaneously.
             </p>
           </div>
         </section>
@@ -286,10 +272,9 @@ export default function DocsSso() {
             Mode 3 — Trusted-Header SSO
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            If your infrastructure runs an authenticating reverse proxy (Nginx +
-            LDAP, Cloudflare Access, Tailscale&hellip;) you can configure Lelu
-            to trust the email header that proxy injects — no OIDC configuration
-            needed.
+            If your infrastructure runs an authenticating reverse proxy (Nginx + LDAP, Cloudflare
+            Access, Tailscale&hellip;) you can configure Lelu to trust the email header that proxy
+            injects — no OIDC configuration needed.
           </p>
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 flex gap-3 mb-6">
             <svg
@@ -306,10 +291,9 @@ export default function DocsSso() {
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <p className="text-sm text-amber-800 dark:text-amber-300">
-              <strong>Security notice:</strong> Only use this mode when the
-              Lelu Platform API is <strong>not</strong> directly reachable from
-              the internet. The trusted header must only be injectable by your
-              proxy, never by end users.
+              <strong>Security notice:</strong> Only use this mode when the Lelu Platform API is{" "}
+              <strong>not</strong> directly reachable from the internet. The trusted header must
+              only be injectable by your proxy, never by end users.
             </p>
           </div>
           <div className="space-y-4">
@@ -323,9 +307,7 @@ export default function DocsSso() {
             </div>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
-                <span className="text-xs text-zinc-500 font-mono">
-                  Example: Cloudflare Access
-                </span>
+                <span className="text-xs text-zinc-500 font-mono">Example: Cloudflare Access</span>
               </div>
               <pre className="p-4 font-mono text-sm text-zinc-300 leading-loose overflow-x-auto">
                 {`SSO_TRUSTED_HEADER=Cf-Access-Authenticated-User-Email\nSSO_TRUSTED_EMAIL_DOMAIN=yourcompany.com`}
@@ -336,9 +318,7 @@ export default function DocsSso() {
 
         {/* Comparison */}
         <section id="comparison">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">
-            Comparison
-          </h2>
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">Comparison</h2>
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
             <table className="w-full text-left text-sm">
               <thead className="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
@@ -346,13 +326,19 @@ export default function DocsSso() {
                   <th className="px-4 py-3 font-medium text-zinc-900 dark:text-white">Mode</th>
                   <th className="px-4 py-3 font-medium text-zinc-900 dark:text-white">Best for</th>
                   <th className="px-4 py-3 font-medium text-zinc-900 dark:text-white">Setup</th>
-                  <th className="px-4 py-3 font-medium text-zinc-900 dark:text-white">IdP required</th>
+                  <th className="px-4 py-3 font-medium text-zinc-900 dark:text-white">
+                    IdP required
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
                 <tr>
-                  <td className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">API Key</td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">CI/CD, agents, local dev</td>
+                  <td className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">
+                    API Key
+                  </td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                    CI/CD, agents, local dev
+                  </td>
                   <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">1 env var</td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
@@ -361,9 +347,15 @@ export default function DocsSso() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">OIDC SSO</td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">Enterprise team logins</td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">2 env vars + IdP config</td>
+                  <td className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">
+                    OIDC SSO
+                  </td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                    Enterprise team logins
+                  </td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                    2 env vars + IdP config
+                  </td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">
                       Yes
@@ -371,8 +363,12 @@ export default function DocsSso() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">Trusted Header</td>
-                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">Proxy-authenticated intranets</td>
+                  <td className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">
+                    Trusted Header
+                  </td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                    Proxy-authenticated intranets
+                  </td>
                   <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">2 env vars</td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
@@ -384,7 +380,6 @@ export default function DocsSso() {
             </table>
           </div>
         </section>
-
       </div>
 
       {/* Prev / Next */}

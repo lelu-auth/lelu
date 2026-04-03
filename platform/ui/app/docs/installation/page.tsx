@@ -29,7 +29,8 @@ export default function DocsInstallation() {
           Installation
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-2xl">
-          Install an official Lelu SDK, configure environment variables, and initialize the client in your app.
+          Install an official Lelu SDK, configure environment variables, and initialize the client
+          in your app.
         </p>
       </div>
 
@@ -53,17 +54,20 @@ export default function DocsInstallation() {
       </div>
 
       <div className="space-y-16">
-
         {/* Step 1 - Choose Installation Method */}
         <section id="step-1">
-          <h2 id="choose-installation-method" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2
+            id="choose-installation-method"
+            className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3"
+          >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               1
             </span>
             Choose Installation Method
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            Lelu can be installed in two ways: using Docker (recommended for quick start) or by installing SDKs directly.
+            Lelu can be installed in two ways: using Docker (recommended for quick start) or by
+            installing SDKs directly.
           </p>
 
           {/* Featured: One-Command Setup */}
@@ -75,28 +79,46 @@ export default function DocsInstallation() {
             </div>
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-white"
+                >
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">One-Command Setup</h3>
+                <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
+                  One-Command Setup
+                </h3>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                  Install SDK and automatically start all services with Docker. Includes engine, platform, UI, and database. Perfect for getting started quickly.
+                  Install SDK and automatically start all services with Docker. Includes engine,
+                  platform, UI, and database. Perfect for getting started quickly.
                 </p>
                 <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
                   <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                     <span className="text-xs text-zinc-500 font-mono">terminal</span>
                   </div>
                   <pre className="p-3 font-mono text-sm text-zinc-300">
-{`npm install lelu-agent-auth
+                    {`npm install lelu-agent-auth
 npx lelu-agent-auth init`}
                   </pre>
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-300">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 12l2 2 4-4"/>
-                    <circle cx="12" cy="12" r="10"/>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M9 12l2 2 4-4" />
+                    <circle cx="12" cy="12" r="10" />
                   </svg>
                   <span>Opens browser to http://localhost:3002 when ready</span>
                 </div>
@@ -104,31 +126,44 @@ npx lelu-agent-auth init`}
             </div>
           </div>
 
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mb-4">Alternative Installation Methods</p>
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            Alternative Installation Methods
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Docker Option */}
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                    <path d="M20 7h-9"/>
-                    <path d="M14 17H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h9"/>
-                    <path d="M15 7v10"/>
-                    <path d="M20 7v10a2 2 0 0 1-2 2h-2"/>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="text-white"
+                  >
+                    <path d="M20 7h-9" />
+                    <path d="M14 17H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h9" />
+                    <path d="M15 7v10" />
+                    <path d="M20 7v10a2 2 0 0 1-2 2h-2" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Manual Docker Setup</h3>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                  Manual Docker Setup
+                </h3>
               </div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Pull and run Docker images manually. For users who prefer more control over the setup process.
+                Pull and run Docker images manually. For users who prefer more control over the
+                setup process.
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <pre className="p-3 font-mono text-xs text-zinc-300">
-{`# Clone and run all services locally
+                  {`# Clone and run all services locally
 git clone https://github.com/lelu-auth/lelu.git
 cd lelu
 docker-compose up -d`}
@@ -140,22 +175,31 @@ docker-compose up -d`}
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-zinc-600 flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                    <polyline points="14,2 14,8 20,8"/>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="text-white"
+                  >
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                    <polyline points="14,2 14,8 20,8" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">SDK Only</h3>
               </div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Install the lightweight SDK with CLI tools for audit logs and policy management. Uses local SQLite storage by default (like Prisma).
+                Install the lightweight SDK with CLI tools for audit logs and policy management.
+                Uses local SQLite storage by default (like Prisma).
               </p>
               <div className="bg-zinc-900 dark:bg-black rounded-lg border border-zinc-800 dark:border-white/10 overflow-hidden">
                 <div className="px-3 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                   <span className="text-xs text-zinc-500 font-mono">terminal</span>
                 </div>
                 <pre className="p-3 font-mono text-xs text-zinc-300">
-{`# TypeScript/JavaScript
+                  {`# TypeScript/JavaScript
 npm install lelu-agent-auth
 npx lelu audit-log
 
@@ -183,10 +227,16 @@ lelu audit-log`}
             </svg>
             <div className="text-sm text-blue-800 dark:text-blue-300">
               <p className="mb-2">
-                <strong>New to Lelu?</strong> We recommend starting with the one-command setup for the quickest start.
+                <strong>New to Lelu?</strong> We recommend starting with the one-command setup for
+                the quickest start.
               </p>
               <p>
-                The SDK includes CLI tools for audit logs and policy management with local SQLite storage. For a visual UI, use Docker or visit <a href="https://lelu-ai.com" className="underline">lelu-ai.com</a>.
+                The SDK includes CLI tools for audit logs and policy management with local SQLite
+                storage. For a visual UI, use Docker or visit{" "}
+                <a href="https://lelu-ai.com" className="underline">
+                  lelu-ai.com
+                </a>
+                .
               </p>
             </div>
           </div>
@@ -194,7 +244,10 @@ lelu audit-log`}
 
         {/* Step 2 */}
         <section id="step-2">
-          <h2 id="install-package" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2
+            id="install-package"
+            className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3"
+          >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               2
             </span>
@@ -203,28 +256,47 @@ lelu audit-log`}
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Let&apos;s start by adding Lelu to your project:
           </p>
-          
+
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
             <div className="flex items-center px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <div className="flex gap-2">
-                <button onClick={() => setPackageTab("npm")} className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "npm" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+                <button
+                  onClick={() => setPackageTab("npm")}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "npm" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}
+                >
                   npm
                 </button>
-                <button onClick={() => setPackageTab("pnpm")} className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "pnpm" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+                <button
+                  onClick={() => setPackageTab("pnpm")}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "pnpm" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}
+                >
                   pnpm
                 </button>
-                <button onClick={() => setPackageTab("yarn")} className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "yarn" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+                <button
+                  onClick={() => setPackageTab("yarn")}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "yarn" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}
+                >
                   yarn
                 </button>
-                <button onClick={() => setPackageTab("bun")} className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "bun" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}>
+                <button
+                  onClick={() => setPackageTab("bun")}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${packageTab === "bun" ? "bg-zinc-800 text-white font-medium" : "text-zinc-400 hover:text-white hover:bg-zinc-800"}`}
+                >
                   bun
                 </button>
               </div>
             </div>
             <div className="p-4">
               <div className="flex items-center gap-2 text-xs text-zinc-500 mb-2">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 17l6-6-6-6M12 19h8"/>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M4 17l6-6-6-6M12 19h8" />
                 </svg>
                 <span>terminal</span>
               </div>
@@ -232,14 +304,25 @@ lelu audit-log`}
                 {packageCommands[packageTab]}
               </pre>
             </div>
-            <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            <button
+              className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all"
+              title="Copy to clipboard"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-zinc-400 hover:text-zinc-200"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
             </button>
           </div>
-          
+
           <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3">
             <svg
               width="20"
@@ -255,35 +338,51 @@ lelu audit-log`}
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              If your frontend and backend are in separate repositories, install the Lelu SDK in each service that calls the Lelu Engine.
+              If your frontend and backend are in separate repositories, install the Lelu SDK in
+              each service that calls the Lelu Engine.
             </p>
           </div>
         </section>
 
         {/* Step 3 */}
         <section id="step-3">
-          <h2 id="cli-commands" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2
+            id="cli-commands"
+            className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3"
+          >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               3
             </span>
             CLI Commands
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            After installing, you can use the built-in CLI commands to view audit logs, manage policies, and launch the visual UI directly from your terminal:
+            After installing, you can use the built-in CLI commands to view audit logs, manage
+            policies, and launch the visual UI directly from your terminal:
           </p>
 
           {/* Visual UI via Docker - Featured */}
           <div className="mb-8">
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-500/5 dark:to-purple-500/5 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4 mb-4">
               <div className="flex items-start gap-3">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M3 9h18M9 21V9"/>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M3 9h18M9 21V9" />
                 </svg>
                 <div>
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Visual UI (Docker)</h4>
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                    Visual UI (Docker)
+                  </h4>
                   <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
-                    Launch the visual dashboard for managing policies and viewing audit logs. The UI runs as a separate Docker container (like Prisma Studio).
+                    Launch the visual dashboard for managing policies and viewing audit logs. The UI
+                    runs as a separate Docker container (like Prisma Studio).
                   </p>
                 </div>
               </div>
@@ -301,10 +400,15 @@ docker-compose up -d`}
               </pre>
             </div>
           </div>
-          
+
           {/* TypeScript/Node.js */}
           <div className="mb-8">
-            <h3 id="typescript-cli" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">TypeScript/Node.js</h3>
+            <h3
+              id="typescript-cli"
+              className="text-lg font-semibold text-zinc-900 dark:text-white mb-3"
+            >
+              TypeScript/Node.js
+            </h3>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -323,7 +427,12 @@ npx @lelu-auth/lelu policies set auth ./auth.rego`}
 
           {/* Python */}
           <div className="mb-8">
-            <h3 id="python-cli" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Python</h3>
+            <h3
+              id="python-cli"
+              className="text-lg font-semibold text-zinc-900 dark:text-white mb-3"
+            >
+              Python
+            </h3>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -340,7 +449,9 @@ lelu policies set auth ./auth.rego`}
 
           {/* Go */}
           <div className="mb-8">
-            <h3 id="go-cli" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">Go</h3>
+            <h3 id="go-cli" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3">
+              Go
+            </h3>
             <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
               <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                 <span className="text-xs text-zinc-500 font-mono">terminal</span>
@@ -354,7 +465,7 @@ go build -o lelu
               </pre>
             </div>
           </div>
-          
+
           <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 flex gap-3">
             <svg
               width="20"
@@ -371,10 +482,18 @@ go build -o lelu
             </svg>
             <div className="text-sm text-blue-800 dark:text-blue-300">
               <p className="mb-2">
-                <strong>Note:</strong> CLI commands use local SQLite storage by default (<code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded font-mono">~/.lelu/lelu.db</code>).
+                <strong>Note:</strong> CLI commands use local SQLite storage by default (
+                <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded font-mono">
+                  ~/.lelu/lelu.db
+                </code>
+                ).
               </p>
               <p className="text-xs">
-                To use a remote platform, set <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded font-mono">LELU_PLATFORM_URL</code> environment variable.
+                To use a remote platform, set{" "}
+                <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded font-mono">
+                  LELU_PLATFORM_URL
+                </code>{" "}
+                environment variable.
               </p>
             </div>
           </div>
@@ -382,38 +501,51 @@ go build -o lelu
 
         {/* Step 4 */}
         <section id="step-4">
-          <h2 id="environment-variables" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2
+            id="environment-variables"
+            className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3"
+          >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               4
             </span>
             Generate API Key & Set Environment Variables
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-            First, generate an API key to authenticate with the Lelu engine. Then create a <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">.env</code> file with your configuration.
+            First, generate an API key to authenticate with the Lelu engine. Then create a{" "}
+            <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">
+              .env
+            </code>{" "}
+            file with your configuration.
           </p>
 
           <div className="space-y-6">
             {/* API Key Generation */}
             <div>
-              <h3 id="generate-api-key" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
+              <h3
+                id="generate-api-key"
+                className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2"
+              >
                 <span className="flex items-center justify-center w-6 h-6 rounded bg-blue-600 text-white text-xs font-bold">
                   1
                 </span>
                 Generate API Key
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                API keys authenticate your requests and identify your tenant. Choose one of the following methods:
+                API keys authenticate your requests and identify your tenant. Choose one of the
+                following methods:
               </p>
 
               {/* Method 1: PowerShell Script */}
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Method 1: PowerShell Script (Recommended for Self-Hosted)</h4>
+                <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                  Method 1: PowerShell Script (Recommended for Self-Hosted)
+                </h4>
                 <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
                   <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                     <span className="text-xs text-zinc-500 font-mono">powershell</span>
                   </div>
                   <pre className="p-4 font-mono text-sm text-zinc-300">
-{`# Generate and store API key automatically
+                    {`# Generate and store API key automatically
 ./generate-api-key.ps1
 
 # Your key will be:
@@ -421,10 +553,21 @@ go build -o lelu
 # - Stored in Redis
 # - Added to your .env file automatically`}
                   </pre>
-                  <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  <button
+                    className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all"
+                    title="Copy to clipboard"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="text-zinc-400 hover:text-zinc-200"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
                   </button>
                 </div>
@@ -433,16 +576,24 @@ go build -o lelu
 
             {/* API Key */}
             <div>
-              <h3 id="api-key" className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
+              <h3
+                id="api-key"
+                className="text-lg font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2"
+              >
                 <span className="flex items-center justify-center w-6 h-6 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">
                   2
                 </span>
                 API Key
               </h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Your Lelu API key for authenticating requests to the engine. Generate a secure key using <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">openssl rand -base64 32</code>.
+                Your Lelu API key for authenticating requests to the engine. Generate a secure key
+                using{" "}
+                <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">
+                  openssl rand -base64 32
+                </code>
+                .
               </p>
-              
+
               <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
                 <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
                   <span className="text-xs text-zinc-500 font-mono">.env</span>
@@ -450,10 +601,21 @@ go build -o lelu
                 <pre className="p-4 font-mono text-sm text-zinc-300">
                   LELU_API_KEY=your_secure_api_key_here
                 </pre>
-                <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                <button
+                  className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all"
+                  title="Copy to clipboard"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="text-zinc-400 hover:text-zinc-200"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
                 </button>
               </div>
@@ -475,14 +637,23 @@ go build -o lelu
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <div className="text-sm text-amber-800 dark:text-amber-300">
-              <strong>Security notice:</strong> Never commit your API keys to version control. Add <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded font-mono">.env</code> to your <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded font-mono">.gitignore</code> file.
+              <strong>Security notice:</strong> Never commit your API keys to version control. Add{" "}
+              <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded font-mono">.env</code>{" "}
+              to your{" "}
+              <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded font-mono">
+                .gitignore
+              </code>{" "}
+              file.
             </div>
           </div>
         </section>
 
         {/* Step 5 */}
         <section id="step-5">
-          <h2 id="configure-client" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2
+            id="configure-client"
+            className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3"
+          >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black text-sm font-bold">
               5
             </span>
@@ -491,7 +662,7 @@ go build -o lelu
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">
             Initialize the Lelu client in your application to start authorizing agent actions:
           </p>
-          
+
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden group relative">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">lib/lelu.ts</span>
@@ -517,10 +688,21 @@ if (decision.requiresHumanReview) {
   console.log("Action approved autonomously");
 }`}
             </pre>
-            <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            <button
+              className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all"
+              title="Copy to clipboard"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-zinc-400 hover:text-zinc-200"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
             </button>
           </div>
@@ -554,10 +736,21 @@ if decision.requires_human_review:
 elif decision.allowed:
     print("Action approved autonomously")`}
               </pre>
-              <button className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all" title="Copy to clipboard">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 hover:text-zinc-200">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              <button
+                className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-all"
+                title="Copy to clipboard"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-zinc-400 hover:text-zinc-200"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>
               </button>
             </div>
@@ -566,45 +759,76 @@ elif decision.allowed:
 
         {/* Step 6 */}
         <section id="step-6">
-          <h2 id="complete" className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
+          <h2
+            id="complete"
+            className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3"
+          >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-green-600 text-white text-sm font-bold">
               ✓
             </span>
             That&apos;s it!
           </h2>
-          
+
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-6">
             <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-              You&apos;re all set! Lelu is now configured and ready to use. Check out the following resources to learn more:
+              You&apos;re all set! Lelu is now configured and ready to use. Check out the following
+              resources to learn more:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <a href="/docs/concepts/architecture" className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group">
+              <a
+                href="/docs/concepts/architecture"
+                className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group"
+              >
                 <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600 dark:text-blue-400">
-                    <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
-                    <path d="M12 2v10l8.66 5"/>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="text-blue-600 dark:text-blue-400"
+                  >
+                    <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
+                    <path d="M12 2v10l8.66 5" />
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Architecture</div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-500">Learn how Lelu works</div>
+                  <div className="font-medium text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    Architecture
+                  </div>
+                  <div className="text-xs text-zinc-500 dark:text-zinc-500">
+                    Learn how Lelu works
+                  </div>
                 </div>
               </a>
-              <a href="/docs/integrations/nextjs" className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group">
+              <a
+                href="/docs/integrations/nextjs"
+                className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group"
+              >
                 <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center shrink-0">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600 dark:text-purple-400">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="text-purple-600 dark:text-purple-400"
+                  >
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-zinc-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Integrations</div>
+                  <div className="font-medium text-zinc-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    Integrations
+                  </div>
                   <div className="text-xs text-zinc-500 dark:text-zinc-500">Framework guides</div>
                 </div>
               </a>
             </div>
           </div>
         </section>
-
       </div>
 
       {/* Prev / Next */}
