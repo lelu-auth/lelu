@@ -106,7 +106,10 @@ export async function listAuditEvents(params?: {
   limit?: number;
 }): Promise<AuditEvent[]> {
   const qs = new URLSearchParams(
-    Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v !== undefined)) as Record<string, string>
+    Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v !== undefined)) as Record<
+      string,
+      string
+    >,
   ).toString();
   const res = await fetch(`${PLATFORM_URL}/api/v1/audit${qs ? `?${qs}` : ""}`, {
     headers,
@@ -157,7 +160,9 @@ export async function getShadowSummary(windowMinutes = 60): Promise<ShadowSummar
   }
 }
 
-export async function getComplianceExport(framework: "owasp_genai" | "nist_ai_rmf" | "all" = "all"): Promise<ComplianceExportResponse | null> {
+export async function getComplianceExport(
+  framework: "owasp_genai" | "nist_ai_rmf" | "all" = "all",
+): Promise<ComplianceExportResponse | null> {
   try {
     const res = await fetch(`${PLATFORM_URL}/api/v1/compliance/export?framework=${framework}`, {
       headers,

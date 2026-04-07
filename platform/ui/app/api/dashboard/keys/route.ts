@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     // TODO: Get user from session/auth
     // TODO: Fetch keys from database
-    
+
     const keys = [
       {
         keyId: "abc123",
@@ -22,10 +22,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ keys });
   } catch (error) {
     console.error("Failed to fetch API keys:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch API keys" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch API keys" }, { status: 500 });
   }
 }
 
@@ -35,17 +32,11 @@ export async function POST(request: NextRequest) {
     const { name, env } = body;
 
     if (!name || !env) {
-      return NextResponse.json(
-        { error: "Name and environment are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Name and environment are required" }, { status: 400 });
     }
 
     if (env !== "live" && env !== "test") {
-      return NextResponse.json(
-        { error: "Environment must be 'live' or 'test'" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Environment must be 'live' or 'test'" }, { status: 400 });
     }
 
     // TODO: Get user/tenant from session
@@ -64,9 +55,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Failed to generate API key:", error);
-    return NextResponse.json(
-      { error: "Failed to generate API key" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to generate API key" }, { status: 500 });
   }
 }

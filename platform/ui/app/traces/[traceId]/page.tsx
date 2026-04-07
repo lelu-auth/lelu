@@ -20,8 +20,20 @@ export default async function TracePage({
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
-      <a href="/audit" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors mb-8">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <a
+        href="/audit"
+        className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors mb-8"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
@@ -36,11 +48,17 @@ export default async function TracePage({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
           <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Events</div>
-          <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{trace.events.length}</div>
+          <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+            {trace.events.length}
+          </div>
         </div>
         <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
-          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Avg Confidence</div>
-          <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{(avgConf * 100).toFixed(0)}%</div>
+          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+            Avg Confidence
+          </div>
+          <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+            {(avgConf * 100).toFixed(0)}%
+          </div>
         </div>
         <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 flex flex-col items-start gap-2">
           <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Decisions</div>
@@ -54,7 +72,9 @@ export default async function TracePage({
 
       {trace.events.length > 0 && (
         <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50 mb-10">
-          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Actors involved</div>
+          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+            Actors involved
+          </div>
           <div className="text-xl font-medium text-zinc-900 dark:text-zinc-100 mt-2">
             {Array.from(new Set(trace.events.map((e) => e.actor))).join(", ")}
           </div>

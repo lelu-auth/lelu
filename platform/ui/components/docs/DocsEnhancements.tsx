@@ -21,7 +21,7 @@ export function DocsEnhancements() {
     if (!root) return;
 
     const revealTargets = Array.from(root.querySelectorAll<HTMLElement>(REVEAL_SELECTOR)).filter(
-      (node) => !node.closest("nav")
+      (node) => !node.closest("nav"),
     );
 
     revealTargets.forEach((node, index) => {
@@ -38,7 +38,7 @@ export function DocsEnhancements() {
           }
         }
       },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.08 }
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
     );
 
     revealTargets.forEach((node) => observer.observe(node));

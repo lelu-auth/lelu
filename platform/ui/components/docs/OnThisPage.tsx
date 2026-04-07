@@ -34,7 +34,7 @@ export function OnThisPage() {
       {
         rootMargin: "-80px 0px -80% 0px",
         threshold: 1,
-      }
+      },
     );
 
     elements.forEach((element) => observer.observe(element));
@@ -59,10 +59,7 @@ export function OnThisPage() {
             {headings.map((heading) => {
               const isActive = activeId === heading.id;
               return (
-                <li
-                  key={heading.id}
-                  className={heading.level === 3 ? "pl-4" : ""}
-                >
+                <li key={heading.id} className={heading.level === 3 ? "pl-4" : ""}>
                   <a
                     href={`#${heading.id}`}
                     onClick={(e) => {
