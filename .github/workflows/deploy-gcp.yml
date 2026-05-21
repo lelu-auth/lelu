@@ -33,9 +33,18 @@ jobs:
       platform_image: ${{ steps.meta.outputs.platform }}
       ui_image:       ${{ steps.meta.outputs.ui }}
       mcp_image:      ${{ steps.meta.outputs.mcp }}
+      prefix:         ${{ steps.meta.outputs.prefix }}
+      service:        ${{ steps.svc.outputs.target }}
 
     steps:
       - uses: actions/checkout@v4
+
+      # Normalize service — push events have no inputs, default to "all"
+      - name: Normalize service target
+        id: svc
+        run: |
+          TARGET="${{ github.event.inputs.service }}"
+          echo "target=${TARGET:-all}" >> "$GITHUB_OUTPUT"
 
       # Keyless auth via Workload Identity Federation — no long-lived keys
       - name: Authenticate to Google Cloud
@@ -51,7 +60,7 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
-      # Compute short SHA tag used for traceability
+      # Compute short SHA tag — strip whitespace from secret to avoid newline injection
       - name: Compute image tags
         id: meta
         run: |
@@ -67,17 +76,14 @@ jobs:
 
       # ── Engine ──────────────────────────────────────────────────────────────
       - name: Build & push engine
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'engine' ||
-          github.event.inputs.service == ''
+        if: steps.svc.outputs.target == 'all' || steps.svc.outputs.target == 'engine'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: engine/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.engine_image }}
+            ${{ steps.meta.outputs.engine }}
             ${{ steps.meta.outputs.prefix }}/engine:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=engine
@@ -85,17 +91,14 @@ jobs:
 
       # ── Platform ────────────────────────────────────────────────────────────
       - name: Build & push platform
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'platform' ||
-          github.event.inputs.service == ''
+        if: steps.svc.outputs.target == 'all' || steps.svc.outputs.target == 'platform'
         uses: docker/build-push-action@v5
         with:
           context: platform
           file: platform/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.platform_image }}
+            ${{ steps.meta.outputs.platform }}
             ${{ steps.meta.outputs.prefix }}/platform:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=platform
@@ -103,17 +106,14 @@ jobs:
 
       # ── UI ──────────────────────────────────────────────────────────────────
       - name: Build & push ui
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'ui' ||
-          github.event.inputs.service == ''
+        if: steps.svc.outputs.target == 'all' || steps.svc.outputs.target == 'ui'
         uses: docker/build-push-action@v5
         with:
           context: platform/ui
           file: platform/ui/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.ui_image }}
+            ${{ steps.meta.outputs.ui }}
             ${{ steps.meta.outputs.prefix }}/ui:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=ui
@@ -121,17 +121,14 @@ jobs:
 
       # ── MCP ─────────────────────────────────────────────────────────────────
       - name: Build & push mcp
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'mcp' ||
-          github.event.inputs.service == ''
+        if: steps.svc.outputs.target == 'all' || steps.svc.outputs.target == 'mcp'
         uses: docker/build-push-action@v5
         with:
           context: sdk/mcp
           file: sdk/mcp/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.mcp_image }}
+            ${{ steps.meta.outputs.mcp }}
             ${{ steps.meta.outputs.prefix }}/mcp:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=mcp
@@ -158,18 +155,21 @@ jobs:
       - name: Set up gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      # Sanitize the project ID once — used in every deploy step below
+      - name: Set deploy vars
+        id: vars
+        run: |
+          PROJECT="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '[:space:]')"
+          echo "project=${PROJECT}" >> "$GITHUB_OUTPUT"
+
       # ── Engine ──────────────────────────────────────────────────────────────
       - name: Deploy engine
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'engine' ||
-          github.event.inputs.service == ''
+        if: needs.build.outputs.service == 'all' || needs.build.outputs.service == 'engine'
         run: |
-          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+          PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
           IMAGE="${{ needs.build.outputs.engine_image }}"
 
-          # Substitute template variables in the service YAML
           sed \
             -e "s|__PROJECT__|${PROJECT}|g" \
             -e "s|__REGION__|${REGION}|g" \
@@ -181,7 +181,6 @@ jobs:
             --region="${REGION}" \
             --quiet
 
-          # Make it publicly accessible (override policy if needed)
           gcloud run services add-iam-policy-binding lelu-engine \
             --region="${REGION}" \
             --member="allUsers" \
@@ -190,12 +189,9 @@ jobs:
 
       # ── Platform ────────────────────────────────────────────────────────────
       - name: Deploy platform
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'platform' ||
-          github.event.inputs.service == ''
+        if: needs.build.outputs.service == 'all' || needs.build.outputs.service == 'platform'
         run: |
-          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+          PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
           IMAGE="${{ needs.build.outputs.platform_image }}"
 
@@ -222,20 +218,17 @@ jobs:
         run: |
           REGION="${{ env.GCP_REGION }}"
           ENGINE_URL=$(gcloud run services describe lelu-engine \
-            --region="$REGION" --format="value(status.url)")
+            --region="$REGION" --format="value(status.url)" 2>/dev/null || echo "")
           PLATFORM_URL=$(gcloud run services describe lelu-platform \
-            --region="$REGION" --format="value(status.url)")
-          echo "engine=${ENGINE_URL}"   >> "$GITHUB_OUTPUT"
+            --region="$REGION" --format="value(status.url)" 2>/dev/null || echo "")
+          echo "engine=${ENGINE_URL}"     >> "$GITHUB_OUTPUT"
           echo "platform=${PLATFORM_URL}" >> "$GITHUB_OUTPUT"
 
       # ── UI ──────────────────────────────────────────────────────────────────
       - name: Deploy ui
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'ui' ||
-          github.event.inputs.service == ''
+        if: needs.build.outputs.service == 'all' || needs.build.outputs.service == 'ui'
         run: |
-          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+          PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
           IMAGE="${{ needs.build.outputs.ui_image }}"
           ENGINE_URL="${{ steps.urls.outputs.engine }}"
@@ -262,12 +255,9 @@ jobs:
 
       # ── MCP ─────────────────────────────────────────────────────────────────
       - name: Deploy mcp
-        if: >
-          github.event.inputs.service == 'all' ||
-          github.event.inputs.service == 'mcp' ||
-          github.event.inputs.service == ''
+        if: needs.build.outputs.service == 'all' || needs.build.outputs.service == 'mcp'
         run: |
-          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+          PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
           IMAGE="${{ needs.build.outputs.mcp_image }}"
           ENGINE_URL="${{ steps.urls.outputs.engine }}"
