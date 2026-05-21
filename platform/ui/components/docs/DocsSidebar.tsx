@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { LeluMark } from "@/components/ui/LeluMark";
 
 type NavItem = {
   href: string;
@@ -259,8 +260,8 @@ export function DocsSidebar() {
             href="/"
             className="flex items-center gap-2 font-semibold text-base text-zinc-900 dark:text-white hover:opacity-80 transition-opacity"
           >
-            <img src="/logo.png" alt="Lelu" className="w-6 h-6 rounded" />
-            Lelu
+            <LeluMark size={20} />
+            <span style={{ letterSpacing: "-0.02em" }}>lelu</span>
           </a>
         </div>
 

@@ -43,102 +43,50 @@ export default function DocsPage() {
       </div>
 
       {/* Generate API Key CTA */}
-      <div className="mb-16 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-2 border-indigo-200 dark:border-indigo-800/50 rounded-2xl p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 blur-3xl"></div>
-        <div className="relative z-10">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shrink-0">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-white"
+      <div className="mb-16 border border-[#E7E5E4] dark:border-[#222224] rounded-2xl p-8">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-[#0A0A0A] dark:bg-white flex items-center justify-center shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white dark:text-[#0A0A0A]">
+              <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-1">
+              Get Your Free API Key
+            </h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+              No signup required. Generate an anonymous key and get 500 requests per day.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href="/api-key"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A] rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
               >
-                <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
-                Get Your Free API Key
-              </h2>
-              <p className="text-base text-zinc-600 dark:text-zinc-400 mb-4">
-                Start testing Lelu instantly with no signup required. Generate an anonymous API key
-                and get 500 requests per day.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a
-                  href="/api-key"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                  Generate API Key
-                </a>
-                <a
-                  href="/docs/quickstart"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg font-semibold border-2 border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
-                >
-                  View Quickstart
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
+                Generate API Key →
+              </a>
+              <a
+                href="/docs/quickstart"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[#E7E5E4] dark:border-[#222224] text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium hover:bg-zinc-50 dark:hover:bg-[#141416] transition-colors"
+              >
+                View Quickstart
+              </a>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-indigo-200 dark:border-indigo-800/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                <span className="text-lg">⚡</span>
-              </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-[#E7E5E4] dark:border-[#222224]">
+          {[
+            { label: "Instant Access", sub: "No email required" },
+            { label: "Privacy First", sub: "Completely anonymous" },
+            { label: "500 req/day", sub: "Perfect for testing" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-[#0A0A0A] dark:bg-white shrink-0" />
               <div>
-                <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                  Instant Access
-                </div>
-                <div className="text-xs text-zinc-600 dark:text-zinc-400">No email required</div>
+                <div className="text-sm font-medium text-zinc-900 dark:text-white">{item.label}</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">{item.sub}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <span className="text-lg">🔒</span>
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                  Privacy First
-                </div>
-                <div className="text-xs text-zinc-600 dark:text-zinc-400">Completely anonymous</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <span className="text-lg">🎯</span>
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                  500 Requests/Day
-                </div>
-                <div className="text-xs text-zinc-600 dark:text-zinc-400">Perfect for testing</div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -344,7 +292,7 @@ export default function DocsPage() {
               </svg>
             </div>
             <div className="flex items-center gap-3 bg-zinc-800/50 dark:bg-zinc-800/30 p-3 rounded border border-zinc-700/50 dark:border-zinc-700/30">
-              <div className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center">
+              <div className="w-6 h-6 rounded bg-zinc-500/20 flex items-center justify-center">
                 <svg
                   width="14"
                   height="14"
@@ -352,7 +300,7 @@ export default function DocsPage() {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  className="text-purple-400"
+                  className="text-zinc-400"
                 >
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>

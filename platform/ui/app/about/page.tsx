@@ -28,8 +28,6 @@ import {
   FiDatabase,
   FiCheckCircle,
 } from "react-icons/fi";
-import LeluFooter from "@/components/LeluFooter";
-
 export default function AboutPage() {
   const fadeUp = {
     hidden: { opacity: 0, y: 40 },
@@ -45,12 +43,7 @@ export default function AboutPage() {
   };
 
   return (
-    <main className="relative min-h-screen bg-white dark:bg-black-100 flex flex-col items-center overflow-hidden mx-auto sm:px-10 px-5 pt-24 md:pt-32">
-      {/* Background Ambient Glow */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-30 dark:opacity-20 pointer-events-none z-0">
-        <div className="absolute top-[-5%] left-[20%] w-[50%] h-[50%] rounded-full bg-[#3b82f6]/20 blur-[120px]" />
-        <div className="absolute top-[30%] right-[5%] w-[45%] h-[45%] rounded-full bg-[#CBACF9]/20 blur-[120px]" />
-      </div>
+    <main className="relative min-h-screen bg-[#FAFAFA] dark:bg-[#0B0B0C] flex flex-col items-center overflow-hidden mx-auto sm:px-10 px-5 pt-24 md:pt-32">
 
       <div className="max-w-7xl w-full relative z-10">
         {/* HERO SECTION - Exact text match */}
@@ -63,7 +56,7 @@ export default function AboutPage() {
         >
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8">
             About{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#CBACF9] to-[#393BB2]">
+            <span className="text-[#0A0A0A] dark:text-white">
               Lelu AI
             </span>
           </h1>
@@ -86,7 +79,7 @@ export default function AboutPage() {
             id="overview"
           >
             <div className="rounded-[2.5rem] p-8 md:p-14 border border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-xl">
-              <h2 className="text-3xl font-bold mb-12 text-[#CBACF9]">Company Overview</h2>
+              <h2 className="text-3xl font-bold mb-12 text-zinc-900 dark:text-white">Company Overview</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-12">
                 {[
                   { label: "Company", value: "Lelu AI" },
@@ -97,7 +90,7 @@ export default function AboutPage() {
                   { label: "License", value: "Open Source (MIT)" },
                 ].map((item, i) => (
                   <div key={i}>
-                    <div className="text-xs font-bold uppercase tracking-widest text-[#393BB2] mb-3">
+                    <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">
                       {item.label}
                     </div>
                     <div className="text-xl font-bold">{item.value}</div>
@@ -132,10 +125,10 @@ export default function AboutPage() {
                     <a
                       key={i}
                       href={item.link}
-                      className="flex items-center justify-between px-6 py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-[#CBACF9] transition-all group"
+                      className="flex items-center justify-between px-6 py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all group"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-xl text-[#CBACF9] group-hover:scale-110 transition-transform">
+                        <span className="text-xl text-zinc-700 dark:text-zinc-300 group-hover:scale-110 transition-transform">
                           {item.icon}
                         </span>
                         <span className="font-bold text-sm">{item.name}</span>
@@ -156,13 +149,13 @@ export default function AboutPage() {
             variants={fadeUp}
             id="founder"
           >
-            <div className="flex flex-col md:flex-row gap-12 items-start bg-zinc-50 dark:bg-[#0F111A] rounded-[2.5rem] p-10 md:p-16 border border-zinc-200 dark:border-white/10">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-gradient-to-br from-[#CBACF9] to-[#393BB2] flex items-center justify-center text-white text-5xl font-bold shrink-0 shadow-2xl">
+            <div className="flex flex-col md:flex-row gap-12 items-start bg-zinc-50 dark:bg-[#141416] rounded-[2.5rem] p-10 md:p-16 border border-zinc-200 dark:border-white/10">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-[#0A0A0A] dark:bg-[#222224] flex items-center justify-center text-white text-5xl font-bold shrink-0 shadow-2xl">
                 AG
               </div>
               <div className="flex-1">
                 <h2 className="text-3xl font-bold mb-2">Abenezer Getachew</h2>
-                <p className="text-[#CBACF9] font-bold text-lg mb-8 uppercase tracking-widest">
+                <p className="text-zinc-500 font-bold text-lg mb-8 uppercase tracking-widest">
                   Founder & Software Engineer
                 </p>
                 <div className="space-y-6 text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
@@ -237,7 +230,7 @@ export default function AboutPage() {
                   key={i}
                   className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex flex-col gap-8 group hover:border-red-500/30 transition-colors"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-black-100 flex items-center justify-center text-2xl shadow-xl">
+                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-[#0B0B0C] flex items-center justify-center text-2xl shadow-xl">
                     <FiAlertTriangle className="text-red-500" />
                   </div>
                   <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed italic">
@@ -247,7 +240,7 @@ export default function AboutPage() {
               ))}
             </div>
 
-            <p className="text-2xl md:text-3xl text-zinc-600 dark:text-zinc-400 leading-relaxed font-bold italic border-l-8 border-[#CBACF9] pl-10">
+            <p className="text-2xl md:text-3xl text-zinc-600 dark:text-zinc-400 leading-relaxed font-bold italic border-l-8 border-[#0A0A0A] dark:border-white pl-10">
               Lelu provides the security infrastructure that makes AI agents safe for
               production—allowing companies to move fast without breaking things.
             </p>
@@ -309,7 +302,7 @@ export default function AboutPage() {
               ].map((pill, i) => (
                 <div
                   key={i}
-                  className="rounded-[3rem] p-12 bg-zinc-50 dark:bg-[#0F111A] border border-zinc-200 dark:border-white/10 group hover:-translate-y-2 transition-all duration-300"
+                  className="rounded-[3rem] p-12 bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/10 group hover:-translate-y-2 transition-all duration-300"
                 >
                   <div className="text-5xl mb-10 group-hover:scale-110 transition-transform">
                     {pill.icon}
@@ -346,7 +339,7 @@ export default function AboutPage() {
               ].map((sdk, i) => (
                 <div
                   key={i}
-                  className="flex flex-col items-center justify-center p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 gap-6 group hover:bg-[#CBACF9]/5 transition-colors"
+                  className="flex flex-col items-center justify-center p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 gap-6 group hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors"
                 >
                   <div className="text-4xl group-hover:scale-110 transition-transform">
                     {sdk.icon}
@@ -385,10 +378,10 @@ export default function AboutPage() {
               ].map((serve, i) => (
                 <div
                   key={i}
-                  className="p-12 rounded-[3rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-black-100 shadow-sm relative overflow-hidden group"
+                  className="p-12 rounded-[3rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0B0B0C] shadow-sm relative overflow-hidden group"
                 >
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#CBACF9]/10 to-[#393BB2]/10 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                  <h3 className="text-2xl font-bold mb-8 text-[#CBACF9]">{serve.title}</h3>
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-zinc-200/20 dark:bg-white/5 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                  <h3 className="text-2xl font-bold mb-8 text-zinc-900 dark:text-white">{serve.title}</h3>
                   <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-lg">
                     {serve.desc}
                   </p>
@@ -423,9 +416,9 @@ export default function AboutPage() {
               ].map((cc, i) => (
                 <div
                   key={i}
-                  className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#0F111A] group hover:border-[#CBACF9]/30 transition-colors"
+                  className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416] group hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors"
                 >
-                  <h3 className="text-3xl font-bold mb-6 group-hover:text-[#CBACF9] transition-colors">
+                  <h3 className="text-3xl font-bold mb-6 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                     {cc.title}
                   </h3>
                   <p className="text-zinc-600 dark:text-zinc-400 text-xl leading-relaxed">
@@ -507,9 +500,9 @@ export default function AboutPage() {
             <h2 className="text-4xl font-bold mb-16">Company Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-stretch">
               {/* Mission */}
-              <div className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#0F111A]">
+              <div className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416]">
                 <h3 className="text-3xl font-bold mb-8">Mission</h3>
-                <p className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed italic border-l-8 border-[#393BB2] pl-10">
+                <p className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed italic border-l-8 border-[#0A0A0A] dark:border-white pl-10">
                   Make AI agents safe and trustworthy for production use. We believe autonomous AI
                   will transform how businesses operate, but only if companies can deploy it with
                   confidence and control.
@@ -517,7 +510,7 @@ export default function AboutPage() {
               </div>
 
               {/* Open Source */}
-              <div className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#0F111A]">
+              <div className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416]">
                 <h3 className="text-3xl font-bold mb-8">Open Source</h3>
                 <p className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
                   Lelu is open source (MIT License) and available on GitHub. Security infrastructure
@@ -527,15 +520,15 @@ export default function AboutPage() {
               </div>
 
               {/* Contact */}
-              <div className="md:col-span-2 rounded-[3.5rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#0F111A]">
+              <div className="md:col-span-2 rounded-[3.5rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416]">
                 <h3 className="text-3xl font-bold mb-10 tracking-tight">Contact</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <a
                     href="mailto:support@lelu-ai.com"
-                    className="flex items-center gap-10 group bg-white/30 dark:bg-white/5 p-10 rounded-[3rem] border border-transparent hover:border-[#CBACF9]/30 transition-all duration-300"
+                    className="flex items-center gap-10 group bg-white/30 dark:bg-white/5 p-10 rounded-[3rem] border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-300"
                   >
-                    <div className="w-20 h-20 rounded-3xl bg-white dark:bg-black-100 flex items-center justify-center text-3xl shadow-xl transition-all group-hover:scale-110 group-hover:shadow-[#CBACF9]/20">
-                      <FiMail className="text-[#CBACF9]" />
+                    <div className="w-20 h-20 rounded-3xl bg-white dark:bg-[#141416] flex items-center justify-center text-3xl shadow-xl transition-all group-hover:scale-110">
+                      <FiMail className="text-zinc-700 dark:text-zinc-300" />
                     </div>
                     <div>
                       <div className="text-sm font-medium text-zinc-400 mb-1 uppercase tracking-widest">
@@ -546,10 +539,10 @@ export default function AboutPage() {
                   </a>
                   <a
                     href="mailto:security@lelu-ai.com"
-                    className="flex items-center gap-10 group bg-white/30 dark:bg-white/5 p-10 rounded-[3rem] border border-transparent hover:border-[#393BB2]/30 transition-all duration-300"
+                    className="flex items-center gap-10 group bg-white/30 dark:bg-white/5 p-10 rounded-[3rem] border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-300"
                   >
-                    <div className="w-20 h-20 rounded-3xl bg-white dark:bg-black-100 flex items-center justify-center text-3xl shadow-xl transition-all group-hover:scale-110 group-hover:shadow-[#393BB2]/20">
-                      <FiShield className="text-[#393BB2]" />
+                    <div className="w-20 h-20 rounded-3xl bg-white dark:bg-[#141416] flex items-center justify-center text-3xl shadow-xl transition-all group-hover:scale-110">
+                      <FiShield className="text-zinc-700 dark:text-zinc-300" />
                     </div>
                     <div>
                       <div className="text-sm font-medium text-zinc-400 mb-1 uppercase tracking-widest">

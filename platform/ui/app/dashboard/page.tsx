@@ -107,7 +107,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="h-10 w-10 border-2 border-[#0A0A0A] dark:border-white border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-mono text-zinc-500 uppercase tracking-widest">
             Initializing Foundry...
           </p>
@@ -143,7 +143,7 @@ export default function DashboardPage() {
             </Link>
             <button
               onClick={() => setShowNewKeyModal(true)}
-              className="px-4 py-2 text-sm font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all flex items-center gap-2"
+              className="px-4 py-2 text-sm font-bold bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A] rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-95 transition-all flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               New API Key
@@ -157,8 +157,8 @@ export default function DashboardPage() {
             <div className="lg:col-span-2 p-8 rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-2xl shadow-xl">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-indigo-500" />
+                  <div className="h-10 w-10 rounded-xl bg-zinc-100 dark:bg-zinc-500/10 flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
                   </div>
                   <h2 className="text-lg font-bold">Monthly Quota Usage</h2>
                 </div>
@@ -181,7 +181,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="relative h-2 w-full bg-zinc-200 dark:bg-white/5 rounded-full overflow-hidden">
                     <div
-                      className="absolute inset-y-0 left-0 bg-indigo-500 transition-all duration-1000 ease-out"
+                      className="absolute inset-y-0 left-0 bg-[#0A0A0A] dark:bg-white transition-all duration-1000 ease-out"
                       style={{ width: `${(usage.authRequests / usage.authQuota) * 100}%` }}
                     />
                   </div>
@@ -212,18 +212,18 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="p-8 rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-indigo-600 shadow-xl overflow-hidden relative group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl -translate-y-12 translate-x-12" />
+            <div className="p-8 rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-[#0A0A0A] dark:bg-[#141416] shadow-xl overflow-hidden relative group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl -translate-y-12 translate-x-12" />
               <div className="relative z-10 flex flex-col h-full">
                 <Shield className="w-10 h-10 text-white/40 mb-6" />
                 <h3 className="text-xl font-bold text-white mb-2">Real-time Gating</h3>
-                <p className="text-indigo-100 text-sm leading-relaxed mb-8 flex-1">
+                <p className="text-zinc-400 text-sm leading-relaxed mb-8 flex-1">
                   Your agents are being secured by Lelu's active policy engine. Suspicious tool
                   calls are being routed to human review automatically.
                 </p>
                 <Link
                   href="/audit"
-                  className="w-full py-3 bg-white text-indigo-600 rounded-xl font-bold text-sm text-center flex items-center justify-center gap-2 hover:bg-indigo-50 transition-colors"
+                  className="w-full py-3 bg-white text-[#0A0A0A] rounded-xl font-bold text-sm text-center flex items-center justify-center gap-2 hover:bg-zinc-100 transition-colors"
                 >
                   View Live Audit Log
                   <ArrowUpRight className="w-4 h-4" />
@@ -264,7 +264,7 @@ export default function DashboardPage() {
                         className={
                           key.env === "live"
                             ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                            : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                            : "bg-zinc-100 dark:bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700"
                         }
                       >
                         {key.env.toUpperCase()}
@@ -278,7 +278,7 @@ export default function DashboardPage() {
                           {copiedKey === key.key ? (
                             <Check className="w-3.5 h-3.5 text-emerald-500" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5 hover:text-indigo-500" />
+                            <Copy className="w-3.5 h-3.5 hover:text-zinc-900 dark:hover:text-zinc-100" />
                           )}
                         </button>
                       </div>
@@ -316,12 +316,12 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="p-8 rounded-[2rem] bg-indigo-50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-100 flex flex-col gap-6 border border-indigo-100 dark:border-indigo-900/30">
+          <div className="p-8 rounded-[2rem] bg-zinc-50 dark:bg-zinc-900/20 text-zinc-900 dark:text-white flex flex-col gap-6 border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center">
-                <Rocket className="w-5 h-5 text-white" />
+              <div className="h-10 w-10 rounded-xl bg-[#0A0A0A] dark:bg-white flex items-center justify-center">
+                <Rocket className="w-5 h-5 text-white dark:text-[#0A0A0A]" />
               </div>
-              <h3 className="text-xl font-bold underline decoration-indigo-500/30 underline-offset-4">
+              <h3 className="text-xl font-bold underline decoration-zinc-400/30 underline-offset-4">
                 Explore Automation
               </h3>
             </div>
@@ -375,7 +375,7 @@ export default function DashboardPage() {
                     setGeneratedKey(null);
                     setNewKeyName("");
                   }}
-                  className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors"
+                  className="w-full py-4 bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A] rounded-2xl font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
                 >
                   Done
                 </button>
@@ -393,7 +393,7 @@ export default function DashboardPage() {
                       value={newKeyName}
                       onChange={(e) => setNewKeyName(e.target.value)}
                       placeholder="e.g. Lambda Deployment"
-                      className="w-full px-6 py-4 bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                      className="w-full px-6 py-4 bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-500 transition-all font-medium"
                     />
                   </div>
                   <div className="space-y-2">
@@ -403,7 +403,7 @@ export default function DashboardPage() {
                     <select
                       value={newKeyEnv}
                       onChange={(e) => setNewKeyEnv(e.target.value as "live" | "test")}
-                      className="w-full px-6 py-4 bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium appearance-none"
+                      className="w-full px-6 py-4 bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-500 transition-all font-medium appearance-none"
                     >
                       <option value="test">Sandbox (Development)</option>
                       <option value="live">Live (Production)</option>
@@ -423,7 +423,7 @@ export default function DashboardPage() {
                   <button
                     onClick={handleGenerateKey}
                     disabled={!newKeyName}
-                    className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-indigo-500/20 transition-all active:scale-95"
+                    className="flex-1 py-4 bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A] rounded-2xl font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                   >
                     Foundry Key
                   </button>
