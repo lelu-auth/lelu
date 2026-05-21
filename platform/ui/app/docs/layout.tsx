@@ -1,23 +1,26 @@
 import { DocsEnhancements } from "@/components/docs/DocsEnhancements";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { OnThisPage } from "@/components/docs/OnThisPage";
-import LeluFooter from "@/components/LeluFooter";
+import { DocsNav } from "@/components/docs/DocsNav";
+import { AskAIPill } from "@/components/docs/AskAIPill";
 import type { ReactNode } from "react";
 
 export default function DocsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen bg-[#FAFAFA] dark:bg-[#0B0B0C]">
-      <div className="docs-page flex-1 flex max-w-screen-2xl mx-auto w-full">
+    <div className="min-h-screen bg-white dark:bg-[#0B0B0C]">
+      <DocsNav />
+      <div className="docs-page flex max-w-[1400px] mx-auto w-full">
         <DocsSidebar />
 
-        {/* Main Content Area */}
-        <main className="flex-1 min-w-0 pt-24 md:pt-32 pb-8 px-6 lg:px-12">
-          <div className="max-w-[800px] mx-auto">{children}</div>
+        {/* Main content */}
+        <main className="flex-1 min-w-0 py-10 px-10 lg:px-14">
+          <div className="max-w-[720px]">{children}</div>
         </main>
 
         <OnThisPage />
         <DocsEnhancements />
       </div>
+      <AskAIPill />
     </div>
   );
 }
