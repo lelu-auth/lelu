@@ -1,19 +1,24 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import LeluHero from "@/components/LeluHero";
-import CodeShowcase from "@/components/CodeShowcase";
-const LeluGrid = dynamic(() => import("@/components/LeluGrid"), { ssr: false });
 import LeluFeatures from "@/components/LeluFeatures";
+import CodeShowcase from "@/components/CodeShowcase";
+import QuickstartStrip from "@/components/QuickstartStrip";
+import IntegrationMarquee from "@/components/IntegrationMarquee";
 
 const Home = () => {
   return (
-    <main className="relative bg-white dark:bg-black-100 flex justify-center items-center flex-col overflow-hidden mx-auto sm:px-10 px-5">
+    <main className="relative bg-[#FAFAFA] dark:bg-[#0B0B0C] flex justify-center items-center flex-col overflow-hidden mx-auto">
       <div className="max-w-7xl w-full">
         <LeluHero />
-        <CodeShowcase />
+      </div>
+      <div className="w-full">
+        <IntegrationMarquee />
+      </div>
+      <div className="max-w-7xl w-full">
         <LeluFeatures />
-        <LeluGrid />
+        <CodeShowcase />
+        <QuickstartStrip />
       </div>
     </main>
   );

@@ -1,85 +1,67 @@
 "use client";
-import React from "react";
-import { stats, features } from "@/data";
-import { Button } from "./ui/MovingBorders";
 import { motion } from "framer-motion";
+import { numberedFeatures } from "@/data";
+
+const chipClass: Record<string, string> = {
+  allow:
+    "bg-[#6B9E7A]/10 text-[#6B9E7A] border border-[#6B9E7A]/20 dark:bg-[#6B9E7A]/10 dark:text-[#8FC99E] dark:border-[#6B9E7A]/25",
+  review:
+    "bg-[#E8B339]/10 text-[#C49A30] border border-[#E8B339]/20 dark:bg-[#E8B339]/10 dark:text-[#E8B339] dark:border-[#E8B339]/25",
+  neutral:
+    "bg-zinc-100 text-zinc-500 border border-zinc-200 dark:bg-white/[0.05] dark:text-zinc-400 dark:border-white/10",
+};
 
 const LeluFeatures = () => {
   return (
-    <div className="w-full mt-24 md:mt-32 font-sans relative z-10 overflow-hidden" id="features">
-      {/* STATS SECTION */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.8 }}
-        className="max-w-6xl mx-auto flex flex-wrap justify-center md:justify-between items-center gap-12 md:gap-8 px-4 mb-32 py-10 border-y border-zinc-200 dark:border-white/10 bg-gradient-to-r from-transparent via-zinc-200/50 dark:via-white/[0.02] to-transparent relative"
-      >
-        {stats.map((s, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="flex flex-col items-center justify-center space-y-2 relative z-10"
-          >
-            <h3 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#CBACF9] to-[#393BB2] drop-shadow-sm">
-              {s.value}
-            </h3>
-            <p className="text-zinc-600 dark:text-zinc-400 font-medium tracking-wide uppercase text-sm">
-              {s.label}
-            </p>
-          </motion.div>
-        ))}
-      </motion.div>
+    <section className="w-full py-24 md:py-32" id="features">
+      <div className="max-w-6xl mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mb-16"
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 mb-3">
+            Features
+          </p>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-[#0A0A0A] dark:text-white">
+            Every agent action, accounted for.
+          </h2>
+        </motion.div>
 
-      {/* FEATURES HEADER */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.6 }}
-      >
-        <h1 className="heading">
-          Security infrastructure for your <span className="text-purple">agents.</span>
-        </h1>
-        <p className="text-center text-lg text-zinc-600 dark:text-white-200 max-w-2xl mx-auto mt-4 mb-16">
-          A comprehensive suite to monitor, control, and audit autonomous workflows.
-        </p>
-      </motion.div>
-
-      {/* FEATURES GRID */}
-      <div className="w-full grid lg:grid-cols-4 grid-cols-1 gap-10 max-w-7xl mx-auto px-4">
-        {features.map((card, index) => (
-          <motion.div
-            key={card.id}
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.6, delay: index * 0.15 }}
-            className={`flex w-full ${card.className || "md:col-span-2"}`}
-          >
-            <Button
-              duration={Math.floor(Math.random() * 10000) + 10000}
-              borderRadius="1.75rem"
-              containerClassName="w-full"
-              className="flex-1 w-full text-black dark:text-white border-neutral-200 dark:border-slate-800 transition-all hover:scale-[1.02]"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#E7E5E4] dark:bg-[#222224] rounded-xl overflow-hidden border border-[#E7E5E4] dark:border-[#222224]">
+          {numberedFeatures.map((feat, i) => (
+            <motion.div
+              key={feat.num}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.07 }}
+              className="group relative bg-[#FAFAFA] dark:bg-[#0B0B0C] p-6 flex flex-col gap-4 hover:bg-[#F5F5F4] dark:hover:bg-[#141416] transition-colors duration-200"
             >
-              <div className="flex lg:flex-row flex-col lg:items-center p-3 py-6 md:p-5 lg:p-10 gap-4 h-full w-full">
-                <img src={card.thumbnail} alt={card.title} className="lg:w-32 md:w-20 w-16" />
-                <div className="lg:ms-5 flex flex-col justify-center">
-                  <h1 className="text-start text-xl md:text-2xl font-bold">{card.title}</h1>
-                  <p className="text-start dark:text-white-100 text-zinc-600 mt-3 font-semibold">
-                    {card.desc}
-                  </p>
-                </div>
+              <span className="text-xs font-mono text-zinc-300 dark:text-zinc-600 tracking-widest">
+                {feat.num}
+              </span>
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-[15px] font-semibold text-[#0A0A0A] dark:text-white leading-snug">
+                  {feat.title}
+                </h3>
+                <span
+                  className={`flex-shrink-0 text-[11px] font-mono px-2 py-0.5 rounded-md ${chipClass[feat.chipColor]}`}
+                >
+                  {feat.chip}
+                </span>
               </div>
-            </Button>
-          </motion.div>
-        ))}
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                {feat.desc}
+              </p>
+              <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-lelu-amber group-hover:w-full transition-all duration-300" />
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

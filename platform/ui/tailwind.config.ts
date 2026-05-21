@@ -27,14 +27,25 @@ const config = {
       colors: {
         black: {
           DEFAULT: "#000",
-          100: "#000319",
-          200: "rgba(17, 25, 40, 0.75)",
-          300: "rgba(255, 255, 255, 0.125)",
+          100: "#0B0B0C",
+          200: "#141416",
+          300: "#222224",
         },
         white: {
           DEFAULT: "#FFF",
-          100: "#BEC1DD",
-          200: "#C1C2D3",
+          100: "#A1A1A3",
+          200: "#C8C8CA",
+        },
+        surface: {
+          light: "#F5F5F4",
+          dark: "#141416",
+        },
+        lelu: {
+          amber: "#E8B339",
+          "amber-dim": "#C49A30",
+          allow: "#6B9E7A",
+          review: "#C49A30",
+          deny: "#9E6B6B",
         },
         blue: {
           "100": "#E4ECFF",
@@ -148,6 +159,14 @@ const config = {
           "0%": { opacity: "0", transform: "translateY(20px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-50% - 0.75rem))" },
+        },
+        "marquee-reverse": {
+          from: { transform: "translateX(calc(-50% - 0.75rem))" },
+          to: { transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -162,6 +181,8 @@ const config = {
         scroll:
           "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
         fadeInUp: "fadeInUp 0.8s ease-out forwards",
+        marquee: "marquee 30s linear infinite",
+        "marquee-reverse": "marquee-reverse 25s linear infinite",
       },
     },
   },
