@@ -16,7 +16,6 @@ concurrency:
 
 env:
   GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
-  AR_PREFIX: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lelu
 
 # ─────────────────────────────────────────────────────────────────────────────
 jobs:
@@ -57,11 +56,14 @@ jobs:
         id: meta
         run: |
           SHA="${GITHUB_SHA::8}"
-          PREFIX="${{ env.AR_PREFIX }}"
+          REGION="${{ env.GCP_REGION }}"
+          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+          PREFIX="${REGION}-docker.pkg.dev/${PROJECT}/lelu"
           echo "engine=${PREFIX}/engine:${SHA}"     >> "$GITHUB_OUTPUT"
           echo "platform=${PREFIX}/platform:${SHA}" >> "$GITHUB_OUTPUT"
           echo "ui=${PREFIX}/ui:${SHA}"             >> "$GITHUB_OUTPUT"
           echo "mcp=${PREFIX}/mcp:${SHA}"           >> "$GITHUB_OUTPUT"
+          echo "prefix=${PREFIX}"                   >> "$GITHUB_OUTPUT"
 
       # ── Engine ──────────────────────────────────────────────────────────────
       - name: Build & push engine
@@ -76,7 +78,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.engine_image }}
-            ${{ env.AR_PREFIX }}/engine:latest
+            ${{ steps.meta.outputs.prefix }}/engine:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=engine
           cache-to:   type=gha,scope=engine,mode=max
@@ -94,7 +96,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.platform_image }}
-            ${{ env.AR_PREFIX }}/platform:latest
+            ${{ steps.meta.outputs.prefix }}/platform:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=platform
           cache-to:   type=gha,scope=platform,mode=max
@@ -112,7 +114,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.ui_image }}
-            ${{ env.AR_PREFIX }}/ui:latest
+            ${{ steps.meta.outputs.prefix }}/ui:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=ui
           cache-to:   type=gha,scope=ui,mode=max
@@ -130,7 +132,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.mcp_image }}
-            ${{ env.AR_PREFIX }}/mcp:latest
+            ${{ steps.meta.outputs.prefix }}/mcp:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=mcp
           cache-to:   type=gha,scope=mcp,mode=max
