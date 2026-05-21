@@ -12,7 +12,7 @@ on:
 
 concurrency:
   group: deploy-gcp-${{ github.ref }}
-  cancel-in-progress: false   # never cancel a running deploy
+  cancel-in-progress: false
 
 env:
   GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
@@ -26,29 +26,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # required for Workload Identity Federation
+      id-token: write
 
     outputs:
-      engine_image:   ${{ steps.meta.outputs.engine }}
-      platform_image: ${{ steps.meta.outputs.platform }}
-      ui_image:       ${{ steps.meta.outputs.ui }}
-      mcp_image:      ${{ steps.meta.outputs.mcp }}
-      prefix:         ${{ steps.meta.outputs.prefix }}
-      service:        ${{ steps.svc.outputs.target }}
+      service: ${{ steps.svc.outputs.target }}
 
     steps:
       - uses: actions/checkout@v4
 
-      # Normalize service — push events have no inputs, default to "all"
       - name: Normalize service target
         id: svc
         run: |
           TARGET="${{ github.event.inputs.service }}"
           echo "target=${TARGET:-all}" >> "$GITHUB_OUTPUT"
 
-      # Keyless auth via Workload Identity Federation — no long-lived keys
       - name: Authenticate to Google Cloud
-        id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
@@ -58,21 +50,19 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+        run: |
+          PROJECT="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '[:space:]')"
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
-      # Compute short SHA tag — strip whitespace from secret to avoid newline injection
-      - name: Compute image tags
+      - name: Compute image prefix
         id: meta
         run: |
-          SHA="${GITHUB_SHA::8}"
+          SHA="${GITHUB_SHA:0:8}"
           REGION="${{ env.GCP_REGION }}"
           PROJECT="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '[:space:]')"
           PREFIX="${REGION}-docker.pkg.dev/${PROJECT}/lelu"
-          echo "engine=${PREFIX}/engine:${SHA}"     >> "$GITHUB_OUTPUT"
-          echo "platform=${PREFIX}/platform:${SHA}" >> "$GITHUB_OUTPUT"
-          echo "ui=${PREFIX}/ui:${SHA}"             >> "$GITHUB_OUTPUT"
-          echo "mcp=${PREFIX}/mcp:${SHA}"           >> "$GITHUB_OUTPUT"
-          echo "prefix=${PREFIX}"                   >> "$GITHUB_OUTPUT"
+          echo "prefix=${PREFIX}" >> "$GITHUB_OUTPUT"
+          echo "sha=${SHA}"       >> "$GITHUB_OUTPUT"
 
       # ── Engine ──────────────────────────────────────────────────────────────
       - name: Build & push engine
@@ -83,7 +73,7 @@ jobs:
           file: engine/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.engine }}
+            ${{ steps.meta.outputs.prefix }}/engine:${{ steps.meta.outputs.sha }}
             ${{ steps.meta.outputs.prefix }}/engine:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=engine
@@ -98,7 +88,7 @@ jobs:
           file: platform/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.platform }}
+            ${{ steps.meta.outputs.prefix }}/platform:${{ steps.meta.outputs.sha }}
             ${{ steps.meta.outputs.prefix }}/platform:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=platform
@@ -113,7 +103,7 @@ jobs:
           file: platform/ui/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.ui }}
+            ${{ steps.meta.outputs.prefix }}/ui:${{ steps.meta.outputs.sha }}
             ${{ steps.meta.outputs.prefix }}/ui:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=ui
@@ -128,7 +118,7 @@ jobs:
           file: sdk/mcp/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.mcp }}
+            ${{ steps.meta.outputs.prefix }}/mcp:${{ steps.meta.outputs.sha }}
             ${{ steps.meta.outputs.prefix }}/mcp:latest
           platforms: linux/amd64
           cache-from: type=gha,scope=mcp
@@ -155,12 +145,19 @@ jobs:
       - name: Set up gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      # Sanitize the project ID once — used in every deploy step below
+      # Recompute image URIs from the same SHA — avoids inter-job output fragility
       - name: Set deploy vars
         id: vars
         run: |
+          SHA="${GITHUB_SHA:0:8}"
+          REGION="${{ env.GCP_REGION }}"
           PROJECT="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '[:space:]')"
-          echo "project=${PROJECT}" >> "$GITHUB_OUTPUT"
+          PREFIX="${REGION}-docker.pkg.dev/${PROJECT}/lelu"
+          echo "project=${PROJECT}"                    >> "$GITHUB_OUTPUT"
+          echo "engine_image=${PREFIX}/engine:${SHA}"   >> "$GITHUB_OUTPUT"
+          echo "platform_image=${PREFIX}/platform:${SHA}" >> "$GITHUB_OUTPUT"
+          echo "ui_image=${PREFIX}/ui:${SHA}"           >> "$GITHUB_OUTPUT"
+          echo "mcp_image=${PREFIX}/mcp:${SHA}"         >> "$GITHUB_OUTPUT"
 
       # ── Engine ──────────────────────────────────────────────────────────────
       - name: Deploy engine
@@ -168,7 +165,7 @@ jobs:
         run: |
           PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
-          IMAGE="${{ needs.build.outputs.engine_image }}"
+          IMAGE="${{ steps.vars.outputs.engine_image }}"
 
           sed \
             -e "s|__PROJECT__|${PROJECT}|g" \
@@ -178,8 +175,7 @@ jobs:
             > /tmp/engine.yaml
 
           gcloud run services replace /tmp/engine.yaml \
-            --region="${REGION}" \
-            --quiet
+            --region="${REGION}" --quiet
 
           gcloud run services add-iam-policy-binding lelu-engine \
             --region="${REGION}" \
@@ -193,7 +189,7 @@ jobs:
         run: |
           PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
-          IMAGE="${{ needs.build.outputs.platform_image }}"
+          IMAGE="${{ steps.vars.outputs.platform_image }}"
 
           sed \
             -e "s|__PROJECT__|${PROJECT}|g" \
@@ -203,8 +199,7 @@ jobs:
             > /tmp/platform.yaml
 
           gcloud run services replace /tmp/platform.yaml \
-            --region="${REGION}" \
-            --quiet
+            --region="${REGION}" --quiet
 
           gcloud run services add-iam-policy-binding lelu-platform \
             --region="${REGION}" \
@@ -230,7 +225,7 @@ jobs:
         run: |
           PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
-          IMAGE="${{ needs.build.outputs.ui_image }}"
+          IMAGE="${{ steps.vars.outputs.ui_image }}"
           ENGINE_URL="${{ steps.urls.outputs.engine }}"
           PLATFORM_URL="${{ steps.urls.outputs.platform }}"
 
@@ -244,8 +239,7 @@ jobs:
             > /tmp/ui.yaml
 
           gcloud run services replace /tmp/ui.yaml \
-            --region="${REGION}" \
-            --quiet
+            --region="${REGION}" --quiet
 
           gcloud run services add-iam-policy-binding lelu-ui \
             --region="${REGION}" \
@@ -259,7 +253,7 @@ jobs:
         run: |
           PROJECT="${{ steps.vars.outputs.project }}"
           REGION="${{ env.GCP_REGION }}"
-          IMAGE="${{ needs.build.outputs.mcp_image }}"
+          IMAGE="${{ steps.vars.outputs.mcp_image }}"
           ENGINE_URL="${{ steps.urls.outputs.engine }}"
 
           sed \
@@ -271,8 +265,7 @@ jobs:
             > /tmp/mcp.yaml
 
           gcloud run services replace /tmp/mcp.yaml \
-            --region="${REGION}" \
-            --quiet
+            --region="${REGION}" --quiet
 
           gcloud run services add-iam-policy-binding lelu-mcp \
             --region="${REGION}" \
