@@ -57,7 +57,7 @@ jobs:
         run: |
           SHA="${GITHUB_SHA::8}"
           REGION="${{ env.GCP_REGION }}"
-          PROJECT="${{ secrets.GCP_PROJECT_ID }}"
+          PROJECT="$(printf '%s' '${{ secrets.GCP_PROJECT_ID }}' | tr -d '[:space:]')"
           PREFIX="${REGION}-docker.pkg.dev/${PROJECT}/lelu"
           echo "engine=${PREFIX}/engine:${SHA}"     >> "$GITHUB_OUTPUT"
           echo "platform=${PREFIX}/platform:${SHA}" >> "$GITHUB_OUTPUT"
