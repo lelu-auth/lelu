@@ -43,14 +43,15 @@ async function getRedis(): Promise<RedisClientType> {
     ?? process.env.REDIS_ADDR
     ?? "redis://localhost:6379";
 
+  if (!process.env.REDIS_URL && !process.env.REDIS_ADDR) {
+    console.warn("[auth] REDIS_URL is not set — falling back to localhost:6379. Set REDIS_URL in your Vercel environment variables.");
+  }
+
   const client = createClient({
     url: url.startsWith("redis") ? url : `redis://${url}`,
     socket: {
-      connectTimeout: 5000,
-      reconnectStrategy: (retries) => {
-        if (retries > 3) return new Error("Redis unreachable");
-        return Math.min(retries * 200, 1000);
-      },
+      connectTimeout: 2000,
+      reconnectStrategy: false, // don't auto-reconnect in serverless — next request creates a fresh client
     },
   }) as RedisClientType;
 
