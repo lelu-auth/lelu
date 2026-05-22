@@ -13,8 +13,6 @@ export function UserMenu() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null | "loading">("loading");
-
-  if (pathname === "/login" || pathname === "/register") return null;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -39,6 +37,8 @@ export function UserMenu() {
     router.push("/");
     router.refresh();
   }
+
+  if (pathname === "/login" || pathname === "/register") return null;
 
   if (user === "loading") return <div className="w-8 h-8 rounded-full bg-[#F5F5F4] dark:bg-[#141416] animate-pulse" />;
 
