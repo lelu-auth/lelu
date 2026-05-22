@@ -47,3 +47,4 @@ DEPLOY_*.md
 # Test scripts (keep local only)
 test-*.ps1
 test-*.sh
+.env.local
