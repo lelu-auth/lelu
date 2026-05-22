@@ -8,7 +8,7 @@ import { LeluMark } from "@/components/ui/LeluMark";
 
 const LeluFooter = ({ showCTA: manualShowCTA }: { showCTA?: boolean }) => {
   const pathname = usePathname();
-  const showCTA = manualShowCTA ?? pathname === "/";
+  const showCTA = manualShowCTA ?? false;
 
   return (
     <footer className="w-full border-t border-[#E7E5E4] dark:border-[#222224]" id="contact">

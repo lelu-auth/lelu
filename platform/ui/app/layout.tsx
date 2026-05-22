@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SiteNav } from "@/components/SiteNav";
-import LeluFooter from "@/components/LeluFooter";
+import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -38,11 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           <SiteNav />
           <main className="flex-1">{children}</main>
-          <div className="flex flex-col items-center w-full px-5 sm:px-10">
-            <div className="max-w-7xl w-full">
-              <LeluFooter />
-            </div>
-          </div>
+          <ConditionalFooter />
         </ThemeProvider>
       </body>
     </html>

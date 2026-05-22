@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { LeluMark } from "@/components/ui/LeluMark";
 
@@ -54,7 +54,13 @@ const FEATURES = [
   },
 ];
 
-const RIGHT_TABS = ["README", "DOCS", "SDK", "ENTERPRISE", "CHANGELOG"];
+const RIGHT_TABS: { label: string; href?: string }[] = [
+  { label: "README" },
+  { label: "DOCS", href: "/docs" },
+  { label: "SDK", href: "/docs/installation" },
+  { label: "ENTERPRISE", href: "/docs" },
+  { label: "CHANGELOG", href: "/docs" },
+];
 
 /* ── Dot-mesh decoration for left panel ───────────────────────────── */
 function DotMesh() {
@@ -84,8 +90,13 @@ function DotMesh() {
 /* ── Main page ─────────────────────────────────────────────────────── */
 export default function HomePage() {
   const [codeTab, setCodeTab] = useState<keyof typeof CODE>("CLI");
-  const [rightTab, setRightTab] = useState("README");
   const [copied, setCopied] = useState(false);
+
+  // Lock body scroll so only the right panel scrolls internally
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
 
   function copy() {
     navigator.clipboard.writeText(CODE[codeTab]).then(() => {
@@ -129,12 +140,12 @@ export default function HomePage() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-white text-[1.45rem] sm:text-[1.65rem] xl:text-[1.8rem] font-bold leading-[1.15] tracking-tight mb-8 text-center lg:text-left">
+          <h1 className="text-white text-[1.45rem] sm:text-[1.65rem] xl:text-[1.8rem] font-bold leading-[1.15] tracking-tight mb-8 text-center">
             The authorization layer for autonomous AI agents
           </h1>
 
           {/* CTAs */}
-          <div className="flex items-center gap-3 justify-center lg:justify-start flex-wrap">
+          <div className="flex items-center gap-3 justify-center flex-wrap">
             <Link
               href="/register"
               className="px-5 py-2.5 bg-white text-[#0A0A0A] text-[14px] font-semibold rounded-md hover:bg-zinc-100 transition-colors"
@@ -177,22 +188,24 @@ export default function HomePage() {
         {/* Right panel tab bar */}
         <div className="sticky top-0 z-10 flex items-center border-b border-[#E7E5E4] dark:border-[#27272A] bg-white/90 dark:bg-[#0B0B0C]/90 backdrop-blur-sm px-6 shrink-0">
           <div className="flex items-center gap-0 -mb-px flex-1 overflow-x-auto no-scrollbar">
-            {RIGHT_TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setRightTab(tab)}
-                className={`px-4 py-3.5 text-[12px] font-bold tracking-[0.06em] uppercase whitespace-nowrap border-b-[1.5px] transition-colors ${
-                  rightTab === tab
-                    ? "border-[#0A0A0A] dark:border-white text-[#0A0A0A] dark:text-white"
-                    : "border-transparent text-[#737373] hover:text-[#0A0A0A] dark:hover:text-white"
-                }`}
-              >
-                {tab}
-                {(tab === "SDK" || tab === "ENTERPRISE") && (
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline ml-1 mb-0.5"><path d="M6 9l6 6 6-6" /></svg>
-                )}
-              </button>
-            ))}
+            {RIGHT_TABS.map((tab) => {
+              const isReadme = tab.label === "README";
+              const cls = `px-4 py-3.5 text-[12px] font-bold tracking-[0.06em] uppercase whitespace-nowrap border-b-[1.5px] transition-colors ${
+                isReadme
+                  ? "border-[#0A0A0A] dark:border-white text-[#0A0A0A] dark:text-white"
+                  : "border-transparent text-[#737373] hover:text-[#0A0A0A] dark:hover:text-white"
+              }`;
+              const chevron = (tab.label === "SDK" || tab.label === "ENTERPRISE") && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline ml-1 mb-0.5"><path d="M6 9l6 6 6-6" /></svg>
+              );
+              return tab.href ? (
+                <Link key={tab.label} href={tab.href} className={cls}>
+                  {tab.label}{chevron}
+                </Link>
+              ) : (
+                <span key={tab.label} className={cls}>{tab.label}{chevron}</span>
+              );
+            })}
           </div>
           <Link
             href="/login"
