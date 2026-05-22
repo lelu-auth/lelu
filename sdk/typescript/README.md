@@ -1,129 +1,171 @@
-<div align="center">
-  <img src="https://lelu-ai.com/logo.svg" alt="Lelu logo" width="120" />
-</div>
+# lelu-agent-auth
 
-# Lelu
+The TypeScript SDK for [Lelu](https://lelu-ai.com) — the confidence-aware authorization engine for autonomous AI agents.
 
-The TypeScript SDK for Lelu — the confidence-aware authorization engine for autonomous AI agents.
+Lelu lets you gate every agent action against a policy, route low-confidence calls to a human reviewer, and keep an immutable audit trail — without running any infrastructure yourself.
 
-> **Package Renamed:** If you're looking for `@lelu-auth/lelu`, this is the new package name. Simply install `lelu-agent-auth` instead. [Migration guide](https://github.com/lelu-auth/lelu/blob/main/NPM_MIGRATION_STRATEGY.md)
-
-**Author:** Abenezer Getachew  
-**Contributors:** [Abenezer Getachew](https://github.com/Abenezer0923)
-
-Lelu provides confidence-aware access control, human-in-the-loop approvals, and SOC 2-ready audit trails for your autonomous agents.
-
-## Installation
+## Install
 
 ```bash
 npm install lelu-agent-auth
 ```
 
-## Start Dashboard (Localhost)
+## Get an API key
 
-After installing the package, start the local dashboard stack with one command:
+Visit **[lelu-ai.com/api-key](https://lelu-ai.com/api-key)** — no signup, no email, instant anonymous key with 500 requests/day free.
 
-```bash
-npx lelu-agent-auth dashboard
-```
+## Quick start
 
-Then open:
-
-```text
-http://localhost:3002/audit
-```
-
-This command clones/updates the Lelu stack in `~/.lelu-stack` and runs `docker compose up -d --build`.
-
-## Docker Support
-
-Lelu works in Dockerized apps.
-
-The SDK resolves engine URL in this order:
-
-1. `baseUrl` passed to `createClient(...)`
-2. `LELU_BASE_URL` environment variable
-3. `http://localhost:8080` fallback
-
-Example for containers:
-
-```bash
-LELU_BASE_URL=http://host.docker.internal:8083
-```
-
-## Quick Start
-
-### Option 1: Use Hosted Engine (Recommended)
-
-Connect to the hosted Lelu engine for instant setup with an API key:
-
-```typescript
+```ts
 import { createClient } from "lelu-agent-auth";
 
-// Initialize with hosted engine and API key
-const lelu = createClient({ 
-  baseUrl: "https://lelu-engine.onrender.com",
-  apiKey: process.env.LELU_API_KEY  // Get your key from the dashboard
+const lelu = createClient({
+  apiKey: process.env.LELU_API_KEY,   // key from lelu-ai.com/api-key
 });
 
-// Authorize an agent action
-async function runAgent() {
-  const decision = await lelu.agentAuthorize({
-    actor: "billing-agent",
-    action: "refund:process",
-    resource: { orderId: "12345" },
-    context: {
-      confidence: 0.85
-    }
-  });
+const decision = await lelu.agentAuthorize({
+  actor: "billing-agent",
+  action: "refund:process",
+  resource: { orderId: "ord_123" },
+  context: { confidence: 0.85 },
+});
 
-  if (decision.allowed) {
-    console.log("✅ Action permitted!");
-  } else {
-    console.log("❌ Action denied:", decision.reason);
-    if (decision.requiresHumanReview) {
-      console.log("⏳ Queued for human review");
-    }
-  }
+if (decision.allowed) {
+  // proceed
+} else if (decision.requiresHumanReview) {
+  // agent pauses — action queued for human approval
+} else {
+  // blocked by policy
+  console.error(decision.reason);
 }
 ```
 
-**Get Your API Key:**
-1. Visit the [Lelu Dashboard](https://lelu-engine.onrender.com)
-2. Generate a beta API key (free, no signup required)
-3. Set it as `LELU_API_KEY` environment variable
+That's it. No Docker. No local server. The SDK routes to the Lelu cloud engine automatically when an API key is provided.
 
-### Option 2: Run Locally
+## How URL resolution works
 
-For development, you can run the engine locally:
+| Situation | Engine used |
+|---|---|
+| `apiKey` provided, no `baseUrl` | Lelu cloud (`https://lelu-engine-666101080696.us-central1.run.app`) |
+| `LELU_BASE_URL` env var set | That URL |
+| `baseUrl` passed to `createClient` | That URL |
+| No `apiKey`, no env var, no `baseUrl` | `http://localhost:8080` (self-hosted dev) |
 
-```typescript
+## Framework integrations
+
+### Vercel AI SDK
+
+```ts
 import { createClient } from "lelu-agent-auth";
+import { secureTool } from "lelu-agent-auth/vercel";
+import { tool } from "ai";
+import { z } from "zod";
 
-// Initialize with local engine
-const lelu = createClient({ 
-  baseUrl: "http://localhost:8083" 
+const lelu = createClient({ apiKey: process.env.LELU_API_KEY });
+
+const processRefund = secureTool(lelu, "billing-agent", {
+  tool: tool({
+    description: "Process a customer refund",
+    parameters: z.object({ orderId: z.string(), amount: z.number() }),
+    execute: async ({ orderId, amount }) => {
+      // only runs when Lelu allows it
+      return { success: true };
+    },
+  }),
+  action: "refund:process",
+  confidence: 0.9,
 });
 ```
 
-Start the local engine:
+### Express middleware
 
-```bash
-npx lelu-agent-auth dashboard
+```ts
+import { createClient } from "lelu-agent-auth";
+import { authorize } from "lelu-agent-auth/express";
+
+const lelu = createClient({ apiKey: process.env.LELU_API_KEY });
+
+app.post(
+  "/api/refund",
+  authorize(lelu, { action: "refund:process", confidence: 0.9 }),
+  (req, res) => res.json({ ok: true }),
+);
 ```
 
-Then open: `http://localhost:3002/audit`
+### LangChain
 
-## Features
+```ts
+import { createClient } from "lelu-agent-auth";
+import { secureTool } from "lelu-agent-auth/langchain";
 
-- **Confidence-Aware**: Dynamically adjust permissions based on the AI agent's confidence level.
-- **Human-in-the-loop**: Require human approval for low-confidence or high-risk actions.
-- **Audit Trails**: SOC 2-ready logging of all agent decisions and actions.
-- **Framework Agnostic**: Works with LangChain, AutoGPT, or custom agent frameworks.
+const lelu = createClient({ apiKey: process.env.LELU_API_KEY });
 
-## Documentation
+const safeTool = secureTool(lelu, "research-agent", myLangChainTool, {
+  action: "web:search",
+  confidence: 0.8,
+});
+```
 
-For full documentation, visit [https://lelu-ai.com/](https://lelu-ai.com/).
+## All methods
+
+```ts
+// Authorization
+lelu.agentAuthorize({ actor, action, resource?, context })
+lelu.authorize({ userId, action, resource? })
+
+// Token management (scoped, time-limited JWTs)
+lelu.mintToken({ scope, actingFor?, ttlSeconds? })
+lelu.revokeToken(tokenId)
+
+// Multi-agent delegation
+lelu.delegateScope({ delegator, delegatee, scopedTo?, ttlSeconds?, confidence? })
+
+// Audit trail
+lelu.listAuditEvents({ actor?, action?, decision?, from?, to?, limit?, cursor? })
+
+// Behavioral analytics
+lelu.getAgentReputation(agentId)
+lelu.getAgentAnomalies(agentId, since?)
+lelu.getAgentBaseline(agentId)
+lelu.getAlerts(agentId?)
+
+// Health
+lelu.isHealthy()  // → boolean
+```
+
+## Environment variables
+
+| Variable | Description |
+|---|---|
+| `LELU_API_KEY` | Your API key — set this and you're done |
+| `LELU_BASE_URL` | Override the engine URL (e.g. for self-hosted) |
+
+## Self-hosting
+
+If you run your own Lelu engine (Docker / Kubernetes / Cloud Run), pass the URL directly:
+
+```ts
+const lelu = createClient({
+  baseUrl: "https://your-engine.example.com",
+  apiKey: process.env.LELU_API_KEY,
+});
+```
+
+Or via environment variable — no code change needed:
+
+```bash
+LELU_BASE_URL=https://your-engine.example.com
+LELU_API_KEY=your-key
+```
+
+See the [self-hosting guide](https://lelu-ai.com/docs/guides/production) for Docker Compose and Kubernetes manifests.
+
+## Links
+
+- [Documentation](https://lelu-ai.com/docs)
+- [Get API key](https://lelu-ai.com/api-key)
+- [GitHub](https://github.com/lelu-auth/lelu)
+- [Issues](https://github.com/lelu-auth/lelu/issues)
 
 ## License
 

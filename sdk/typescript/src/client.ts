@@ -41,12 +41,14 @@ import { agentTracer, type DecisionMetrics, type LatencyMetrics } from "./observ
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 /**
- * LeluClient is the core SDK entry-point. It communicates with the local
- * Auth Permission Engine sidecar over HTTP/JSON.
+ * LeluClient is the core SDK entry-point.
+ *
+ * When an `apiKey` is provided the client routes to the Lelu cloud engine
+ * automatically — no Docker or local server required.
  *
  * @example
  * ```ts
- * const lelu = new LeluClient({ baseUrl: "http://localhost:8080" });
+ * const lelu = new LeluClient({ apiKey: process.env.LELU_API_KEY });
  *
  * const decision = await lelu.agentAuthorize({
  *   actor: "invoice_bot",
@@ -54,9 +56,7 @@ import { agentTracer, type DecisionMetrics, type LatencyMetrics } from "./observ
  *   context: { confidence: 0.92, actingFor: "user_123" },
  * });
  *
- * if (!decision.allowed) {
- *   console.log(decision.reason);
- * }
+ * if (!decision.allowed) throw new Error(decision.reason);
  * ```
  */
 export class LeluClient {
@@ -64,16 +64,20 @@ export class LeluClient {
   private readonly timeoutMs: number;
   private readonly apiKey: string | undefined;
 
+  /** Lelu cloud engine — no self-hosting required. */
+  static readonly CLOUD_URL = "https://lelu-engine-666101080696.us-central1.run.app";
+
   constructor(cfg: ClientConfig = {}) {
     const envBaseUrl =
       typeof process !== "undefined" && process.env
         ? process.env["LELU_BASE_URL"]
         : undefined;
-    
-    // Dual-mode logic: If API key is provided and looks like a SaaS key, default to Render URL
-    const isSaaSKey = cfg.apiKey && (cfg.apiKey.startsWith("lelu_live_") || cfg.apiKey.startsWith("lelu_test_"));
-    const defaultUrl = isSaaSKey ? "https://lelu-engine.onrender.com" : "http://localhost:8080";
-    
+
+    // When an API key is supplied, route to the Lelu cloud engine by default.
+    // For self-hosted / local development, pass `baseUrl` explicitly or set
+    // the LELU_BASE_URL environment variable.
+    const defaultUrl = cfg.apiKey ? LeluClient.CLOUD_URL : "http://localhost:8080";
+
     this.baseUrl = (cfg.baseUrl ?? envBaseUrl ?? defaultUrl).replace(/\/$/, "");
     this.timeoutMs = cfg.timeoutMs ?? 5_000;
     this.apiKey = cfg.apiKey;
@@ -347,11 +351,12 @@ export class LeluClient {
 
   /**
    * Returns true if the engine is reachable and healthy.
+   * Uses /v1/fallback/status — /healthz is reserved by Cloud Run infrastructure.
    */
   async isHealthy(): Promise<boolean> {
     try {
-      const data = await this.get<{ status: string }>("/healthz");
-      return data.status === "ok";
+      const data = await this.get<{ status: string }>("/v1/fallback/status");
+      return typeof data.status === "string";
     } catch {
       return false;
     }

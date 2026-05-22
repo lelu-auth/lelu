@@ -13,6 +13,7 @@ export { AgentTracer, agentTracer, AI_AGENT_ATTRIBUTES, AGENT_TYPES, DECISION_TY
 export type { AgentSpanOptions, DecisionMetrics, LatencyMetrics } from "./observability/tracer.js";
 
 export { LeluClient } from "./client.js";
+export const LELU_CLOUD_URL = "https://lelu-engine-666101080696.us-central1.run.app";
 export { LocalStorage } from "./storage.js";
 
 export type {
