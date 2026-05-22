@@ -5,6 +5,7 @@ import { FloatingNav } from "@/components/ui/FloatingNavbar";
 import { navItems } from "@/data";
 import LeluFooter from "@/components/LeluFooter";
 import { LeluMark } from "@/components/ui/LeluMark";
+import { UserMenu } from "@/components/UserMenu";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem
           disableTransitionOnChange
         >
-          <div className="fixed top-6 left-6 md:left-10 z-[5001] pointer-events-none">
+          <div className="fixed top-6 left-6 md:left-10 right-6 md:right-10 z-[5001] pointer-events-none flex items-center justify-between">
             <a href="/" className="pointer-events-auto flex items-center gap-2.5 group">
               <LeluMark
                 size={24}
@@ -48,6 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 lelu
               </span>
             </a>
+            <div className="pointer-events-auto">
+              <UserMenu />
+            </div>
           </div>
           <FloatingNav navItems={navItems} />
           <main className="flex-1">{children}</main>
