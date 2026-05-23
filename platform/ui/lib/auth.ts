@@ -1,74 +1,79 @@
-import { createClient, RedisClientType } from "redis";
-import { scryptSync, randomBytes, timingSafeEqual } from "crypto";
+import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import { db, ensureSchema } from "./db";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface User {
   id: string;
   name: string;
   email: string;
   passwordHash: string;
+  emailVerified: boolean;
   createdAt: string;
 }
 
-export interface Session {
+export interface SessionPayload {
   userId: string;
   email: string;
   name: string;
-  createdAt: string;
-  lastSeenAt: string;
+  emailVerified: boolean;
+  iat: number;
+  exp: number;
 }
 
 export const SESSION_COOKIE = "lelu_session";
 const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days
-const RATE_LIMIT_WINDOW = 60; // 1 minute
-const RATE_LIMIT_MAX = 10; // max attempts per window per IP
 
-// ── Redis connection ──────────────────────────────────────────────────────────
-// Using a module-level singleton that properly handles reconnects.
-// In serverless (Vercel/Edge), each cold start gets a fresh module so this
-// always starts from null — that's fine.
+// ── JWT (zero-dependency, Node.js crypto) ─────────────────────────────────────
 
-let _redis: RedisClientType | null = null;
-
-async function getRedis(): Promise<RedisClientType> {
-  if (_redis?.isReady) return _redis;
-
-  // Disconnect any stale client before creating a new one
-  if (_redis) {
-    try { await _redis.disconnect(); } catch { /* ignore */ }
-    _redis = null;
-  }
-
-  const url = process.env.REDIS_URL
-    ?? process.env.REDIS_ADDR
-    ?? "redis://localhost:6379";
-
-  if (!process.env.REDIS_URL && !process.env.REDIS_ADDR) {
-    console.warn("[auth] REDIS_URL is not set — falling back to localhost:6379. Set REDIS_URL in your Vercel environment variables.");
-  }
-
-  const client = createClient({
-    url: url.startsWith("redis") ? url : `redis://${url}`,
-    socket: {
-      connectTimeout: 2000,
-      reconnectStrategy: false, // don't auto-reconnect in serverless — next request creates a fresh client
-    },
-  }) as RedisClientType;
-
-  client.on("error", (err) => {
-    console.error("[auth] Redis error:", err.message);
-  });
-
-  client.on("end", () => {
-    if (_redis === client) _redis = null;
-  });
-
-  await client.connect();
-  _redis = client;
-  return _redis;
+function b64url(buf: Buffer): string {
+  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-// ── Password hashing ─────────────────────────────────────────────────────────
+function getSecret(): string {
+  const s = process.env.JWT_SECRET;
+  if (!s) throw new Error("JWT_SECRET is not set. Generate one with: openssl rand -base64 32");
+  return s;
+}
+
+export function signJWT(payload: Omit<SessionPayload, "iat" | "exp">): string {
+  const secret = getSecret();
+  const now = Math.floor(Date.now() / 1000);
+  const header = b64url(Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const body = b64url(
+    Buffer.from(JSON.stringify({ ...payload, iat: now, exp: now + SESSION_TTL }))
+  );
+  const sig = b64url(createHmac("sha256", secret).update(`${header}.${body}`).digest());
+  return `${header}.${body}.${sig}`;
+}
+
+export function verifyJWT(token: string): SessionPayload | null {
+  try {
+    const secret = getSecret();
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [header, body, sig] = parts;
+
+    const expectedSig = b64url(
+      createHmac("sha256", secret).update(`${header}.${body}`).digest()
+    );
+
+    // Both are fixed-length HMAC-SHA256 base64url (43 chars) — safe for timingSafeEqual
+    const a = Buffer.from(sig, "base64");
+    const b = Buffer.from(expectedSig, "base64");
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+
+    const payload = JSON.parse(Buffer.from(body, "base64").toString()) as SessionPayload;
+    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// ── Password hashing ──────────────────────────────────────────────────────────
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
@@ -87,132 +92,112 @@ export function verifyPassword(password: string, stored: string): boolean {
   }
 }
 
-// ── Rate limiting (sliding window via Redis sorted set) ───────────────────────
-
-export async function checkRateLimit(key: string): Promise<{ ok: boolean; remaining: number }> {
-  try {
-    const redis = await getRedis();
-    const now = Date.now();
-    const windowStart = now - RATE_LIMIT_WINDOW * 1000;
-    const redisKey = `ratelimit:${key}`;
-
-    // Remove expired entries, count current, add new entry atomically
-    await redis.zRemRangeByScore(redisKey, 0, windowStart);
-    const count = await redis.zCard(redisKey);
-
-    if (count >= RATE_LIMIT_MAX) {
-      return { ok: false, remaining: 0 };
-    }
-
-    await redis.zAdd(redisKey, { score: now, value: `${now}-${randomBytes(4).toString("hex")}` });
-    await redis.expire(redisKey, RATE_LIMIT_WINDOW);
-
-    return { ok: true, remaining: RATE_LIMIT_MAX - count - 1 };
-  } catch {
-    // If Redis is down, fail open (don't block the user)
-    return { ok: true, remaining: RATE_LIMIT_MAX };
-  }
-}
-
 // ── User management ───────────────────────────────────────────────────────────
 
 export async function createUser(name: string, email: string, password: string): Promise<User> {
-  const redis = await getRedis();
-  const normalizedEmail = email.toLowerCase().trim();
+  await ensureSchema();
+  const sql = db();
+  const norm = email.toLowerCase().trim();
 
-  const existing = await redis.get(`user:email:${normalizedEmail}`);
-  if (existing) throw new Error("EMAIL_TAKEN");
+  const existing = await sql`SELECT id FROM lelu_users WHERE email = ${norm}`;
+  if (existing.length > 0) throw new Error("EMAIL_TAKEN");
 
   const user: User = {
     id: randomBytes(16).toString("hex"),
     name: name.trim(),
-    email: normalizedEmail,
+    email: norm,
     passwordHash: hashPassword(password),
+    emailVerified: false,
     createdAt: new Date().toISOString(),
   };
 
-  // Write both lookup keys atomically
-  const multi = redis.multi();
-  multi.set(`user:email:${user.email}`, JSON.stringify(user));
-  multi.set(`user:id:${user.id}`, JSON.stringify(user));
-  await multi.exec();
+  await sql`
+    INSERT INTO lelu_users (id, name, email, password_hash, email_verified, created_at)
+    VALUES (${user.id}, ${user.name}, ${user.email}, ${user.passwordHash}, FALSE, NOW())
+  `;
 
   return user;
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const redis = await getRedis();
-  const raw = await redis.get(`user:email:${email.toLowerCase().trim()}`);
-  return raw ? (JSON.parse(raw) as User) : null;
+  await ensureSchema();
+  const sql = db();
+  const rows = await sql`
+    SELECT id, name, email, password_hash, email_verified, created_at
+    FROM lelu_users WHERE email = ${email.toLowerCase().trim()}
+  `;
+  if (rows.length === 0) return null;
+  const r = rows[0];
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    email: r.email as string,
+    passwordHash: r.password_hash as string,
+    emailVerified: r.email_verified as boolean,
+    createdAt: r.created_at as string,
+  };
 }
 
-// ── Session management ────────────────────────────────────────────────────────
+export async function markEmailVerified(userId: string): Promise<void> {
+  const sql = db();
+  await sql`UPDATE lelu_users SET email_verified = TRUE WHERE id = ${userId}`;
+}
 
-export async function createSession(user: User): Promise<string> {
-  const redis = await getRedis();
+// ── Email verification tokens ─────────────────────────────────────────────────
+
+export async function createVerificationToken(userId: string): Promise<string> {
+  await ensureSchema();
+  const sql = db();
   const token = randomBytes(32).toString("hex");
-  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  const session: Session = {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    createdAt: now,
-    lastSeenAt: now,
-  };
+  // Delete any previous tokens for this user
+  await sql`DELETE FROM lelu_email_tokens WHERE user_id = ${userId}`;
+  await sql`
+    INSERT INTO lelu_email_tokens (token, user_id, expires_at, created_at)
+    VALUES (${token}, ${userId}, ${expiresAt.toISOString()}, NOW())
+  `;
 
-  // Track session ID on user so we can invalidate all sessions later
-  await redis.sAdd(`user:sessions:${user.id}`, token);
-  await redis.set(`session:${token}`, JSON.stringify(session), { EX: SESSION_TTL });
   return token;
 }
 
-export async function getSession(token: string): Promise<Session | null> {
-  if (!token || token.length !== 64) return null; // 32 bytes = 64 hex chars
-  const redis = await getRedis();
-  const raw = await redis.get(`session:${token}`);
-  if (!raw) return null;
+export async function consumeVerificationToken(
+  token: string
+): Promise<{ userId: string } | null> {
+  const sql = db();
+  const rows = await sql`
+    SELECT user_id, expires_at FROM lelu_email_tokens WHERE token = ${token}
+  `;
+  if (rows.length === 0) return null;
 
-  const session = JSON.parse(raw) as Session;
-
-  // Rolling expiry — refresh TTL on each use
-  const updatedSession: Session = { ...session, lastSeenAt: new Date().toISOString() };
-  await redis.set(`session:${token}`, JSON.stringify(updatedSession), { EX: SESSION_TTL });
-
-  return updatedSession;
-}
-
-export async function deleteSession(token: string): Promise<void> {
-  if (!token) return;
-  const redis = await getRedis();
-  const raw = await redis.get(`session:${token}`);
-  if (raw) {
-    const session = JSON.parse(raw) as Session;
-    // Remove from user's session set too
-    await redis.sRem(`user:sessions:${session.userId}`, token);
+  const row = rows[0];
+  if (new Date(row.expires_at as string) < new Date()) {
+    await sql`DELETE FROM lelu_email_tokens WHERE token = ${token}`;
+    return null;
   }
-  await redis.del(`session:${token}`);
+
+  await sql`DELETE FROM lelu_email_tokens WHERE token = ${token}`;
+  return { userId: row.user_id as string };
 }
 
-export async function deleteAllUserSessions(userId: string): Promise<void> {
-  const redis = await getRedis();
-  const tokens = await redis.sMembers(`user:sessions:${userId}`);
-  if (tokens.length > 0) {
-    const multi = redis.multi();
-    tokens.forEach((t) => multi.del(`session:${t}`));
-    multi.del(`user:sessions:${userId}`);
-    await multi.exec();
-  }
+// ── Session helpers ───────────────────────────────────────────────────────────
+
+export function cookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge,
+    secure: process.env.NODE_ENV === "production",
+  };
 }
 
-// ── Current user (server-side) ────────────────────────────────────────────────
-
-export async function getCurrentUser(): Promise<Session | null> {
+export async function getCurrentUser(): Promise<SessionPayload | null> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get(SESSION_COOKIE)?.value;
     if (!token) return null;
-    return await getSession(token);
+    return verifyJWT(token);
   } catch {
     return null;
   }

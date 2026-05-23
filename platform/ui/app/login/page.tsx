@@ -19,6 +19,17 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
+  const verified = params.get("verified") === "1";
+  const queryError = params.get("error");
+  const queryErrorMsg =
+    queryError === "token_expired"
+      ? "Verification link has expired. Please register again."
+      : queryError === "invalid_token"
+      ? "Invalid verification link."
+      : queryError === "verification_failed"
+      ? "Email verification failed. Please try again."
+      : null;
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError("");
@@ -45,14 +56,22 @@ function LoginForm() {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      {error && (
+      {verified && (
+        <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200/70 dark:border-emerald-800/40 text-[13px] text-emerald-700 dark:text-emerald-400">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          Email verified! You can now sign in.
+        </div>
+      )}
+      {(error || queryErrorMsg) && (
         <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200/70 dark:border-red-800/40 text-[13px] text-red-700 dark:text-red-400">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          {error}
+          {error || queryErrorMsg}
         </div>
       )}
 
