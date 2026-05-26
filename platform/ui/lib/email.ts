@@ -1,31 +1,25 @@
-const FROM_EMAIL = "noreply@lelu-ai.com";
-const FROM_NAME = "Lelu";
+const FROM = "Lelu <noreply@lelu-ai.com>";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://lelu-ai.com";
 
 async function send(to: string, subject: string, html: string): Promise<void> {
-  const apiKey = process.env.SENDGRID_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn("[email] SENDGRID_API_KEY not set — skipping email send.");
+    console.warn("[email] RESEND_API_KEY not set — skipping email send.");
     return;
   }
 
-  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+  const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: FROM_EMAIL, name: FROM_NAME },
-      subject,
-      content: [{ type: "text/html", value: html }],
-    }),
+    body: JSON.stringify({ from: FROM, to, subject, html }),
   });
 
   if (!res.ok) {
     const body = await res.text();
-    console.error("[email] SendGrid error:", res.status, body);
+    console.error("[email] Resend error:", res.status, body);
     throw new Error("Failed to send email");
   }
 }
