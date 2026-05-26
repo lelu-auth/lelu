@@ -13,7 +13,8 @@ interface PolicyRule {
 
 const RULES: PolicyRule[] = [
   {
-    pattern: /\bdelete\b|drop_table|truncate|destroy|wipe|purge|erase|remove_all|bulk_delete/i,
+    // snake_case tool names use _ as word separator — \b won't work, match substring instead
+    pattern: /delete|drop|truncate|destroy|wipe|purge|erase|bulk_delete|remove_all/i,
     decision: "deny",
     reason: "Destructive operations are blocked by the default safety policy.",
     rule: "deny:destructive-ops",
@@ -31,13 +32,13 @@ const RULES: PolicyRule[] = [
     rule: "deny:privilege-escalation",
   },
   {
-    pattern: /transfer_funds|wire_transfer|payment|charge|refund|billing|withdraw/i,
+    pattern: /transfer|payment|charge|refund|billing|withdraw|wire/i,
     decision: "human_review",
     reason: "Financial operations require a human to approve before execution.",
     rule: "review:financial-ops",
   },
   {
-    pattern: /send_email|send_message|post_tweet|publish|notify|broadcast|alert_user/i,
+    pattern: /send_email|send_message|post_tweet|publish|notify|broadcast|alert/i,
     decision: "human_review",
     reason: "Outbound communications require human sign-off to prevent misuse.",
     rule: "review:outbound-comms",
