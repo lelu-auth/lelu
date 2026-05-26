@@ -1,3 +1,5 @@
+import { TryInSandbox } from "@/components/docs/TryInSandbox";
+
 export default function DocsLangChain() {
   return (
     <div className="max-w-3xl">
@@ -29,6 +31,9 @@ pip install lelu-agent-auth langchain langchain-openai`}</pre>
 
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">TypeScript — wrap a tool</h2>
+          <div className="mb-4">
+            <TryInSandbox tool="delete_record" context="table=users id=42" />
+          </div>
           <div className="bg-zinc-900 dark:bg-black rounded-xl border border-zinc-800 dark:border-white/10 overflow-hidden">
             <div className="px-4 py-2 border-b border-zinc-800 dark:border-white/10 bg-zinc-950 dark:bg-white/5">
               <span className="text-xs text-zinc-500 font-mono">tools/delete_record.ts</span>

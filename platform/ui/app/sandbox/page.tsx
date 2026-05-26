@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type Decision = "allow" | "deny" | "human_review";
 
@@ -104,6 +105,9 @@ const DECISION_CONFIG = {
 } as const;
 
 export default function SandboxPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [activeScenario, setActiveScenario] = useState(0);
   const [tool, setTool] = useState(SCENARIOS[0].tool);
   const [context, setContext] = useState(SCENARIOS[0].context);
@@ -117,7 +121,36 @@ export default function SandboxPage() {
 
   const [copiedCurl, setCopiedCurl] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
   const [activeTab, setActiveTab] = useState<"response" | "raw">("response");
+
+  // Pre-fill from URL params (?tool=delete_record&context=...)
+  useEffect(() => {
+    const t = searchParams.get("tool");
+    const c = searchParams.get("context");
+    if (t) {
+      setTool(t);
+      setContext(c ?? "");
+      setArgsText("{}");
+      setActiveScenario(-1);
+    }
+  }, [searchParams]);
+
+  // Update URL when tool changes so the link is shareable
+  useEffect(() => {
+    if (!tool.trim()) return;
+    const params = new URLSearchParams();
+    params.set("tool", tool.trim());
+    if (context.trim()) params.set("context", context.trim());
+    router.replace(`/sandbox?${params.toString()}`, { scroll: false });
+  }, [tool, context, router]);
+
+  function copyShareLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 1500);
+    });
+  }
 
   function loadScenario(i: number) {
     setActiveScenario(i);
@@ -222,13 +255,28 @@ export default function SandboxPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Live — no account required
           </div>
-          <h1 className="text-[24px] sm:text-[32px] font-bold tracking-[-0.03em] text-[#0A0A0A] dark:text-white mb-2">
-            Authorization Playground
-          </h1>
-          <p className="text-[14px] text-[#737373] max-w-xl">
-            Send real authorization requests to the Lelu API using the sandbox key below.
-            Copy the curl command and run it in your terminal — it actually works.
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-[24px] sm:text-[32px] font-bold tracking-[-0.03em] text-[#0A0A0A] dark:text-white mb-2">
+                Authorization Playground
+              </h1>
+              <p className="text-[14px] text-[#737373] max-w-xl">
+                Send real authorization requests to the Lelu API using the sandbox key below.
+                Copy the curl command and run it in your terminal — it actually works.
+              </p>
+            </div>
+            <button
+              onClick={copyShareLink}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg border border-[#E7E5E4] dark:border-[#27272A] text-[#737373] hover:text-[#0A0A0A] dark:hover:text-white hover:border-[#0A0A0A] dark:hover:border-white transition-colors"
+              title="Copy shareable link"
+            >
+              {copiedShare ? (
+                <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>Copied!</>
+              ) : (
+                <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" /></svg>Share</>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Sandbox API key banner */}

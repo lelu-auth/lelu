@@ -1,3 +1,5 @@
+import { TryInSandbox } from "@/components/docs/TryInSandbox";
+
 export default function DocsMCP() {
   return (
     <div className="max-w-3xl">
@@ -52,6 +54,9 @@ export default function DocsMCP() {
 
         <section>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">Self-hosted middleware</h2>
+          <div className="mb-4">
+            <TryInSandbox tool="delete_file" context="path=/tmp/data.csv" />
+          </div>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             Embed Lelu authorization directly in your MCP server using the SDK.
           </p>

@@ -1,3 +1,5 @@
+import { TryInSandbox } from "@/components/docs/TryInSandbox";
+
 export default function DocsOpenAI() {
   return (
     <div className="max-w-3xl">
@@ -27,6 +29,9 @@ export default function DocsOpenAI() {
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-4">
             Chat Completions with tool calls
           </h2>
+          <div className="mb-4">
+            <TryInSandbox tool="send_email" context="to=user@example.com subject=Welcome" />
+          </div>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             After the model returns a <code className="text-sm px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-mono">tool_calls</code> response,
             authorize each call through Lelu before executing the underlying function.
