@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { validateApiKey } from "@/lib/apikeys";
+import { getActivePoliciesForUser, evaluateWithPolicies } from "@/lib/policies";
 
 type Decision = "allow" | "deny" | "human_review";
 
@@ -123,7 +124,29 @@ export async function POST(req: NextRequest) {
 
   // --- Evaluate ---
   const start = Date.now();
-  const result = evaluateTool(tool.trim());
+
+  // For real API keys, check user's own policies first (first matching rule wins),
+  // then fall back to the built-in rule set.
+  let result: { decision: Decision; reason: string; rule: string };
+  let policyName: string | undefined;
+
+  if (userId && !isSandbox) {
+    try {
+      const policies = await getActivePoliciesForUser(userId);
+      const policyMatch = evaluateWithPolicies(tool.trim(), policies);
+      if (policyMatch) {
+        result = { decision: policyMatch.decision, reason: policyMatch.reason, rule: policyMatch.rule };
+        policyName = policyMatch.policyName;
+      } else {
+        result = evaluateTool(tool.trim());
+      }
+    } catch {
+      result = evaluateTool(tool.trim());
+    }
+  } else {
+    result = evaluateTool(tool.trim());
+  }
+
   const latencyMs = Date.now() - start + Math.floor(Math.random() * 8 + 2);
 
   const response = {
@@ -134,6 +157,7 @@ export async function POST(req: NextRequest) {
     decision: result.decision,
     reason: result.reason,
     rule: result.rule,
+    ...(policyName ? { policyName } : {}),
     latencyMs,
     mode: isSandbox ? "sandbox" : "live",
     ...(keyId ? { keyId } : {}),
