@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, createVerificationToken } from "@/lib/auth";
-import { sendVerificationEmail } from "@/lib/email";
+import { createUser } from "@/lib/auth";
 
 const NAME_RE = /^[a-zA-Z\s'\-.]{2,80}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -31,10 +30,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Password too long" }, { status: 400 });
   }
 
-  // Step 1: create user (fatal — if this fails, stop)
-  let user: Awaited<ReturnType<typeof createUser>>;
   try {
-    user = await createUser(name.trim(), email.trim(), password);
+    await createUser(name.trim(), email.trim(), password);
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "EMAIL_TAKEN") {
       return NextResponse.json(
@@ -46,17 +43,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Registration failed. Please try again." }, { status: 500 });
   }
 
-  // Step 2: send verification email (non-fatal — user is created regardless)
-  try {
-    const token = await createVerificationToken(user.id);
-    await sendVerificationEmail(user.email, user.name, token);
-  } catch (err) {
-    console.error("[auth/register] Email send failed (non-fatal):", err);
-    // User is created; they can request a resend. Don't return 500.
-  }
-
-  return NextResponse.json(
-    { ok: true, needsVerification: true },
-    { status: 201 }
-  );
+  return NextResponse.json({ ok: true }, { status: 201 });
 }

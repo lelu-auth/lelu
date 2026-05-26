@@ -20,6 +20,7 @@ function LoginForm() {
   const [showPw, setShowPw] = useState(false);
 
   const verified = params.get("verified") === "1";
+  const registered = params.get("registered") === "1";
   const queryError = params.get("error");
   const queryErrorMsg =
     queryError === "token_expired"
@@ -56,12 +57,12 @@ function LoginForm() {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      {verified && (
+      {(verified || registered) && (
         <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200/70 dark:border-emerald-800/40 text-[13px] text-emerald-700 dark:text-emerald-400">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5">
             <path d="M20 6 9 17l-5-5" />
           </svg>
-          Email verified! You can now sign in.
+          {registered ? "Account created! Sign in to continue." : "Email verified! You can now sign in."}
         </div>
       )}
       {(error || queryErrorMsg) && (
