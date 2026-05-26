@@ -1,25 +1,28 @@
-import {
-  getComplianceExport,
-  getShadowSummary,
-  listAuditEvents,
-  type ShadowSummaryResponse,
-} from "@/lib/api";
+import { listAuditEvents, getAuditStats, type AuditEventRow } from "@/lib/audit";
+import { getCurrentUser } from "@/lib/auth";
 import { AuditTable } from "@/components/AuditTable";
 import LeluFooter from "@/components/LeluFooter";
 
 export const dynamic = "force-dynamic";
 
-function buildSparklinePoints(summary: ShadowSummaryResponse): string {
-  const buckets = Array.isArray(summary?.buckets) ? summary.buckets : [];
-  const values = buckets.map((bucket) => bucket.allow + bucket.review + bucket.deny);
-  if (values.length === 0) return "0,24 240,24";
-  const maxValue = Math.max(...values, 1);
+function buildSparklinePoints(events: AuditEventRow[]): string {
+  // Group events into 12 buckets by time (last hour)
+  const now = Date.now();
+  const bucketMs = 5 * 60 * 1000; // 5-min buckets
+  const bucketCount = 12;
+  const counts = new Array(bucketCount).fill(0);
+  for (const e of events) {
+    const age = now - new Date(e.created_at).getTime();
+    const bucket = Math.floor(age / bucketMs);
+    if (bucket >= 0 && bucket < bucketCount) counts[bucketCount - 1 - bucket]++;
+  }
+  const max = Math.max(...counts, 1);
   const width = 240;
   const height = 48;
-  return values
-    .map((value, index) => {
-      const x = values.length === 1 ? 0 : (index / (values.length - 1)) * width;
-      const y = height - (value / maxValue) * height;
+  return counts
+    .map((v, i) => {
+      const x = (i / (bucketCount - 1)) * width;
+      const y = height - (v / max) * height;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
@@ -41,27 +44,25 @@ export default async function AuditPage({
   searchParams: Promise<{ actor?: string; action?: string; decision?: string }>;
 }) {
   const params = await searchParams;
+  const user = await getCurrentUser();
 
-  const [events, shadow, compliance] = await Promise.all([
+  const [events, stats] = await Promise.all([
     listAuditEvents({
+      userId: user?.userId,
       actor: params.actor,
       action: params.action,
       decision: params.decision,
       limit: 100,
     }).catch(() => []),
-    getShadowSummary(60).catch(() => null),
-    getComplianceExport("all").catch(() => null),
+    getAuditStats(user?.userId).catch(() => ({ total: 0, allowed: 0, denied: 0, human_review: 0 })),
   ]);
-  const sparklinePoints = shadow ? buildSparklinePoints(shadow) : "0,24 240,24";
-  const knownControls = 6;
-  const coverageCount = compliance?.controls?.length ?? 0;
-  const coveragePercent = Math.round((coverageCount / knownControls) * 100);
 
   const safeEvents = Array.isArray(events) ? events : [];
-  const total = safeEvents.length;
-  const allowed = safeEvents.filter((e) => e.decision === "allowed").length;
-  const denied = safeEvents.filter((e) => e.decision === "denied").length;
-  const review = safeEvents.filter((e) => e.decision === "human_review").length;
+  const sparklinePoints = buildSparklinePoints(safeEvents);
+  const total = stats.total;
+  const allowed = stats.allowed;
+  const denied = stats.denied;
+  const review = stats.human_review;
   const highRiskIncidents = safeEvents
     .filter((event) => event.decision === "denied" || event.decision === "human_review")
     .slice(0, 8);
@@ -183,30 +184,22 @@ export default async function AuditPage({
         <div className="mb-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              Shadow Mode (last 60m)
+              Activity (last 60m — 5-min buckets)
             </h2>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              {shadow?.mode === "shadow" ? "active" : "enforce mode"}
-            </span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">enforce mode</span>
           </div>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
               <p className="text-xs text-zinc-500 dark:text-zinc-400">Allow</p>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {shadow?.totals?.allow ?? 0}
-              </p>
+              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{allowed}</p>
             </div>
             <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
               <p className="text-xs text-zinc-500 dark:text-zinc-400">Review</p>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {shadow?.totals?.review ?? 0}
-              </p>
+              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{review}</p>
             </div>
             <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
               <p className="text-xs text-zinc-500 dark:text-zinc-400">Deny</p>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {shadow?.totals?.deny ?? 0}
-              </p>
+              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{denied}</p>
             </div>
           </div>
           <div className="mt-3 rounded-lg border border-zinc-200 dark:border-zinc-800 px-2 py-2 bg-white dark:bg-zinc-900/40">
@@ -214,7 +207,7 @@ export default async function AuditPage({
               viewBox="0 0 240 48"
               className="h-12 w-full"
               role="img"
-              aria-label="Shadow decisions sparkline"
+              aria-label="Decision activity sparkline"
             >
               <polyline
                 fill="none"
@@ -224,52 +217,6 @@ export default async function AuditPage({
                 points={sparklinePoints}
               />
             </svg>
-          </div>
-        </div>
-
-        <div className="mb-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              Compliance Coverage
-            </h2>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              OWASP GenAI + NIST AI RMF
-            </span>
-          </div>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Controls Observed</p>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {coverageCount}
-              </p>
-            </div>
-            <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Coverage</p>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {coveragePercent}%
-              </p>
-            </div>
-            <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Mapped Events</p>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {compliance?.total_events ?? 0}
-              </p>
-            </div>
-            <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Evidence</p>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {compliance?.evidence?.signed ? "Signed" : "Unsigned"}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 rounded-lg border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900/40">
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Top Controls</p>
-            <p className="text-sm text-zinc-700 dark:text-zinc-300">
-              {(compliance?.controls ?? [])
-                .slice(0, 3)
-                .map((control) => `${control.id} (${control.event_count})`)
-                .join(" · ") || "No controls mapped yet"}
-            </p>
           </div>
         </div>
 
@@ -324,7 +271,7 @@ export default async function AuditPage({
                         {event.decision === "denied" ? "Denied" : "Human review"}
                       </span>
                       <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {formatAgo(event.timestamp || event.created_at)}
+                        {formatAgo(event.created_at)}
                       </span>
                     </div>
                   </li>
@@ -403,7 +350,18 @@ export default async function AuditPage({
         </form>
 
         <div className="mb-20 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900/30">
-          <AuditTable events={events} />
+          <AuditTable events={safeEvents.map((e) => ({
+            id: e.id,
+            trace_id: e.trace_id,
+            timestamp: e.created_at,
+            actor: e.actor,
+            action: e.action,
+            decision: e.decision,
+            reason: e.reason,
+            confidence_score: e.confidence,
+            latency_ms: e.latency_ms,
+            created_at: e.created_at,
+          }))} />
         </div>
       </div>
     </main>

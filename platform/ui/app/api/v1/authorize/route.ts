@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { validateApiKey } from "@/lib/apikeys";
 import { getActivePoliciesForUser, evaluateWithPolicies } from "@/lib/policies";
+import { logAuditEvent } from "@/lib/audit";
 
 type Decision = "allow" | "deny" | "human_review";
 
@@ -148,9 +149,35 @@ export async function POST(req: NextRequest) {
   }
 
   const latencyMs = Date.now() - start + Math.floor(Math.random() * 8 + 2);
+  const requestId = `req_${randomBytes(8).toString("hex")}`;
+  const mode = isSandbox ? "sandbox" : "live";
+
+  const decisionMapped =
+    result.decision === "allow" ? "allowed" :
+    result.decision === "deny" ? "denied" : "human_review";
+
+  const confidence =
+    result.decision === "allow" ? 0.95 :
+    result.decision === "human_review" ? 0.7 : 0.3;
+
+  // Log async — don't await so response isn't delayed
+  logAuditEvent({
+    traceId: requestId,
+    userId,
+    keyId,
+    actor: isSandbox ? "sandbox" : (keyId ?? "unknown"),
+    action: tool.trim(),
+    decision: decisionMapped,
+    reason: result.reason,
+    rule: result.rule,
+    policyName,
+    confidence,
+    latencyMs,
+    mode,
+  });
 
   const response = {
-    requestId: `req_${randomBytes(8).toString("hex")}`,
+    requestId,
     tool: tool.trim(),
     ...(typeof context === "string" && context ? { context } : {}),
     ...(args && typeof args === "object" ? { args } : {}),
@@ -159,7 +186,7 @@ export async function POST(req: NextRequest) {
     rule: result.rule,
     ...(policyName ? { policyName } : {}),
     latencyMs,
-    mode: isSandbox ? "sandbox" : "live",
+    mode,
     ...(keyId ? { keyId } : {}),
     timestamp: new Date().toISOString(),
   };
