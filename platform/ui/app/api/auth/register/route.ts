@@ -31,15 +31,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Password too long" }, { status: 400 });
   }
 
+  // Step 1: create user (fatal — if this fails, stop)
+  let user: Awaited<ReturnType<typeof createUser>>;
   try {
-    const user = await createUser(name.trim(), email.trim(), password);
-    const token = await createVerificationToken(user.id);
-    await sendVerificationEmail(user.email, user.name, token);
-
-    return NextResponse.json(
-      { ok: true, needsVerification: true },
-      { status: 201 }
-    );
+    user = await createUser(name.trim(), email.trim(), password);
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "EMAIL_TAKEN") {
       return NextResponse.json(
@@ -47,7 +42,21 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
-    console.error("[auth/register]", err);
+    console.error("[auth/register] createUser failed:", err);
     return NextResponse.json({ error: "Registration failed. Please try again." }, { status: 500 });
   }
+
+  // Step 2: send verification email (non-fatal — user is created regardless)
+  try {
+    const token = await createVerificationToken(user.id);
+    await sendVerificationEmail(user.email, user.name, token);
+  } catch (err) {
+    console.error("[auth/register] Email send failed (non-fatal):", err);
+    // User is created; they can request a resend. Don't return 500.
+  }
+
+  return NextResponse.json(
+    { ok: true, needsVerification: true },
+    { status: 201 }
+  );
 }
