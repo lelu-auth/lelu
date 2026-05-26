@@ -78,19 +78,18 @@ export async function updatePolicy(
   patch: { name?: string; description?: string; rules?: PolicyRule[]; isActive?: boolean },
 ): Promise<Policy | null> {
   const sql = db();
-  const sets: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (patch.name !== undefined) sets.name = patch.name;
-  if (patch.description !== undefined) sets.description = patch.description;
-  if (patch.rules !== undefined) sets.rules = JSON.stringify(patch.rules);
-  if (patch.isActive !== undefined) sets.is_active = patch.isActive;
+  const name: string | null = patch.name ?? null;
+  const description: string | null = patch.description ?? null;
+  const rules: string | null = patch.rules !== undefined ? JSON.stringify(patch.rules) : null;
+  const isActive: boolean | null = patch.isActive ?? null;
 
   await sql`
     UPDATE lelu_policies
     SET
-      name        = COALESCE(${sets.name ?? null}, name),
-      description = COALESCE(${sets.description ?? null}, description),
-      rules       = COALESCE(${sets.rules ?? null}::jsonb, rules),
-      is_active   = COALESCE(${sets.is_active ?? null}, is_active),
+      name        = COALESCE(${name}, name),
+      description = COALESCE(${description}, description),
+      rules       = COALESCE(${rules}::jsonb, rules),
+      is_active   = COALESCE(${isActive}, is_active),
       updated_at  = NOW()
     WHERE id = ${id} AND user_id = ${userId}
   `;
