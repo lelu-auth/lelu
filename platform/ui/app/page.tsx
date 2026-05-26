@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LeluMark } from "@/components/ui/LeluMark";
+
+interface User { name: string; email: string; }
 
 /* ── Tabbed code block ─────────────────────────────────────────────── */
 const CODE: Record<string, string> = {
@@ -91,12 +94,45 @@ function DotMesh() {
 export default function HomePage() {
   const [codeTab, setCodeTab] = useState<keyof typeof CODE>("CLI");
   const [copied, setCopied] = useState(false);
+  const [user, setUser] = useState<User | null | "loading">("loading");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Fetch auth state
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setUser(d?.user ?? null))
+      .catch(() => setUser(null));
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
+        setDropdownOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    setDropdownOpen(false);
+    router.refresh();
+  }
 
   // Lock body scroll so only the right panel scrolls internally
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
+
+  const initials = typeof user === "object" && user
+    ? user.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+    : "";
 
   function copy() {
     navigator.clipboard.writeText(CODE[codeTab]).then(() => {
@@ -146,12 +182,22 @@ export default function HomePage() {
 
           {/* CTAs */}
           <div className="flex items-center gap-3 justify-center flex-wrap">
-            <Link
-              href="/register"
-              className="px-5 py-2.5 bg-white text-[#0A0A0A] text-[14px] font-semibold rounded-md hover:bg-zinc-100 transition-colors"
-            >
-              Get Started
-            </Link>
+            {user && user !== "loading" ? (
+              <Link
+                href="/dashboard"
+                className="px-5 py-2.5 bg-white text-[#0A0A0A] text-[14px] font-semibold rounded-md hover:bg-zinc-100 transition-colors flex items-center gap-1.5"
+              >
+                Dashboard
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </Link>
+            ) : (
+              <Link
+                href="/register"
+                className="px-5 py-2.5 bg-white text-[#0A0A0A] text-[14px] font-semibold rounded-md hover:bg-zinc-100 transition-colors"
+              >
+                Get Started
+              </Link>
+            )}
             <Link
               href="/sandbox"
               className="px-5 py-2.5 border border-white/20 text-white text-[14px] font-medium rounded-md hover:bg-white/5 transition-colors"
@@ -207,13 +253,65 @@ export default function HomePage() {
               );
             })}
           </div>
-          <Link
-            href="/login"
-            className="ml-4 shrink-0 px-3 py-1.5 text-[11px] font-bold tracking-[0.06em] uppercase border border-[#0A0A0A] dark:border-white text-[#0A0A0A] dark:text-white rounded hover:bg-[#0A0A0A] hover:text-white dark:hover:bg-white dark:hover:text-[#0A0A0A] transition-colors flex items-center gap-1"
-          >
-            SIGN IN
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 17L17 7M17 7H7M17 7v10" /></svg>
-          </Link>
+          {/* Auth area */}
+          <div className="ml-4 shrink-0">
+            {user === "loading" && (
+              <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+            )}
+            {user === null && (
+              <Link
+                href="/login"
+                className="px-3 py-1.5 text-[11px] font-bold tracking-[0.06em] uppercase border border-[#0A0A0A] dark:border-white text-[#0A0A0A] dark:text-white rounded hover:bg-[#0A0A0A] hover:text-white dark:hover:bg-white dark:hover:text-[#0A0A0A] transition-colors flex items-center gap-1"
+              >
+                SIGN IN
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 17L17 7M17 7H7M17 7v10" /></svg>
+              </Link>
+            )}
+            {user !== null && user !== "loading" && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen((v) => !v)}
+                  className="flex items-center gap-1.5 group"
+                  aria-label="User menu"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A] text-[11px] font-bold flex items-center justify-center">
+                    {initials}
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    className={`text-[#737373] transition-transform hidden sm:block ${dropdownOpen ? "rotate-180" : ""}`}>
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-[200px] bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#27272A] rounded-lg shadow-lg overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-[#E7E5E4] dark:border-[#27272A]">
+                      <p className="text-[13px] font-semibold text-[#0A0A0A] dark:text-white truncate">{user.name}</p>
+                      <p className="text-[12px] text-[#737373] truncate">{user.email}</p>
+                    </div>
+                    <div className="py-1">
+                      {[
+                        { label: "Dashboard", href: "/dashboard" },
+                        { label: "API Keys", href: "/api-key" },
+                        { label: "Policies", href: "/policies" },
+                        { label: "Audit Log", href: "/audit" },
+                      ].map((item) => (
+                        <Link key={item.href} href={item.href} onClick={() => setDropdownOpen(false)}
+                          className="block px-4 py-2 text-[13px] text-[#0A0A0A] dark:text-[#E4E4E7] hover:bg-[#F5F5F4] dark:hover:bg-[#1A1A1C] transition-colors">
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="border-t border-[#E7E5E4] dark:border-[#27272A] py-1">
+                      <button onClick={logout}
+                        className="w-full text-left px-4 py-2 text-[13px] text-red-600 dark:text-red-400 hover:bg-[#F5F5F4] dark:hover:bg-[#1A1A1C] transition-colors">
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* README content */}
