@@ -1,13 +1,11 @@
 import { DocsEnhancements } from "@/components/docs/DocsEnhancements";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { OnThisPage } from "@/components/docs/OnThisPage";
-import { DocsNav } from "@/components/docs/DocsNav";
 import type { ReactNode } from "react";
 
 export default function DocsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0B0B0C]">
-      <DocsNav />
       <div className="docs-page flex max-w-[1400px] mx-auto w-full">
         <DocsSidebar />
 
