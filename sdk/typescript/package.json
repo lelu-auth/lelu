@@ -14,7 +14,6 @@
     "url": "https://github.com/lelu-auth/lelu/issues"
   },
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "bin": {
     "lelu": "./scripts/lelu.js",
@@ -23,22 +22,22 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
     "./langchain": {
       "types": "./dist/langchain/index.d.ts",
-      "import": "./dist/langchain/index.mjs",
+      "import": "./dist/langchain/index.js",
       "require": "./dist/langchain/index.js"
     },
     "./react": {
       "types": "./dist/react/index.d.ts",
-      "import": "./dist/react/index.mjs",
+      "import": "./dist/react/index.js",
       "require": "./dist/react/index.js"
     },
     "./express": {
       "types": "./dist/express/index.d.ts",
-      "import": "./dist/express/index.mjs",
+      "import": "./dist/express/index.js",
       "require": "./dist/express/index.js"
     }
   },
