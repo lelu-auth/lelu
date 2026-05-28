@@ -4,7 +4,7 @@ import { db, ensureSchema } from "./db";
 export interface PolicyRule {
   id: string;
   pattern: string;       // substring matched against tool name (case-insensitive)
-  decision: "allow" | "deny" | "human_review";
+  decision: "allow" | "deny" | "human_review" | "compute";
   reason: string;
 }
 
@@ -117,7 +117,7 @@ export async function getActivePoliciesForUser(userId: string): Promise<Policy[]
 export function evaluateWithPolicies(
   tool: string,
   policies: Policy[],
-): { decision: "allow" | "deny" | "human_review"; reason: string; rule: string; policyName: string } | null {
+): { decision: "allow" | "deny" | "human_review" | "compute"; reason: string; rule: string; policyName: string } | null {
   for (const policy of policies) {
     for (const rule of policy.rules) {
       try {

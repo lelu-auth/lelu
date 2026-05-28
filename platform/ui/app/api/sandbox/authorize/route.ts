@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 
-type Decision = "allow" | "deny" | "human_review";
+type Decision = "allow" | "deny" | "human_review" | "compute";
 
 interface PolicyRule {
   pattern: RegExp;
   decision: Decision;
   reason: string;
   rule: string;
+  safeTool?: string;
+  safeArgs?: Record<string, unknown>;
 }
 
 const RULES: PolicyRule[] = [
@@ -48,6 +50,22 @@ const RULES: PolicyRule[] = [
     rule: "review:config-change",
   },
   {
+    pattern: /write_file|save_file|overwrite_file|update_file/i,
+    decision: "compute",
+    reason: "File writes are redirected to the sandbox environment for safety.",
+    rule: "compute:sandbox-file-write",
+    safeTool: "write_file",
+    safeArgs: { path: "/tmp/sandbox/{original}", sandboxed: true },
+  },
+  {
+    pattern: /deploy|release|push_to_prod|rollout|go_live/i,
+    decision: "compute",
+    reason: "Deployments are redirected to the staging environment for validation.",
+    rule: "compute:staging-deploy",
+    safeTool: "deploy",
+    safeArgs: { environment: "staging", sandboxed: true },
+  },
+  {
     pattern: /read|get|fetch|list|search|query|find|view|show|describe|inspect/i,
     decision: "allow",
     reason: "Read-only operations are permitted by the default policy.",
@@ -67,10 +85,10 @@ const DEFAULT: Omit<PolicyRule, "pattern"> = {
   rule: "allow:default-fallthrough",
 };
 
-function evaluate(tool: string): { decision: Decision; reason: string; rule: string } {
+function evaluate(tool: string): { decision: Decision; reason: string; rule: string; safeTool?: string; safeArgs?: Record<string, unknown> } {
   for (const r of RULES) {
     if (r.pattern.test(tool)) {
-      return { decision: r.decision, reason: r.reason, rule: r.rule };
+      return { decision: r.decision, reason: r.reason, rule: r.rule, safeTool: r.safeTool, safeArgs: r.safeArgs };
     }
   }
   return DEFAULT;
@@ -95,7 +113,7 @@ export async function POST(req: NextRequest) {
 
   const start = Date.now();
   const result = evaluate(tool.trim());
-  const latencyMs = Date.now() - start + Math.floor(Math.random() * 8 + 2); // realistic latency
+  const latencyMs = Date.now() - start + Math.floor(Math.random() * 8 + 2);
 
   return NextResponse.json({
     requestId: `req_${randomBytes(8).toString("hex")}`,
@@ -105,7 +123,10 @@ export async function POST(req: NextRequest) {
     decision: result.decision,
     reason: result.reason,
     rule: result.rule,
+    ...(result.safeTool ? { safeTool: result.safeTool } : {}),
+    ...(result.safeArgs ? { safeArgs: result.safeArgs } : {}),
     latencyMs,
+    mode: "sandbox",
     timestamp: new Date().toISOString(),
   });
 }

@@ -4,13 +4,15 @@ import { validateApiKey } from "@/lib/apikeys";
 import { getActivePoliciesForUser, evaluateWithPolicies } from "@/lib/policies";
 import { logAuditEvent } from "@/lib/audit";
 
-type Decision = "allow" | "deny" | "human_review";
+type Decision = "allow" | "deny" | "human_review" | "compute";
 
 interface PolicyRule {
   pattern: RegExp;
   decision: Decision;
   reason: string;
   rule: string;
+  safeTool?: string;
+  safeArgs?: Record<string, unknown>;
 }
 
 const RULES: PolicyRule[] = [
@@ -52,6 +54,22 @@ const RULES: PolicyRule[] = [
     rule: "review:config-change",
   },
   {
+    pattern: /write_file|save_file|overwrite_file|update_file/i,
+    decision: "compute",
+    reason: "File writes are redirected to the sandbox environment for safety.",
+    rule: "compute:sandbox-file-write",
+    safeTool: "write_file",
+    safeArgs: { path: "/tmp/sandbox/{original}", sandboxed: true },
+  },
+  {
+    pattern: /deploy|release|push_to_prod|rollout|go_live/i,
+    decision: "compute",
+    reason: "Deployments are redirected to the staging environment for validation.",
+    rule: "compute:staging-deploy",
+    safeTool: "deploy",
+    safeArgs: { environment: "staging", sandboxed: true },
+  },
+  {
     pattern: /read|get|fetch|list|search|query|find|view|show|describe|inspect/i,
     decision: "allow",
     reason: "Read-only operations are permitted by the default policy.",
@@ -71,10 +89,10 @@ const DEFAULT_RULE = {
   rule: "allow:default-fallthrough",
 };
 
-function evaluateTool(tool: string): { decision: Decision; reason: string; rule: string } {
+function evaluateTool(tool: string): { decision: Decision; reason: string; rule: string; safeTool?: string; safeArgs?: Record<string, unknown> } {
   for (const r of RULES) {
     if (r.pattern.test(tool)) {
-      return { decision: r.decision, reason: r.reason, rule: r.rule };
+      return { decision: r.decision, reason: r.reason, rule: r.rule, safeTool: r.safeTool, safeArgs: r.safeArgs };
     }
   }
   return DEFAULT_RULE;
@@ -128,7 +146,7 @@ export async function POST(req: NextRequest) {
 
   // For real API keys, check user's own policies first (first matching rule wins),
   // then fall back to the built-in rule set.
-  let result: { decision: Decision; reason: string; rule: string };
+  let result: { decision: Decision; reason: string; rule: string; safeTool?: string; safeArgs?: Record<string, unknown> };
   let policyName: string | undefined;
 
   if (userId && !isSandbox) {
@@ -154,10 +172,12 @@ export async function POST(req: NextRequest) {
 
   const decisionMapped =
     result.decision === "allow" ? "allowed" :
-    result.decision === "deny" ? "denied" : "human_review";
+    result.decision === "deny" ? "denied" :
+    result.decision === "compute" ? "compute" : "human_review";
 
   const confidence =
     result.decision === "allow" ? 0.95 :
+    result.decision === "compute" ? 0.85 :
     result.decision === "human_review" ? 0.7 : 0.3;
 
   // Log async — don't await so response isn't delayed
@@ -185,6 +205,8 @@ export async function POST(req: NextRequest) {
     reason: result.reason,
     rule: result.rule,
     ...(policyName ? { policyName } : {}),
+    ...(result.safeTool ? { safeTool: result.safeTool } : {}),
+    ...(result.safeArgs ? { safeArgs: result.safeArgs } : {}),
     latencyMs,
     mode,
     ...(keyId ? { keyId } : {}),

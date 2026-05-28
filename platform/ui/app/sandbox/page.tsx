@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 
-type Decision = "allow" | "deny" | "human_review";
+type Decision = "allow" | "deny" | "human_review" | "compute";
 
 interface AuthResponse {
   requestId: string;
@@ -17,6 +17,8 @@ interface AuthResponse {
   latencyMs: number;
   mode: string;
   timestamp: string;
+  safeTool?: string;
+  safeArgs?: Record<string, unknown>;
 }
 
 interface HistoryItem {
@@ -78,6 +80,13 @@ const SCENARIOS: Scenario[] = [
     args: '{\n  "command": "rm -rf /tmp/cache/*"\n}',
     expected: "deny",
   },
+  {
+    label: "Write file",
+    tool: "write_file",
+    context: "Saving updated config to production directory",
+    args: '{\n  "path": "/prod/config.yaml",\n  "content": "timeout: 30s"\n}',
+    expected: "compute",
+  },
 ];
 
 const DECISION_CONFIG = {
@@ -101,6 +110,13 @@ const DECISION_CONFIG = {
     bg: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/40",
     dot: "bg-amber-500",
     badge: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+  },
+  compute: {
+    label: "COMPUTE",
+    color: "text-violet-700 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800/40",
+    dot: "bg-violet-500",
+    badge: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400",
   },
 } as const;
 
@@ -484,6 +500,21 @@ function SandboxContent() {
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#A3A3A3] mb-1">Request ID</p>
                       <code className="text-[11px] font-mono text-[#0A0A0A] dark:text-white">{response.requestId}</code>
                     </div>
+                    {response.decision === "compute" && response.safeTool && (
+                      <div className="rounded-xl border border-violet-200 dark:border-violet-800/40 bg-violet-50 dark:bg-violet-900/10 p-3 space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">Safe Alternative (Compute)</p>
+                        <div>
+                          <p className="text-[10px] text-[#A3A3A3] mb-0.5">Tool</p>
+                          <code className="text-[11px] font-mono text-[#0A0A0A] dark:text-white">{response.safeTool}</code>
+                        </div>
+                        {response.safeArgs && (
+                          <div>
+                            <p className="text-[10px] text-[#A3A3A3] mb-0.5">Args</p>
+                            <code className="text-[11px] font-mono text-[#0A0A0A] dark:text-white">{JSON.stringify(response.safeArgs)}</code>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
