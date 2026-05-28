@@ -80,7 +80,7 @@ export default function DocsIntegrationsReact() {
 export function ApprovalDashboard() {
   return (
     <LeluApprovalUI
-      engineUrl="http://lelu-engine-666101080696.us-central1.run.app"
+      engineUrl="https://lelu-ai.com"
       apiKey={import.meta.env.VITE_LELU_KEY}
       onApprove={(requestId) => console.log("Approved:", requestId)}
       onDeny={(requestId) => console.log("Denied:", requestId)}

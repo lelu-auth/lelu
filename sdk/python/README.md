@@ -22,7 +22,7 @@ import asyncio
 from lelu import LeluClient, AgentAuthRequest, AgentContext
 
 async def main():
-    async with LeluClient(base_url="https://lelu-engine.onrender.com") as client:
+    async with LeluClient(base_url="https://lelu-ai.com") as client:
         result = await client.agent_authorize(AgentAuthRequest(
             actor="invoice_bot",
             action="invoice:create",

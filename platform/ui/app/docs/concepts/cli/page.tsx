@@ -15,7 +15,7 @@ export default function DocsConceptCli() {
     "Claude Code": "npx @lelu/mcp add --claude",
     "Open Code": "npx @lelu/mcp add --open-code",
     Manual:
-      "npx @lelu/mcp start --transport stdio --engine-url http://lelu-engine-666101080696.us-central1.run.app --api-key YOUR_API_KEY",
+      "npx @lelu/mcp start --transport stdio --engine-url https://lelu-ai.com --api-key YOUR_API_KEY",
   };
 
   const configSnippets: Record<typeof configTab, string> = {
@@ -346,7 +346,7 @@ curl http://localhost:3003/healthz
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
               {`npx @lelu/mcp start --transport stdio \\
-  --engine-url http://lelu-engine-666101080696.us-central1.run.app \\
+  --engine-url https://lelu-ai.com \\
   --api-key YOUR_API_KEY`}
             </pre>
           </div>

@@ -28,7 +28,7 @@ if (decision.allowed) {
 } else if (decision.requiresHumanReview) {
   // queued for human approval
 }`,
-  curl: `curl -X POST https://lelu-engine-666101080696.us-central1.run.app/v1/agent/authorize \\
+  curl: `curl -X POST https://lelu-ai.com/v1/agent/authorize \\
   -H "Authorization: Bearer $LELU_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"actor":"billing-agent","action":"refund:process","confidence":0.85}'`,

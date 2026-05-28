@@ -30,7 +30,7 @@ import (
 func main() {
 	ctx := context.Background()
 	client := lelu.NewClient(lelu.ClientConfig{
-		BaseURL: "https://lelu-engine.onrender.com",
+		BaseURL: "https://lelu-ai.com",
 		APIKey:  "lelu-dev-key",
 	})
 

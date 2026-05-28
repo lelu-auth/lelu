@@ -95,7 +95,7 @@ const lelu = createClient({
               <span className="text-[12px] text-[#737373] font-mono">bash</span>
             </div>
             <pre className="p-4 bg-white dark:bg-[#0B0B0C] font-mono text-[13px] text-[#0A0A0A] dark:text-[#E4E4E7] leading-relaxed overflow-x-auto">
-{`curl -X POST https://lelu-engine-666101080696.us-central1.run.app/v1/agent/authorize \\
+{`curl -X POST https://lelu-ai.com/v1/agent/authorize \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer $LELU_API_KEY" \\
   -d '{"actor":"billing-agent","action":"refund:process","confidence":0.85}'`}

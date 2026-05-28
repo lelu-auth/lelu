@@ -46,7 +46,7 @@ That's it. No Docker. No local server. The SDK routes to the Lelu cloud engine a
 
 | Situation | Engine used |
 |---|---|
-| `apiKey` provided, no `baseUrl` | Lelu cloud (`https://lelu-engine-666101080696.us-central1.run.app`) |
+| `apiKey` provided, no `baseUrl` | Lelu cloud (`https://lelu-ai.com`) |
 | `LELU_BASE_URL` env var set | That URL |
 | `baseUrl` passed to `createClient` | That URL |
 | No `apiKey`, no env var, no `baseUrl` | `http://localhost:8080` (self-hosted dev) |

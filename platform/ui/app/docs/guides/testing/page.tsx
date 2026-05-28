@@ -94,7 +94,7 @@ test_medium_review {
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`import { createClient } from "lelu-agent-auth";
 
 const lelu = createClient({
-  baseUrl: "http://lelu-engine-666101080696.us-central1.run.app",
+  baseUrl: "https://lelu-ai.com",
   apiKey: "test-key",
 });
 

@@ -1,13 +1,13 @@
 {
   "info": {
     "name": "Lelu Engine API",
-    "description": "Authorization engine for AI agents. Base URL: https://lelu-engine-666101080696.us-central1.run.app\n\nAuth: Set 'api_key' collection variable, used as 'Authorization: Bearer {{api_key}}'.",
+    "description": "Authorization engine for AI agents. Base URL: https://lelu-ai.com\n\nAuth: Set 'api_key' collection variable, used as 'Authorization: Bearer {{api_key}}'.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "https://lelu-engine-666101080696.us-central1.run.app",
+      "value": "https://lelu-ai.com",
       "type": "string"
     },
     {

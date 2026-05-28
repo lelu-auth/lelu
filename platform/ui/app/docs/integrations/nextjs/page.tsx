@@ -131,7 +131,7 @@ LELU_API_KEY=your_key_here
 LELU_API_KEY=your_engine_api_key
 
 # Client-side (if using the approval UI widget)
-NEXT_PUBLIC_LELU_URL=http://lelu-engine-666101080696.us-central1.run.app
+NEXT_PUBLIC_LELU_URL=https://lelu-ai.com
 NEXT_PUBLIC_LELU_KEY=your_public_key`}</pre>
           </div>
         </section>

@@ -80,7 +80,7 @@ export default function DocsConceptClient() {
               {`import { createClient } from "lelu-agent-auth";
 
 const lelu = createClient({
-  baseUrl: "http://lelu-engine-666101080696.us-central1.run.app",
+  baseUrl: "https://lelu-ai.com",
   apiKey: process.env.LELU_API_KEY,
 });
 
@@ -118,7 +118,7 @@ if (decision.allowed) {
               {`from lelu import LeluClient
 
 lelu = LeluClient(
-    base_url="http://lelu-engine-666101080696.us-central1.run.app",
+    base_url="https://lelu-ai.com",
     api_key="YOUR_API_KEY"
 )
 

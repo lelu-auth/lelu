@@ -1,4 +1,4 @@
-const CLOUD_URL = "https://lelu-engine-666101080696.us-central1.run.app";
+const CLOUD_URL = "https://lelu-ai.com";
 
 export default function DocsQuickStart() {
   return (
