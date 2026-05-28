@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -104,7 +104,7 @@ const DECISION_CONFIG = {
   },
 } as const;
 
-export default function SandboxPage() {
+function SandboxContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -565,5 +565,13 @@ export default function SandboxPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SandboxPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0B0B0C]" />}>
+      <SandboxContent />
+    </Suspense>
   );
 }
