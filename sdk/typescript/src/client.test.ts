@@ -68,6 +68,23 @@ describe("LeluClient", () => {
       expect(dec.decision).toBe("human_review");
     });
 
+    it("returns compute decision with safeTool and safeArgs", async () => {
+      mockOK({
+        ...authorizeResponse("compute", "t-compute"),
+        safeTool: "fs.write_file",
+        safeArgs: { path: "/dev/sandbox/config.yaml" },
+      });
+      const dec = await client.authorize({
+        tool: "fs.write_file",
+        args: { path: "/prod/config.yaml" },
+      });
+      expect(dec.decision).toBe("compute");
+      expect(dec.computed).toBe(true);
+      expect(dec.allowed).toBe(false);
+      expect(dec.safeTool).toBe("fs.write_file");
+      expect(dec.safeArgs).toEqual({ path: "/dev/sandbox/config.yaml" });
+    });
+
     it("throws AuthEngineError on HTTP error", async () => {
       mockError(500, "internal error");
       await expect(

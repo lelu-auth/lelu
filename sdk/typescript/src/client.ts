@@ -90,7 +90,7 @@ export class LeluClient {
     const data = await this.post<{
       requestId: string;
       tool: string;
-      decision: "allow" | "deny" | "human_review";
+      decision: "allow" | "deny" | "human_review" | "compute";
       reason: string;
       rule: string;
       policyName?: string;
@@ -98,6 +98,8 @@ export class LeluClient {
       mode: string;
       keyId?: string;
       timestamp: string;
+      safeTool?: string;
+      safeArgs?: Record<string, unknown>;
     }>("/api/v1/authorize", body);
 
     return {
@@ -112,6 +114,9 @@ export class LeluClient {
       ...(data.keyId !== undefined ? { keyId: data.keyId } : {}),
       timestamp: data.timestamp,
       allowed: data.decision === "allow",
+      computed: data.decision === "compute",
+      ...(data.safeTool !== undefined ? { safeTool: data.safeTool } : {}),
+      ...(data.safeArgs !== undefined ? { safeArgs: data.safeArgs } : {}),
     };
   }
 

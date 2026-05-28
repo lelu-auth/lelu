@@ -53,7 +53,7 @@ export const DelegateScopeRequestSchema = z.object({
 export interface AuthDecision {
   requestId: string;
   tool: string;
-  decision: "allow" | "deny" | "human_review";
+  decision: "allow" | "deny" | "human_review" | "compute";
   reason: string;
   rule: string;
   policyName?: string;
@@ -63,6 +63,18 @@ export interface AuthDecision {
   timestamp: string;
   /** Convenience shorthand — true when decision === "allow" */
   allowed: boolean;
+  /**
+   * Present when decision === "compute".
+   * The safe alternative tool the agent should call instead.
+   */
+  safeTool?: string;
+  /**
+   * Present when decision === "compute".
+   * Replacement args the agent should use with safeTool.
+   */
+  safeArgs?: Record<string, unknown>;
+  /** True when decision === "compute" — agent should use safeTool/safeArgs. */
+  computed: boolean;
 }
 
 /** @deprecated Use AuthDecision. Kept for backward compatibility. */
