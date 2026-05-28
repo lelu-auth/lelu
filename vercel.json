@@ -4,6 +4,7 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "rootDirectory": "platform/ui",
   "redirects": [
     {
       "source": "/www.:path*",
