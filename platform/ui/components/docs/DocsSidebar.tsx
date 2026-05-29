@@ -163,8 +163,8 @@ const sections: NavSection[] = [
     defaultOpen: false,
     icon: <Ico d={["M16 18l6-6-6-6", "M8 6l-6 6 6 6"]} />,
     items: [
-      { href: "/docs/integrations/nextjs", label: "TypeScript" },
-      { href: "/docs/integrations/backend", label: "Python" },
+      { href: "/docs/integrations/typescript", label: "TypeScript" },
+      { href: "/docs/integrations/python", label: "Python" },
     ],
   },
 ];
