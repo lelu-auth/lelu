@@ -79,7 +79,7 @@ class AuthDecision(BaseModel):
 
     request_id: str = Field(..., description="Unique request identifier")
     tool: str = Field(..., description="Tool name that was evaluated")
-    decision: str = Field(..., description="allow | deny | human_review")
+    decision: str = Field(..., description="allow | deny | human_review | compute")
     reason: str = Field(..., description="Human-readable explanation")
     rule: str = Field(..., description="Rule that matched")
     policy_name: str | None = Field(default=None, description="Policy that matched, if any")
@@ -87,6 +87,8 @@ class AuthDecision(BaseModel):
     mode: str = Field(..., description="live | sandbox")
     key_id: str | None = Field(default=None, description="API key ID, if authenticated")
     timestamp: str = Field(..., description="ISO 8601 timestamp")
+    safe_tool: str | None = Field(default=None, description="Safe alternative tool (present when decision == 'compute')")
+    safe_args: dict | None = Field(default=None, description="Replacement args for safe_tool (present when decision == 'compute')")
 
     @property
     def allowed(self) -> bool:
@@ -97,6 +99,11 @@ class AuthDecision(BaseModel):
     def requires_human_review(self) -> bool:
         """Convenience shorthand — True when decision == 'human_review'."""
         return self.decision == "human_review"
+
+    @property
+    def computed(self) -> bool:
+        """True when decision == 'compute' — agent should use safe_tool/safe_args."""
+        return self.decision == "compute"
 
 
 class AgentAuthDecision(AuthDecision):

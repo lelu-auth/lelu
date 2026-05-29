@@ -78,6 +78,25 @@ async def test_authorize_human_review(client: LeluClient, httpx_mock: HTTPXMock)
 
 
 @pytest.mark.asyncio
+async def test_authorize_compute(client: LeluClient, httpx_mock: HTTPXMock) -> None:
+    response = _authorize_response(decision="compute", reason="Redirected to sandbox", req_id="t-compute")
+    response["safeTool"] = "write_file"
+    response["safeArgs"] = {"path": "/tmp/sandbox/config.yaml", "sandboxed": True}
+    httpx_mock.add_response(
+        method="POST",
+        url="http://localhost:8080/api/v1/authorize",
+        json=response,
+    )
+    dec = await client.authorize(AuthorizeRequest(tool="write_file", args={"path": "/prod/config.yaml"}))
+    assert dec.decision == "compute"
+    assert dec.computed is True
+    assert dec.allowed is False
+    assert dec.requires_human_review is False
+    assert dec.safe_tool == "write_file"
+    assert dec.safe_args == {"path": "/tmp/sandbox/config.yaml", "sandboxed": True}
+
+
+@pytest.mark.asyncio
 async def test_authorize_http_error(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(status_code=500, json={"error": "internal server error"})
     with pytest.raises(AuthEngineError) as exc_info:

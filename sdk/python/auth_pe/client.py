@@ -108,10 +108,14 @@ class LeluClient:
         Example::
 
             result = await lelu.authorize(AuthorizeRequest(tool="send_email"))
-            if result.decision == "deny":
-                return f"Blocked: {result.reason}"
-            if result.decision == "human_review":
+            if result.decision == "allow":
+                pass  # proceed
+            elif result.decision == "compute":
+                call_tool(result.safe_tool, result.safe_args)  # use safe alternative
+            elif result.decision == "human_review":
                 return f"Awaiting approval (id: {result.request_id})"
+            else:
+                return f"Blocked: {result.reason}"
         """
         payload: dict[str, Any] = {"tool": req.tool}
         if req.context is not None:
@@ -131,6 +135,8 @@ class LeluClient:
             mode=data["mode"],
             key_id=data.get("keyId"),
             timestamp=data["timestamp"],
+            safe_tool=data.get("safeTool"),
+            safe_args=data.get("safeArgs"),
         )
 
     # ── Agent authorization (backward compat) ─────────────────────────────────
