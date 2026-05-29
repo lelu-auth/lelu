@@ -23,7 +23,7 @@ export interface AuditEvent {
   action: string;
   resource?: Record<string, string>;
   confidence_score: number;
-  decision: "allowed" | "denied" | "human_review";
+  decision: "allowed" | "denied" | "human_review" | "compute";
   reason?: string;
   downgraded_scope?: string;
   latency_ms: number;

@@ -7,7 +7,7 @@ export interface AuditEventRow {
   key_id: string | null;
   actor: string;
   action: string;
-  decision: "allowed" | "denied" | "human_review";
+  decision: "allowed" | "denied" | "human_review" | "compute";
   reason: string;
   rule: string;
   policy_name: string | null;
@@ -23,7 +23,7 @@ export interface LogAuditEventInput {
   keyId: string | null;
   actor: string;
   action: string;
-  decision: "allowed" | "denied" | "human_review";
+  decision: "allowed" | "denied" | "human_review" | "compute";
   reason: string;
   rule: string;
   policyName?: string;
@@ -84,7 +84,7 @@ export async function listAuditEvents(opts: {
     key_id: r.key_id as string | null,
     actor: r.actor as string,
     action: r.action as string,
-    decision: r.decision as "allowed" | "denied" | "human_review",
+    decision: r.decision as "allowed" | "denied" | "human_review" | "compute",
     reason: r.reason as string,
     rule: r.rule as string,
     policy_name: r.policy_name as string | null,
