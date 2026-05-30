@@ -202,12 +202,9 @@ function SandboxContent() {
     if (parsedArgs) requestBody.args = parsedArgs;
 
     try {
-      const res = await fetch("/api/v1/authorize", {
+      const res = await fetch("/api/sandbox/authorize", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SANDBOX_KEY}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
 
