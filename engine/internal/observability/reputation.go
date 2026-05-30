@@ -312,26 +312,31 @@ func (rm *ReputationManager) UpdateAllReputations(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to query agent reputations: %w", err)
 	}
-	defer rows.Close()
+
+	// Collect all rows before closing the cursor — required for SQLite (MaxOpenConns=1)
+	// so ExecContext below can acquire the connection without deadlocking.
+	var agents []AgentReputation
+	for rows.Next() {
+		var rep AgentReputation
+		if err := rows.Scan(
+			&rep.AgentID, &rep.ReputationScore, &rep.DecisionCount, &rep.AccuracyRate,
+			&rep.CalibrationScore, &rep.LastUpdated, &rep.ConfidenceSum, &rep.CorrectDecisions,
+			&rep.HighConfErrors, &rep.LowConfCorrect,
+		); err != nil {
+			continue
+		}
+		agents = append(agents, rep)
+	}
+	rows.Close()
 
 	updateQuery := `
-		UPDATE agent_reputation 
+		UPDATE agent_reputation
 		SET reputation_score = ?, accuracy_rate = ?, calibration_score = ?, last_updated = ?
 		WHERE agent_id = ?
 	`
 
 	now := time.Now()
-	for rows.Next() {
-		var rep AgentReputation
-		err := rows.Scan(
-			&rep.AgentID, &rep.ReputationScore, &rep.DecisionCount, &rep.AccuracyRate,
-			&rep.CalibrationScore, &rep.LastUpdated, &rep.ConfidenceSum, &rep.CorrectDecisions,
-			&rep.HighConfErrors, &rep.LowConfCorrect,
-		)
-		if err != nil {
-			continue
-		}
-
+	for _, rep := range agents {
 		// Recalculate accuracy rate
 		if rep.DecisionCount > 0 {
 			rep.AccuracyRate = float64(rep.CorrectDecisions) / float64(rep.DecisionCount)
