@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.63] (2026-06-01)
+
+### Features
+
+* `AuthDecision` extended with forensic fields: `input_hash`, `output_hash`, `policy_digest` — surfaced from engine response for tamper-proof verification
+* `AuditEvent.decision` description updated to include `"compute"` — aligns with engine's four-decision model
+* `AuditEvent` extended with `input_hash`, `output_hash`, `policy_digest` optional fields
+
 ## [0.3.6](https://github.com/lelu-auth/lelu/compare/python-sdk-v0.3.5...python-sdk-v0.3.6) (2026-03-30)
 
 
