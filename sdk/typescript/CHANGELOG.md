@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.19] (2026-06-01)
+
+### Features
+
+* `AuthDecision` extended with forensic fields: `inputHash`, `outputHash`, `policyDigest` — surfaced from engine response for tamper-proof client-side verification
+* `AuditEvent.decision` union now includes `"compute"` — aligns with engine's four-decision model
+* `AuditEvent` extended with `inputHash`, `outputHash`, `policyDigest` optional fields
+* `authorize()` in `LeluClient` extracts and returns all three new fields when present in the engine response
+
 ## [0.0.18] (2026-05-30)
 
 ### Engine Upgrades
