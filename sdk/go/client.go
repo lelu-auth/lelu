@@ -73,16 +73,23 @@ type AuthorizeRequest struct {
 
 // AuthDecision is the response from POST /api/v1/authorize.
 type AuthDecision struct {
-	RequestID  string  `json:"requestId"`
-	Tool       string  `json:"tool"`
-	Decision   string  `json:"decision"` // "allow" | "deny" | "human_review"
-	Reason     string  `json:"reason"`
-	Rule       string  `json:"rule"`
-	PolicyName *string `json:"policyName,omitempty"`
-	LatencyMS  float64 `json:"latencyMs"`
-	Mode       string  `json:"mode"` // "live" | "sandbox"
-	KeyID      *string `json:"keyId,omitempty"`
-	Timestamp  string  `json:"timestamp"`
+	RequestID  string                 `json:"requestId"`
+	Tool       string                 `json:"tool"`
+	Decision   string                 `json:"decision"` // "allow" | "deny" | "human_review" | "compute"
+	Reason     string                 `json:"reason"`
+	Rule       string                 `json:"rule"`
+	PolicyName *string                `json:"policyName,omitempty"`
+	LatencyMS  float64                `json:"latencyMs"`
+	Mode       string                 `json:"mode"` // "live" | "sandbox"
+	KeyID      *string                `json:"keyId,omitempty"`
+	Timestamp  string                 `json:"timestamp"`
+	// Compute decision fields — non-nil when Decision == "compute".
+	SafeTool *string                `json:"safeTool,omitempty"`
+	SafeArgs map[string]interface{} `json:"safeArgs,omitempty"`
+	// Forensic fields for tamper-proof audit trails.
+	InputHash    string `json:"inputHash,omitempty"`
+	OutputHash   string `json:"outputHash,omitempty"`
+	PolicyDigest string `json:"policyDigest,omitempty"`
 }
 
 // Allowed returns true when the decision is "allow".
@@ -93,6 +100,12 @@ func (d *AuthDecision) Allowed() bool {
 // RequiresHumanReview returns true when the decision is "human_review".
 func (d *AuthDecision) RequiresHumanReview() bool {
 	return d != nil && d.Decision == "human_review"
+}
+
+// Computed returns true when the decision is "compute" — the agent should
+// proceed using SafeTool and SafeArgs instead of the original request.
+func (d *AuthDecision) Computed() bool {
+	return d != nil && d.Decision == "compute"
 }
 
 // AgentAuthRequest is the confidence-aware agent authorization request payload.
@@ -139,20 +152,23 @@ type RevokeTokenResult struct {
 
 // AuditEvent represents a single audit event from the platform.
 type AuditEvent struct {
-	ID         int64   `json:"id"`
-	TraceID    string  `json:"traceId"`
-	UserID     *string `json:"userId,omitempty"`
-	KeyID      *string `json:"keyId,omitempty"`
-	Actor      string  `json:"actor"`
-	Action     string  `json:"action"`
-	Decision   string  `json:"decision"` // "allow" | "deny" | "human_review"
-	Reason     string  `json:"reason"`
-	Rule       string  `json:"rule"`
-	PolicyName *string `json:"policyName,omitempty"`
-	Confidence float64 `json:"confidence"`
-	LatencyMS  float64 `json:"latencyMs"`
-	Mode       string  `json:"mode"`
-	CreatedAt  string  `json:"createdAt"`
+	ID           int64   `json:"id"`
+	TraceID      string  `json:"traceId"`
+	UserID       *string `json:"userId,omitempty"`
+	KeyID        *string `json:"keyId,omitempty"`
+	Actor        string  `json:"actor"`
+	Action       string  `json:"action"`
+	Decision     string  `json:"decision"` // "allowed" | "denied" | "human_review" | "compute"
+	Reason       string  `json:"reason"`
+	Rule         string  `json:"rule"`
+	PolicyName   *string `json:"policyName,omitempty"`
+	Confidence   float64 `json:"confidence"`
+	LatencyMS    float64 `json:"latencyMs"`
+	Mode         string  `json:"mode"`
+	InputHash    string  `json:"inputHash,omitempty"`
+	OutputHash   string  `json:"outputHash,omitempty"`
+	PolicyDigest string  `json:"policyDigest,omitempty"`
+	CreatedAt    string  `json:"createdAt"`
 }
 
 // ListAuditEventsRequest configures audit event listing.

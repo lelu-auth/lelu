@@ -89,20 +89,23 @@ export async function ensureSchema(): Promise<void> {
 
   await sql`
     CREATE TABLE IF NOT EXISTS lelu_audit_events (
-      id          BIGSERIAL PRIMARY KEY,
-      trace_id    TEXT NOT NULL DEFAULT '',
-      user_id     TEXT REFERENCES lelu_users(id) ON DELETE SET NULL,
-      key_id      TEXT,
-      actor       TEXT NOT NULL,
-      action      TEXT NOT NULL,
-      decision    TEXT NOT NULL CHECK (decision IN ('allowed', 'denied', 'human_review')),
-      reason      TEXT NOT NULL DEFAULT '',
-      rule        TEXT NOT NULL DEFAULT '',
-      policy_name TEXT,
-      confidence  NUMERIC(4,3) NOT NULL DEFAULT 1.0,
-      latency_ms  INTEGER NOT NULL DEFAULT 0,
-      mode        TEXT NOT NULL DEFAULT 'live',
-      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      id            BIGSERIAL PRIMARY KEY,
+      trace_id      TEXT NOT NULL DEFAULT '',
+      user_id       TEXT REFERENCES lelu_users(id) ON DELETE SET NULL,
+      key_id        TEXT,
+      actor         TEXT NOT NULL,
+      action        TEXT NOT NULL,
+      decision      TEXT NOT NULL CHECK (decision IN ('allowed', 'denied', 'human_review', 'compute')),
+      reason        TEXT NOT NULL DEFAULT '',
+      rule          TEXT NOT NULL DEFAULT '',
+      policy_name   TEXT,
+      confidence    NUMERIC(4,3) NOT NULL DEFAULT 1.0,
+      latency_ms    INTEGER NOT NULL DEFAULT 0,
+      mode          TEXT NOT NULL DEFAULT 'live',
+      input_hash    TEXT,
+      output_hash   TEXT,
+      policy_digest TEXT,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
 

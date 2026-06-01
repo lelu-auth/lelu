@@ -75,6 +75,12 @@ export interface AuthDecision {
   safeArgs?: Record<string, unknown>;
   /** True when decision === "compute" — agent should use safeTool/safeArgs. */
   computed: boolean;
+  /** SHA-256 of the request payload — tamper-proof record of what was asked. */
+  inputHash?: string;
+  /** SHA-256 of the decision response — tamper-proof record of what was decided. */
+  outputHash?: string;
+  /** SHA-256 of the policy bytes active at evaluation time. */
+  policyDigest?: string;
 }
 
 /** @deprecated Use AuthDecision. Kept for backward compatibility. */
@@ -124,13 +130,16 @@ export interface AuditEvent {
   keyId?: string;
   actor: string;
   action: string;
-  decision: "allowed" | "denied" | "human_review";
+  decision: "allowed" | "denied" | "human_review" | "compute";
   reason: string;
   rule: string;
   policyName?: string;
   confidence: number;
   latencyMs: number;
   mode: string;
+  inputHash?: string;
+  outputHash?: string;
+  policyDigest?: string;
   createdAt: string;
 }
 

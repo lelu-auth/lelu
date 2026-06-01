@@ -14,6 +14,9 @@ export interface AuditEventRow {
   confidence: number;
   latency_ms: number;
   mode: string;
+  input_hash: string | null;
+  output_hash: string | null;
+  policy_digest: string | null;
   created_at: string;
 }
 
@@ -30,6 +33,9 @@ export interface LogAuditEventInput {
   confidence: number;
   latencyMs: number;
   mode: string;
+  inputHash?: string;
+  outputHash?: string;
+  policyDigest?: string;
 }
 
 export async function logAuditEvent(input: LogAuditEventInput): Promise<void> {
@@ -39,13 +45,18 @@ export async function logAuditEvent(input: LogAuditEventInput): Promise<void> {
     const userId: string | null = input.userId;
     const keyId: string | null = input.keyId;
     const policyName: string | null = input.policyName ?? null;
+    const inputHash: string | null = input.inputHash ?? null;
+    const outputHash: string | null = input.outputHash ?? null;
+    const policyDigest: string | null = input.policyDigest ?? null;
     await sql`
       INSERT INTO lelu_audit_events
-        (trace_id, user_id, key_id, actor, action, decision, reason, rule, policy_name, confidence, latency_ms, mode)
+        (trace_id, user_id, key_id, actor, action, decision, reason, rule, policy_name,
+         confidence, latency_ms, mode, input_hash, output_hash, policy_digest)
       VALUES
         (${input.traceId}, ${userId}, ${keyId}, ${input.actor}, ${input.action},
          ${input.decision}, ${input.reason}, ${input.rule}, ${policyName},
-         ${input.confidence}, ${input.latencyMs}, ${input.mode})
+         ${input.confidence}, ${input.latencyMs}, ${input.mode},
+         ${inputHash}, ${outputHash}, ${policyDigest})
     `;
   } catch {
     // Never fail the main request due to audit logging
@@ -66,7 +77,7 @@ export async function listAuditEvents(opts: {
   // Build filters dynamically
   const rows = await sql`
     SELECT id, trace_id, user_id, key_id, actor, action, decision, reason, rule,
-           policy_name, confidence, latency_ms, mode, created_at
+           policy_name, confidence, latency_ms, mode, input_hash, output_hash, policy_digest, created_at
     FROM lelu_audit_events
     WHERE
       (${opts.userId ?? null}::text IS NULL OR user_id = ${opts.userId ?? null})
@@ -91,6 +102,9 @@ export async function listAuditEvents(opts: {
     confidence: Number(r.confidence),
     latency_ms: r.latency_ms as number,
     mode: r.mode as string,
+    input_hash: (r.input_hash as string | null) ?? null,
+    output_hash: (r.output_hash as string | null) ?? null,
+    policy_digest: (r.policy_digest as string | null) ?? null,
     created_at: r.created_at as string,
   }));
 }

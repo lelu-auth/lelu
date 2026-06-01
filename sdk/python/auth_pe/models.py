@@ -89,6 +89,9 @@ class AuthDecision(BaseModel):
     timestamp: str = Field(..., description="ISO 8601 timestamp")
     safe_tool: str | None = Field(default=None, description="Safe alternative tool (present when decision == 'compute')")
     safe_args: dict[str, object] | None = Field(default=None, description="Replacement args for safe_tool (present when decision == 'compute')")
+    input_hash: str | None = Field(default=None, description="SHA-256 of the request payload — tamper-proof record of what was asked")
+    output_hash: str | None = Field(default=None, description="SHA-256 of the decision response — tamper-proof record of what was decided")
+    policy_digest: str | None = Field(default=None, description="SHA-256 of the policy bytes active at evaluation time")
 
     @property
     def allowed(self) -> bool:
@@ -155,13 +158,16 @@ class AuditEvent(BaseModel):
     key_id: str | None = None
     actor: str
     action: str
-    decision: str = Field(..., description="allowed | denied | human_review")
+    decision: str = Field(..., description="allowed | denied | human_review | compute")
     reason: str
     rule: str
     policy_name: str | None = None
     confidence: float
     latency_ms: float
     mode: str
+    input_hash: str | None = None
+    output_hash: str | None = None
+    policy_digest: str | None = None
     created_at: str
 
 

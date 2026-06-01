@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { validateApiKey } from "@/lib/apikeys";
 import { getActivePoliciesForUser, evaluateWithPolicies } from "@/lib/policies";
 import { logAuditEvent } from "@/lib/audit";
+
+function sha256(value: unknown): string {
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
 
 type Decision = "allow" | "deny" | "human_review" | "compute";
 
@@ -169,6 +173,7 @@ export async function POST(req: NextRequest) {
   const latencyMs = Date.now() - start + Math.floor(Math.random() * 8 + 2);
   const requestId = `req_${randomBytes(8).toString("hex")}`;
   const mode = isSandbox ? "sandbox" : "live";
+  const inputHash = sha256({ tool: tool.trim(), context, args });
 
   const decisionMapped =
     result.decision === "allow" ? "allowed" :
@@ -179,6 +184,8 @@ export async function POST(req: NextRequest) {
     result.decision === "allow" ? 0.95 :
     result.decision === "compute" ? 0.85 :
     result.decision === "human_review" ? 0.7 : 0.3;
+
+  const outputHash = sha256({ requestId, decision: decisionMapped, reason: result.reason });
 
   // Log async — don't await so response isn't delayed
   logAuditEvent({
@@ -194,6 +201,8 @@ export async function POST(req: NextRequest) {
     confidence,
     latencyMs,
     mode,
+    inputHash,
+    outputHash,
   });
 
   const response = {
@@ -211,6 +220,8 @@ export async function POST(req: NextRequest) {
     mode,
     ...(keyId ? { keyId } : {}),
     timestamp: new Date().toISOString(),
+    inputHash,
+    outputHash,
   };
 
   return NextResponse.json(response);

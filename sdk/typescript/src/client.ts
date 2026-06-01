@@ -100,6 +100,9 @@ export class LeluClient {
       timestamp: string;
       safeTool?: string;
       safeArgs?: Record<string, unknown>;
+      inputHash?: string;
+      outputHash?: string;
+      policyDigest?: string;
     }>("/api/v1/authorize", body);
 
     return {
@@ -117,6 +120,9 @@ export class LeluClient {
       computed: data.decision === "compute",
       ...(data.safeTool !== undefined ? { safeTool: data.safeTool } : {}),
       ...(data.safeArgs !== undefined ? { safeArgs: data.safeArgs } : {}),
+      ...(data.inputHash !== undefined ? { inputHash: data.inputHash } : {}),
+      ...(data.outputHash !== undefined ? { outputHash: data.outputHash } : {}),
+      ...(data.policyDigest !== undefined ? { policyDigest: data.policyDigest } : {}),
     };
   }
 
