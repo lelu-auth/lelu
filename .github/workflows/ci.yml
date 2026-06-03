@@ -166,23 +166,15 @@ jobs:
     name: "Go Platform — build & lint"
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_DB:       lelu
-          POSTGRES_USER:     lelu
-          POSTGRES_PASSWORD: lelu-ci-secret
-        options: >-
-          --health-cmd "pg_isready -U lelu"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Postgres (runner-native, no Docker Hub pull)
+        run: |
+          sudo systemctl start postgresql.service
+          sudo -u postgres psql -c "CREATE USER lelu WITH PASSWORD 'lelu-ci-secret';"
+          sudo -u postgres psql -c "CREATE DATABASE lelu OWNER lelu;"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE lelu TO lelu;"
 
       - name: Set up Go
         uses: actions/setup-go@v5
