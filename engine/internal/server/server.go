@@ -29,8 +29,10 @@ import (
 	"github.com/lelu/engine/internal/confidence"
 	"github.com/lelu/engine/internal/evaluator"
 	"github.com/lelu/engine/internal/fallback"
+	"github.com/lelu/engine/internal/identity"
 	"github.com/lelu/engine/internal/incident"
 	"github.com/lelu/engine/internal/injection"
+	"github.com/lelu/engine/internal/mcpauth"
 	"github.com/lelu/engine/internal/observability"
 	"github.com/lelu/engine/internal/queue"
 	"github.com/lelu/engine/internal/ratelimit"
@@ -113,6 +115,10 @@ type Handler struct {
 
 	// OAuth Token Vault
 	vaultSvc *vault.Service
+
+	// Feature 2: Durable Agent Identity + MCP OAuth 2.1
+	identityReg *identity.Registry
+	mcpAuth     *mcpauth.Server
 }
 
 // ─── Anomaly Tracker ──────────────────────────────────────────────────────────
@@ -336,6 +342,16 @@ func (h *Handler) SetVault(v *vault.Service) {
 	h.vaultSvc = v
 }
 
+// SetIdentityRegistry attaches the durable agent identity registry.
+func (h *Handler) SetIdentityRegistry(r *identity.Registry) {
+	h.identityReg = r
+}
+
+// SetMCPAuth attaches the MCP OAuth 2.1 authorization server.
+func (h *Handler) SetMCPAuth(m *mcpauth.Server) {
+	h.mcpAuth = m
+}
+
 // Shutdown gracefully shuts down the handler and its components
 func (h *Handler) Shutdown() {
 	if h.reputationMgr != nil {
@@ -379,6 +395,25 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /v1/vault/credential", h.handleVaultRevoke)
 	mux.HandleFunc("GET /v1/vault/list", h.handleVaultList)
 	mux.HandleFunc("GET /v1/vault/providers", h.handleVaultProviders)
+
+	// Feature 2: Durable Agent Identity (requires API key)
+	mux.HandleFunc("POST /v1/agents", h.handleRegisterAgent)
+	mux.HandleFunc("GET /v1/agents", h.handleListAgents)
+	mux.HandleFunc("GET /v1/agents/{agentID}", h.handleGetAgent)
+	mux.HandleFunc("DELETE /v1/agents/{agentID}", h.handleRevokeAgent)
+	mux.HandleFunc("POST /v1/agents/{agentID}/suspend", h.handleSuspendAgent)
+	mux.HandleFunc("POST /v1/agents/{agentID}/token", h.handleIssueAgentToken)
+
+	// Feature 2: OIDC discovery + JWKS (public — no API key)
+	mux.HandleFunc("GET /.well-known/openid-configuration", h.handleOIDCDiscovery)
+	mux.HandleFunc("GET /.well-known/jwks.json", h.handleJWKS)
+	mux.HandleFunc("GET /.well-known/oauth-authorization-server", h.handleMCPAuthServerMeta)
+	mux.HandleFunc("GET /.well-known/oauth-protected-resource", h.handleMCPProtectedResourceMeta)
+
+	// Feature 2: MCP OAuth 2.1 endpoints (public — clients use their own auth)
+	if h.mcpAuth != nil {
+		h.mcpAuth.RegisterRoutes(mux)
+	}
 }
 
 // ─── Authorize ────────────────────────────────────────────────────────────────
@@ -1815,8 +1850,10 @@ func (rec *responseRecorder) WriteHeader(statusCode int) {
 
 func (h *Handler) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Skip auth for health check and metrics
-		if r.URL.Path == "/healthz" || r.URL.Path == "/metrics" {
+		// Skip auth for health check, metrics, and public OIDC/MCP OAuth endpoints.
+		if r.URL.Path == "/healthz" || r.URL.Path == "/metrics" ||
+			strings.HasPrefix(r.URL.Path, "/.well-known/") ||
+			strings.HasPrefix(r.URL.Path, "/oauth/") {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -2242,4 +2279,173 @@ func (h *Handler) handleResolveAlert(w http.ResponseWriter, r *http.Request) {
 		"alert_id": alertID,
 		"status":   "resolved",
 	})
+}
+
+// ─── Agent Identity Registry ──────────────────────────────────────────────────
+
+func (h *Handler) handleRegisterAgent(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "agent identity registry not configured")
+		return
+	}
+	var req struct {
+		Name        string         `json:"name"`
+		Description string         `json:"description"`
+		AgentType   string         `json:"agent_type"`
+		OwnerEmail  string         `json:"owner_email"`
+		Scopes      []string       `json:"scopes"`
+		Metadata    map[string]any `json:"metadata"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.Name == "" {
+		writeError(w, http.StatusBadRequest, "name is required")
+		return
+	}
+	agent, err := h.identityReg.Register(r.Context(), identity.RegisterRequest{
+		Name:        req.Name,
+		Description: req.Description,
+		AgentType:   identity.AgentType(req.AgentType),
+		OwnerEmail:  req.OwnerEmail,
+		Scopes:      req.Scopes,
+		Metadata:    req.Metadata,
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("register agent: %v", err))
+		return
+	}
+	writeJSON(w, http.StatusCreated, agent)
+}
+
+func (h *Handler) handleListAgents(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "agent identity registry not configured")
+		return
+	}
+	tenantID := r.URL.Query().Get("tenant_id")
+	agents, err := h.identityReg.List(r.Context(), tenantID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("list agents: %v", err))
+		return
+	}
+	if agents == nil {
+		agents = []*identity.RegisteredAgent{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"agents": agents, "count": len(agents)})
+}
+
+func (h *Handler) handleGetAgent(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "agent identity registry not configured")
+		return
+	}
+	agentID := r.PathValue("agentID")
+	agent, err := h.identityReg.Get(r.Context(), agentID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			writeError(w, http.StatusNotFound, fmt.Sprintf("agent %q not found", agentID))
+		} else {
+			writeError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, agent)
+}
+
+func (h *Handler) handleRevokeAgent(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "agent identity registry not configured")
+		return
+	}
+	agentID := r.PathValue("agentID")
+	if err := h.identityReg.SetStatus(r.Context(), agentID, identity.AgentStatusRevoked); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			writeError(w, http.StatusNotFound, fmt.Sprintf("agent %q not found", agentID))
+		} else {
+			writeError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"agent_id": agentID, "status": "revoked"})
+}
+
+func (h *Handler) handleSuspendAgent(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "agent identity registry not configured")
+		return
+	}
+	agentID := r.PathValue("agentID")
+	if err := h.identityReg.SetStatus(r.Context(), agentID, identity.AgentStatusSuspended); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			writeError(w, http.StatusNotFound, fmt.Sprintf("agent %q not found", agentID))
+		} else {
+			writeError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"agent_id": agentID, "status": "suspended"})
+}
+
+func (h *Handler) handleIssueAgentToken(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "agent identity registry not configured")
+		return
+	}
+	agentID := r.PathValue("agentID")
+	tok, err := h.identityReg.IssueToken(r.Context(), agentID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			writeError(w, http.StatusNotFound, fmt.Sprintf("agent %q not found", agentID))
+		} else if strings.Contains(err.Error(), "is suspended") || strings.Contains(err.Error(), "is revoked") {
+			writeError(w, http.StatusForbidden, err.Error())
+		} else {
+			writeError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, tok)
+}
+
+// ─── OIDC / MCP OAuth Metadata ────────────────────────────────────────────────
+
+func (h *Handler) handleOIDCDiscovery(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "identity registry not configured")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	json.NewEncoder(w).Encode(h.identityReg.OIDCDiscovery())
+}
+
+func (h *Handler) handleJWKS(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "identity registry not configured")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	json.NewEncoder(w).Encode(h.identityReg.JWKSResponse())
+}
+
+func (h *Handler) handleMCPAuthServerMeta(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "identity registry not configured")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	json.NewEncoder(w).Encode(h.identityReg.MCPAuthServerMetadata())
+}
+
+func (h *Handler) handleMCPProtectedResourceMeta(w http.ResponseWriter, r *http.Request) {
+	if h.identityReg == nil {
+		writeError(w, http.StatusServiceUnavailable, "identity registry not configured")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	json.NewEncoder(w).Encode(h.identityReg.MCPProtectedResourceMetadata())
 }

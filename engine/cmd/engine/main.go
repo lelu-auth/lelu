@@ -19,7 +19,9 @@ import (
 	"github.com/lelu/engine/internal/confidence"
 	"github.com/lelu/engine/internal/evaluator"
 	"github.com/lelu/engine/internal/fallback"
+	"github.com/lelu/engine/internal/identity"
 	"github.com/lelu/engine/internal/incident"
+	"github.com/lelu/engine/internal/mcpauth"
 	"github.com/lelu/engine/internal/queue"
 	"github.com/lelu/engine/internal/ratelimit"
 	"github.com/lelu/engine/internal/server"
@@ -49,6 +51,9 @@ func main() {
 	otelEnabled := envOr("OTEL_ENABLED", "false") == "true"
 	otelEndpoint := envOr("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317")
 	otelSampleRate := parseFloatOr(envOr("OTEL_SAMPLE_RATE", "1.0"), 1.0)
+
+	// Feature 2: Durable Agent Identity + MCP OAuth 2.1
+	leluIssuer := envOr("LELU_ISSUER", "https://lelu-ai.com")
 
 	// Phase 2: Behavioral Analytics Database
 	dbPath := envOr("DATABASE_PATH", "/var/lib/lelu/lelu.db")
@@ -194,6 +199,33 @@ func main() {
 		}
 	}
 
+	// ── Agent Identity Registry + MCP OAuth 2.1 ──────────────────────────────
+	var identityReg *identity.Registry
+	var mcpAuthSvc *mcpauth.Server
+	if db != nil {
+		var iErr error
+		identityReg, iErr = identity.New(identity.Config{
+			DB:     db,
+			Issuer: leluIssuer,
+		})
+		if iErr != nil {
+			log.Printf("warning: agent identity registry init failed: %v", iErr)
+		} else {
+			log.Printf("agent identity registry ready (issuer: %s)", leluIssuer)
+			mcpAuthSvc, iErr = mcpauth.New(mcpauth.Config{
+				DB:        db,
+				SigningKey: identityReg.SigningKey(),
+				Issuer:    leluIssuer,
+				KeyID:     identityReg.KeyID(),
+			})
+			if iErr != nil {
+				log.Printf("warning: MCP OAuth 2.1 server init failed: %v", iErr)
+			} else {
+				log.Printf("MCP OAuth 2.1 authorization server ready")
+			}
+		}
+	}
+
 	// ── HTTP server ───────────────────────────────────────────────────────────
 	h := server.New(eval, tokenSvc, confGate, auditWriter, reviewQueue, apiKey, server.ConfidenceConfig{
 		AllowUnverifiedConfidence: allowUnverifiedConfidence,
@@ -201,6 +233,12 @@ func main() {
 	}, enforcementMode, incidentNotifier, rl, fb, tp, db)
 	if vaultSvc != nil {
 		h.SetVault(vaultSvc)
+	}
+	if identityReg != nil {
+		h.SetIdentityRegistry(identityReg)
+	}
+	if mcpAuthSvc != nil {
+		h.SetMCPAuth(mcpAuthSvc)
 	}
 	srv := server.NewHTTPServer(addr, h)
 

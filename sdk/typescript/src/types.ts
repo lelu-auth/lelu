@@ -394,3 +394,70 @@ export interface AlertsResponse {
 export interface AcknowledgeAlertRequest {
   acknowledged_by: string;
 }
+
+// ─── Agent Identity Registry ──────────────────────────────────────────────────
+
+export type AgentType = "autonomous" | "assistant" | "workflow";
+export type AgentStatus = "active" | "suspended" | "revoked";
+
+export interface RegisterAgentRequest {
+  name: string;
+  description?: string;
+  agentType?: AgentType;
+  ownerEmail?: string;
+  scopes?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface RegisteredAgent {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string;
+  agentType: AgentType;
+  ownerEmail: string;
+  status: AgentStatus;
+  scopes: string[];
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListAgentsResult {
+  agents: RegisteredAgent[];
+  count: number;
+}
+
+export interface AgentWorkloadToken {
+  token: string;
+  agentId: string;
+  scopes: string[];
+  expiresAt: string;
+  issuedAt: string;
+}
+
+export interface AgentStatusResult {
+  agentId: string;
+  status: AgentStatus;
+}
+
+// ─── MCP OAuth 2.1 ───────────────────────────────────────────────────────────
+
+export interface RegisterOAuthClientRequest {
+  clientName?: string;
+  redirectUris?: string[];
+  grantTypes?: string[];
+  scope?: string;
+  tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
+}
+
+export interface OAuthClient {
+  clientId: string;
+  clientSecret: string | undefined;
+  clientName: string;
+  redirectUris: string[];
+  grantTypes: string[];
+  scope: string;
+  tokenEndpointAuthMethod: string;
+  clientIdIssuedAt: number;
+}

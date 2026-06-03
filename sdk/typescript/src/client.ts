@@ -34,6 +34,13 @@ import {
   type VaultStoreResult,
   type VaultTokenResult,
   type VaultCredentialSummary,
+  type RegisterAgentRequest,
+  type RegisteredAgent,
+  type ListAgentsResult,
+  type AgentWorkloadToken,
+  type AgentStatusResult,
+  type RegisterOAuthClientRequest,
+  type OAuthClient,
 } from "./types.js";
 import { agentTracer } from "./observability/tracer.js";
 
@@ -489,6 +496,114 @@ export class LeluClient {
   async vaultProviders(): Promise<string[]> {
     const d = await this.get<{ providers: string[] }>("/v1/vault/providers");
     return d.providers ?? [];
+  }
+
+  // ── Agent Identity Registry ────────────────────────────────────────────────
+
+  /**
+   * Registers a new agent identity in Lelu's durable registry.
+   * The returned `id` is stable across deployments and API key rotations.
+   */
+  async registerAgent(req: RegisterAgentRequest): Promise<RegisteredAgent> {
+    const body: Record<string, unknown> = { name: req.name };
+    if (req.description !== undefined) body.description = req.description;
+    if (req.agentType !== undefined) body.agent_type = req.agentType;
+    if (req.ownerEmail !== undefined) body.owner_email = req.ownerEmail;
+    if (req.scopes !== undefined) body.scopes = req.scopes;
+    if (req.metadata !== undefined) body.metadata = req.metadata;
+    return this.post<RegisteredAgent>("/v1/agents", body);
+  }
+
+  /** Lists all registered agents, optionally filtered by tenant. */
+  async listAgents(tenantId?: string): Promise<ListAgentsResult> {
+    const path = tenantId
+      ? `/v1/agents?tenant_id=${encodeURIComponent(tenantId)}`
+      : "/v1/agents";
+    return this.get<ListAgentsResult>(path);
+  }
+
+  /** Gets a single registered agent by its stable ID. */
+  async getAgent(agentId: string): Promise<RegisteredAgent> {
+    return this.get<RegisteredAgent>(`/v1/agents/${encodeURIComponent(agentId)}`);
+  }
+
+  /**
+   * Permanently revokes an agent identity — all future token issuances for
+   * this agent will be rejected.
+   */
+  async revokeAgent(agentId: string): Promise<AgentStatusResult> {
+    const d = await this.delete<{ agent_id: string; status: string }>(
+      `/v1/agents/${encodeURIComponent(agentId)}`
+    );
+    return { agentId: d.agent_id, status: d.status as "revoked" };
+  }
+
+  /** Suspends an agent (reversible; use revokeAgent for permanent revocation). */
+  async suspendAgent(agentId: string): Promise<AgentStatusResult> {
+    const d = await this.post<{ agent_id: string; status: string }>(
+      `/v1/agents/${encodeURIComponent(agentId)}/suspend`,
+      {}
+    );
+    return { agentId: d.agent_id, status: d.status as "suspended" };
+  }
+
+  /**
+   * Issues a short-lived OIDC-compatible RS256 JWT for a registered agent.
+   * Third-party services can verify it offline via `/.well-known/jwks.json`.
+   */
+  async issueAgentToken(agentId: string): Promise<AgentWorkloadToken> {
+    const d = await this.post<{
+      token: string;
+      agent_id: string;
+      scopes: string[];
+      expires_at: string;
+      issued_at: string;
+    }>(`/v1/agents/${encodeURIComponent(agentId)}/token`, {});
+    return {
+      token: d.token,
+      agentId: d.agent_id,
+      scopes: d.scopes,
+      expiresAt: d.expires_at,
+      issuedAt: d.issued_at,
+    };
+  }
+
+  // ── MCP OAuth 2.1 ─────────────────────────────────────────────────────────
+
+  /**
+   * Dynamically registers an OAuth 2.1 client with Lelu's MCP authorization
+   * server (RFC 7591). Returns client credentials for use in the token flow.
+   */
+  async registerOAuthClient(req: RegisterOAuthClientRequest): Promise<OAuthClient> {
+    const body: Record<string, unknown> = {};
+    if (req.clientName !== undefined) body.client_name = req.clientName;
+    if (req.redirectUris !== undefined) body.redirect_uris = req.redirectUris;
+    if (req.grantTypes !== undefined) body.grant_types = req.grantTypes;
+    if (req.scope !== undefined) body.scope = req.scope;
+    if (req.tokenEndpointAuthMethod !== undefined)
+      body.token_endpoint_auth_method = req.tokenEndpointAuthMethod;
+
+    const d = await this.post<{
+      client_id: string;
+      client_secret?: string;
+      client_name: string;
+      redirect_uris: string[];
+      grant_types: string[];
+      scope: string;
+      token_endpoint_auth_method: string;
+      client_id_issued_at: number;
+    }>("/oauth/clients", body);
+
+    return {
+      clientId: d.client_id,
+      clientSecret: d.client_secret,
+      clientName: d.client_name,
+      redirectUris: d.redirect_uris,
+      grantTypes: d.grant_types,
+      scope: d.scope,
+      tokenEndpointAuthMethod: d.token_endpoint_auth_method,
+      clientIdIssuedAt: d.client_id_issued_at,
+    };
   }
 
   // ── HTTP helpers ───────────────────────────────────────────────────────────
