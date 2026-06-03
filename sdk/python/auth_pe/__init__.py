@@ -49,6 +49,11 @@ from .models import (
     ListAuditEventsResult,
     # Error
     AuthEngineError,
+    # Vault types
+    VaultStoreRequest,
+    VaultStoreResult,
+    VaultTokenResult,
+    VaultCredentialSummary,
 )
 
 # Enhanced Observability
@@ -104,6 +109,11 @@ __all__ = [
     "ListAuditEventsResult",
     # Error
     "AuthEngineError",
+    # Vault
+    "VaultStoreRequest",
+    "VaultStoreResult",
+    "VaultTokenResult",
+    "VaultCredentialSummary",
     # Observability
     "AgentTracer",
     "agent_tracer",

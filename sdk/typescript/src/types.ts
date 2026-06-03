@@ -202,7 +202,9 @@ export interface VaultCredentialSummary {
   userId: string;
   provider: string;
   scopes: string[];
+  /** ISO timestamp or undefined when non-expiring. */
   expiresAt: string | undefined;
+  /** True when the stored access token is already past its expiry. */
   expired: boolean;
   createdAt: string;
   updatedAt: string;

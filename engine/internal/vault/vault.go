@@ -167,8 +167,17 @@ func (s *Service) Store(ctx context.Context, req StoreRequest) (*CredentialEntry
 		return nil, fmt.Errorf("vault: store: %w", err)
 	}
 
+	// Fetch the actual stored ID — on conflict the original row's id is kept.
+	var actualID string
+	if err := s.db.QueryRowContext(ctx,
+		`SELECT id FROM credential_vault WHERE agent_id = ? AND user_id = ? AND provider = ?`,
+		req.AgentID, req.UserID, req.Provider,
+	).Scan(&actualID); err != nil {
+		actualID = id // fallback to generated id on unexpected scan error
+	}
+
 	return &CredentialEntry{
-		ID:           id,
+		ID:           actualID,
 		AgentID:      req.AgentID,
 		UserID:       req.UserID,
 		Provider:     req.Provider,
@@ -331,15 +340,15 @@ func (s *Service) ListByAgent(ctx context.Context, agentID string) ([]*Credentia
 
 // CredentialSummary is a redacted view of a stored credential (no tokens exposed).
 type CredentialSummary struct {
-	ID        string
-	AgentID   string
-	UserID    string
-	Provider  string
-	Scopes    []string
-	ExpiresAt *time.Time
-	Expired   bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string     `json:"id"`
+	AgentID   string     `json:"agent_id"`
+	UserID    string     `json:"user_id"`
+	Provider  string     `json:"provider"`
+	Scopes    []string   `json:"scopes"`
+	ExpiresAt *time.Time `json:"expires_at"` // null when non-expiring
+	Expired   bool       `json:"expired"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 // Providers returns the names of all configured OAuth providers.

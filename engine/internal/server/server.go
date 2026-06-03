@@ -1584,7 +1584,7 @@ func (h *Handler) handleVaultStore(w http.ResponseWriter, r *http.Request) {
 		"user_id":    entry.UserID,
 		"provider":   entry.Provider,
 		"scopes":     entry.Scopes,
-		"expires_at": entry.ExpiresAt,
+		"expires_at": nullTime(entry.ExpiresAt),
 		"created_at": entry.CreatedAt,
 	})
 }
@@ -1613,7 +1613,7 @@ func (h *Handler) handleVaultGetToken(w http.ResponseWriter, r *http.Request) {
 		"provider":     entry.Provider,
 		"access_token": entry.AccessToken,
 		"scopes":       entry.Scopes,
-		"expires_at":   entry.ExpiresAt,
+		"expires_at":   nullTime(entry.ExpiresAt),
 		"refreshed":    entry.Refreshed,
 	})
 }
@@ -1942,6 +1942,15 @@ func decisionString(allowed, requiresReview bool) string {
 		return "allowed"
 	}
 	return "denied"
+}
+
+// nullTime returns nil for a zero time.Time so it serialises as JSON null
+// instead of Go's zero "0001-01-01T00:00:00Z".
+func nullTime(t time.Time) interface{} {
+	if t.IsZero() {
+		return nil
+	}
+	return t
 }
 
 // decisionStringFull extends decisionString with the compute case.
