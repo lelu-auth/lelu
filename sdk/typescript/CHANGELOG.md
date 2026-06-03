@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.20] (2026-06-03)
+
+### Features
+
+* **OAuth Token Vault** — full vault support: `vaultStore()`, `vaultGetToken()`, `vaultRevoke()`, `vaultList()`, `vaultProviders()`
+* New types: `VaultStoreRequest`, `VaultStoreResult`, `VaultTokenResult`, `VaultCredentialSummary` — all exported from package root
+* `VaultTokenResult.refreshed` — indicates whether the access token was transparently refreshed before returning
+* `VaultCredentialSummary.expired` — boolean flag when the stored token is past its expiry
+
+### Bug Fixes
+
+* `VaultCredentialSummary.expiresAt` typed as `string | undefined` (not optional `?`) for strict TS compatibility
+* Engine upsert now returns correct existing `id` after conflict update
+
 ## [0.0.19] (2026-06-01)
 
 ### Features

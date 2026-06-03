@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.64] (2026-06-03)
+
+### Features
+
+* **OAuth Token Vault** — full vault support: `vault_store()`, `vault_get_token()`, `vault_revoke()`, `vault_list()`, `vault_providers()`
+* New models exported from package root: `VaultStoreRequest`, `VaultStoreResult`, `VaultTokenResult`, `VaultCredentialSummary`
+* `VaultTokenResult.refreshed` — true when engine transparently refreshed the access token
+* `VaultCredentialSummary.expired` — boolean flag when stored token is past expiry
+
+### Bug Fixes
+
+* `observability.py` — fixed mypy `unused-ignore` and `no-redef` errors by declaring `otel_trace`, `OtelStatus`, `OtelStatusCode` as `Any` before the try/except block
+* `vault_revoke()` return value cast to `bool()` to satisfy mypy strict return type
+
 ## [0.3.63] (2026-06-01)
 
 ### Features
