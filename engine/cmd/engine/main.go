@@ -22,6 +22,7 @@ import (
 	"github.com/lelu/engine/internal/identity"
 	"github.com/lelu/engine/internal/incident"
 	"github.com/lelu/engine/internal/mcpauth"
+	"github.com/lelu/engine/internal/nhi"
 	"github.com/lelu/engine/internal/queue"
 	"github.com/lelu/engine/internal/ratelimit"
 	"github.com/lelu/engine/internal/server"
@@ -239,6 +240,15 @@ func main() {
 	}
 	if mcpAuthSvc != nil {
 		h.SetMCPAuth(mcpAuthSvc)
+	}
+	if db != nil {
+		nhiInv, nhiErr := nhi.New(db)
+		if nhiErr != nil {
+			log.Printf("warning: NHI inventory init failed: %v", nhiErr)
+		} else {
+			h.SetNHIInventory(nhiInv)
+			log.Printf("NHI inventory ready")
+		}
 	}
 	srv := server.NewHTTPServer(addr, h)
 

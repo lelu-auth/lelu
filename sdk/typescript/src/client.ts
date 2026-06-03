@@ -41,6 +41,11 @@ import {
   type AgentStatusResult,
   type RegisterOAuthClientRequest,
   type OAuthClient,
+  type NHIListResult,
+  type NHIEntry,
+  type NHITopRisksResult,
+  type NHIScanResult,
+  type NHIStats,
 } from "./types.js";
 import { agentTracer } from "./observability/tracer.js";
 
@@ -603,6 +608,88 @@ export class LeluClient {
       scope: d.scope,
       tokenEndpointAuthMethod: d.token_endpoint_auth_method,
       clientIdIssuedAt: d.client_id_issued_at,
+    };
+  }
+
+  // ── NHI Discovery + ISPM ──────────────────────────────────────────────────
+
+  /**
+   * Returns all non-human identities (registered agents, shadow agents, OAuth
+   * credentials) with OWASP NHI risk findings and scores, sorted by risk desc.
+   */
+  async listNHI(tenantId?: string): Promise<NHIListResult> {
+    const path = tenantId
+      ? `/v1/nhi/inventory?tenant_id=${encodeURIComponent(tenantId)}`
+      : "/v1/nhi/inventory";
+    const d = await this.get<{ nhis: NHIEntry[]; count: number }>(path);
+    return { nhis: d.nhis ?? [], count: d.count };
+  }
+
+  /** Returns a single NHI by ID with full OWASP findings and remediation. */
+  async getNHI(id: string): Promise<NHIEntry> {
+    return this.get<NHIEntry>(`/v1/nhi/inventory/${encodeURIComponent(id)}`);
+  }
+
+  /** Returns the top-N highest-risk NHIs (default 10). */
+  async getTopRisks(options: { tenantId?: string; limit?: number } = {}): Promise<NHITopRisksResult> {
+    const params = new URLSearchParams();
+    if (options.tenantId) params.set("tenant_id", options.tenantId);
+    if (options.limit) params.set("limit", String(options.limit));
+    const path = `/v1/nhi/risks${params.size ? "?" + params.toString() : ""}`;
+    const d = await this.get<{ top_risks: NHIEntry[]; count: number }>(path);
+    return { topRisks: d.top_risks ?? [], count: d.count };
+  }
+
+  /**
+   * Triggers a full NHI scan across all data sources for a tenant.
+   * Returns aggregate counts by type, status, risk level, and top risks.
+   */
+  async triggerNHIScan(tenantId?: string): Promise<NHIScanResult> {
+    const path = tenantId
+      ? `/v1/nhi/scan?tenant_id=${encodeURIComponent(tenantId)}`
+      : "/v1/nhi/scan";
+    const d = await this.post<{
+      tenant_id: string;
+      scanned_at: string;
+      total_nhis: number;
+      by_type: Record<string, number>;
+      by_status: Record<string, number>;
+      by_risk_level: Record<string, number>;
+      top_risks: NHIEntry[];
+      finding_counts: Record<string, number>;
+    }>(path, {});
+    return {
+      tenantId: d.tenant_id,
+      scannedAt: d.scanned_at,
+      totalNhis: d.total_nhis,
+      byType: d.by_type,
+      byStatus: d.by_status,
+      byRiskLevel: d.by_risk_level,
+      topRisks: d.top_risks ?? [],
+      findingCounts: d.finding_counts,
+    };
+  }
+
+  /** Returns lightweight aggregate NHI counts without running full checks. */
+  async getNHIStats(tenantId?: string): Promise<NHIStats> {
+    const path = tenantId
+      ? `/v1/nhi/stats?tenant_id=${encodeURIComponent(tenantId)}`
+      : "/v1/nhi/stats";
+    const d = await this.get<{
+      tenant_id: string;
+      total_nhis: number;
+      by_type: Record<string, number>;
+      by_status: Record<string, number>;
+      by_risk_level: Record<string, number>;
+      generated_at: string;
+    }>(path);
+    return {
+      tenantId: d.tenant_id,
+      totalNhis: d.total_nhis,
+      byType: d.by_type,
+      byStatus: d.by_status,
+      byRiskLevel: d.by_risk_level,
+      generatedAt: d.generated_at,
     };
   }
 

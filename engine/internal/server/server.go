@@ -33,6 +33,7 @@ import (
 	"github.com/lelu/engine/internal/incident"
 	"github.com/lelu/engine/internal/injection"
 	"github.com/lelu/engine/internal/mcpauth"
+	"github.com/lelu/engine/internal/nhi"
 	"github.com/lelu/engine/internal/observability"
 	"github.com/lelu/engine/internal/queue"
 	"github.com/lelu/engine/internal/ratelimit"
@@ -119,6 +120,9 @@ type Handler struct {
 	// Feature 2: Durable Agent Identity + MCP OAuth 2.1
 	identityReg *identity.Registry
 	mcpAuth     *mcpauth.Server
+
+	// Feature 3: NHI Discovery + ISPM
+	nhiInventory *nhi.Inventory
 }
 
 // ─── Anomaly Tracker ──────────────────────────────────────────────────────────
@@ -352,6 +356,11 @@ func (h *Handler) SetMCPAuth(m *mcpauth.Server) {
 	h.mcpAuth = m
 }
 
+// SetNHIInventory attaches the NHI discovery and ISPM inventory.
+func (h *Handler) SetNHIInventory(inv *nhi.Inventory) {
+	h.nhiInventory = inv
+}
+
 // Shutdown gracefully shuts down the handler and its components
 func (h *Handler) Shutdown() {
 	if h.reputationMgr != nil {
@@ -414,6 +423,13 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	if h.mcpAuth != nil {
 		h.mcpAuth.RegisterRoutes(mux)
 	}
+
+	// Feature 3: NHI Discovery + ISPM (requires API key)
+	mux.HandleFunc("GET /v1/nhi/inventory", h.handleNHIList)
+	mux.HandleFunc("GET /v1/nhi/inventory/{id}", h.handleNHIGet)
+	mux.HandleFunc("GET /v1/nhi/risks", h.handleNHITopRisks)
+	mux.HandleFunc("POST /v1/nhi/scan", h.handleNHIScan)
+	mux.HandleFunc("GET /v1/nhi/stats", h.handleNHIStats)
 }
 
 // ─── Authorize ────────────────────────────────────────────────────────────────
@@ -2448,4 +2464,98 @@ func (h *Handler) handleMCPProtectedResourceMeta(w http.ResponseWriter, r *http.
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "public, max-age=3600")
 	json.NewEncoder(w).Encode(h.identityReg.MCPProtectedResourceMetadata())
+}
+
+// ─── NHI Discovery + ISPM ────────────────────────────────────────────────────
+
+func (h *Handler) handleNHIList(w http.ResponseWriter, r *http.Request) {
+	if h.nhiInventory == nil {
+		writeError(w, http.StatusServiceUnavailable, "NHI inventory not configured")
+		return
+	}
+	tenantID := r.URL.Query().Get("tenant_id")
+	entries, err := h.nhiInventory.List(r.Context(), tenantID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("list NHIs: %v", err))
+		return
+	}
+	if entries == nil {
+		entries = []*nhi.NHIEntry{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"nhis":  entries,
+		"count": len(entries),
+	})
+}
+
+func (h *Handler) handleNHIGet(w http.ResponseWriter, r *http.Request) {
+	if h.nhiInventory == nil {
+		writeError(w, http.StatusServiceUnavailable, "NHI inventory not configured")
+		return
+	}
+	id := r.PathValue("id")
+	entry, err := h.nhiInventory.Get(r.Context(), id)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			writeError(w, http.StatusNotFound, fmt.Sprintf("NHI %q not found", id))
+		} else {
+			writeError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, entry)
+}
+
+func (h *Handler) handleNHITopRisks(w http.ResponseWriter, r *http.Request) {
+	if h.nhiInventory == nil {
+		writeError(w, http.StatusServiceUnavailable, "NHI inventory not configured")
+		return
+	}
+	tenantID := r.URL.Query().Get("tenant_id")
+	limit := 10
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 && v <= 100 {
+			limit = v
+		}
+	}
+	entries, err := h.nhiInventory.TopRisks(r.Context(), tenantID, limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("top risks: %v", err))
+		return
+	}
+	if entries == nil {
+		entries = []*nhi.NHIEntry{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"top_risks": entries,
+		"count":     len(entries),
+	})
+}
+
+func (h *Handler) handleNHIScan(w http.ResponseWriter, r *http.Request) {
+	if h.nhiInventory == nil {
+		writeError(w, http.StatusServiceUnavailable, "NHI inventory not configured")
+		return
+	}
+	tenantID := r.URL.Query().Get("tenant_id")
+	result, err := h.nhiInventory.Scan(r.Context(), tenantID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("scan: %v", err))
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
+func (h *Handler) handleNHIStats(w http.ResponseWriter, r *http.Request) {
+	if h.nhiInventory == nil {
+		writeError(w, http.StatusServiceUnavailable, "NHI inventory not configured")
+		return
+	}
+	tenantID := r.URL.Query().Get("tenant_id")
+	stats, err := h.nhiInventory.Stats(r.Context(), tenantID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("stats: %v", err))
+		return
+	}
+	writeJSON(w, http.StatusOK, stats)
 }

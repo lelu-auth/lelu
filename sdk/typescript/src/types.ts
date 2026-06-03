@@ -461,3 +461,67 @@ export interface OAuthClient {
   tokenEndpointAuthMethod: string;
   clientIdIssuedAt: number;
 }
+
+// ─── NHI Discovery + ISPM ────────────────────────────────────────────────────
+
+export type NHIType = "registered_agent" | "shadow_agent" | "credential";
+export type NHIStatus = "active" | "shadow" | "suspended" | "revoked" | "stale";
+export type NHIRiskLevel = "critical" | "high" | "medium" | "low" | "none";
+
+export interface OWASPFinding {
+  checkId: string;       // e.g. "NHI-05"
+  title: string;
+  severity: "critical" | "high" | "medium" | "low";
+  description: string;
+  remediation: string;
+}
+
+export interface NHIEntry {
+  id: string;
+  tenantId: string;
+  type: NHIType;
+  name: string;
+  status: NHIStatus;
+  scopes: string[];
+  riskScore: number;      // 0.0–1.0
+  riskLevel: NHIRiskLevel;
+  findings: OWASPFinding[];
+  lastSeen: string;
+  createdAt: string;
+  // type-specific
+  agentType?: string;
+  ownerEmail?: string;
+  provider?: string;
+  requestCount?: number;
+  expiresAt?: string;
+}
+
+export interface NHIListResult {
+  nhis: NHIEntry[];
+  count: number;
+}
+
+export interface NHITopRisksResult {
+  topRisks: NHIEntry[];
+  count: number;
+}
+
+export interface NHIScanResult {
+  tenantId: string;
+  scannedAt: string;
+  totalNhis: number;
+  byType: Record<string, number>;
+  byStatus: Record<string, number>;
+  byRiskLevel: Record<string, number>;
+  topRisks: NHIEntry[];
+  findingCounts: Record<string, number>;
+}
+
+export interface NHIStats {
+  tenantId: string;
+  totalNhis: number;
+  byType: Record<string, number>;
+  byStatus: Record<string, number>;
+  byRiskLevel: Record<string, number>;
+  generatedAt: string;
+}
