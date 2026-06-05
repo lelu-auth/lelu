@@ -106,8 +106,9 @@ func (ea *ExternalAuditor) Audit(req *AuditRequest) (*AuditResult, error) {
 
 	externalScore, err := ea.scoreFromLLM(ctx, req.Prompt, req.Action)
 	if err != nil {
-		// Fail-open with neutral score: don't block legitimate traffic on auditor outage.
-		externalScore = 0.5
+		// Fail-closed: propagate the error so the caller can escalate to human_review
+		// rather than silently granting a neutral pass on auditor outage.
+		return nil, fmt.Errorf("external auditor unavailable (%s): %w", ea.provider, err)
 	}
 
 	drift := absDiff(externalScore, req.ActorConfidence)

@@ -400,7 +400,7 @@ func scanRegisteredAgent(s scanner) (*NHIEntry, error) {
 	case "revoked":
 		e.Status = NHIStatusRevoked
 	default:
-		if time.Since(e.LastSeen) > 30*24*time.Hour {
+		if time.Since(e.LastSeen) > staleIdentityDays*24*time.Hour {
 			e.Status = NHIStatusStale
 		} else {
 			e.Status = NHIStatusActive

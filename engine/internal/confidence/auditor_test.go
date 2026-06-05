@@ -2,7 +2,8 @@ package confidence
 
 import "testing"
 
-// Test auditor flow
+// Test auditor fail-closed behaviour: when the LLM endpoint is unreachable,
+// Audit() must return an error (not silently return a neutral 0.5 score).
 func TestAuditorAuditRequest(t *testing.T) {
 	auditor := NewExternalAuditor("http://localhost:8000/vertex", "dummy-key")
 	req := &AuditRequest{
@@ -14,19 +15,14 @@ func TestAuditorAuditRequest(t *testing.T) {
 	}
 
 	result, err := auditor.Audit(req)
-	if err != nil {
-		t.Fatalf("audit failed: %v", err)
+	// Fail-closed: unreachable endpoint must produce an error, not a neutral pass.
+	if err == nil {
+		t.Fatalf("expected error when auditor endpoint is unreachable, got result: %+v", result)
 	}
-	if result == nil {
-		t.Fatal("audit result is nil")
+	if result != nil {
+		t.Fatalf("expected nil result on error, got: %+v", result)
 	}
-	if result.ActorScore != 0.9 {
-		t.Fatalf("actor score mismatch: got %.2f, want 0.90", result.ActorScore)
-	}
-	if result.ExternalScore == 0 {
-		t.Fatal("external score is zero")
-	}
-	t.Logf("Drift: %.3f, IsAnomalous: %v", result.Drift, result.IsAnomalous)
+	t.Logf("auditor correctly returned error: %v", err)
 }
 
 // Test scorer drift detection

@@ -8,6 +8,24 @@ import (
 	"time"
 )
 
+// Risk thresholds for NHI checks. Named constants make them auditable and easy
+// to update when organizational policy changes.
+const (
+	// longLivedSecretDays is the maximum acceptable token lifetime for NHI-07.
+	// Credentials valid beyond this window are flagged as long-lived.
+	longLivedSecretDays = 90
+
+	// staleIdentityDays is the inactivity window for NHI-01 stale detection.
+	staleIdentityDays = 30
+
+	// highVolumeShadowRequestThreshold triggers NHI-10 for unregistered agents
+	// that have generated a large number of requests without being registered.
+	highVolumeShadowRequestThreshold = 500
+
+	// maxScopesBeforeSprawl is the scope count that triggers NHI-05 scope sprawl.
+	maxScopesBeforeSprawl = 5
+)
+
 // OWASPFinding is a single OWASP NHI top-10 risk detection result.
 type OWASPFinding struct {
 	CheckID     string `json:"check_id"`    // e.g. "NHI-05"
@@ -61,7 +79,7 @@ func checkNHI01ImproperOffboarding(e *NHIEntry) []OWASPFinding {
 		})
 	}
 
-	// Stale active identity — no activity in > 30 days.
+	// Stale active identity — no activity in > staleIdentityDays days.
 	if e.Status == NHIStatusStale && e.Type == NHITypeRegisteredAgent {
 		daysSinceActivity := int(time.Since(e.LastSeen).Hours() / 24)
 		findings = append(findings, OWASPFinding{
@@ -139,7 +157,7 @@ func checkNHI05Overprivileged(e *NHIEntry) []OWASPFinding {
 		})
 	}
 
-	if len(e.Scopes) > 5 {
+	if len(e.Scopes) > maxScopesBeforeSprawl {
 		findings = append(findings, OWASPFinding{
 			CheckID:  "NHI-05",
 			Title:    "Overprivileged Identity — Excessive Scope Count",
@@ -187,7 +205,7 @@ func checkNHI07LongLivedSecret(e *NHIEntry) []OWASPFinding {
 	}
 
 	// Expires more than 90 days from now — considered long-lived.
-	if e.ExpiresAt.After(time.Now().UTC().Add(90 * 24 * time.Hour)) {
+	if e.ExpiresAt.After(time.Now().UTC().Add(longLivedSecretDays * 24 * time.Hour)) {
 		daysUntilExpiry := int(time.Until(*e.ExpiresAt).Hours() / 24)
 		findings = append(findings, OWASPFinding{
 			CheckID:  "NHI-07",
@@ -348,7 +366,7 @@ func checkNHI10HumanAccess(e *NHIEntry) []OWASPFinding {
 
 	// Shadow agents with very high request counts suggest automated tooling
 	// being operated without registration — likely a human developer's script.
-	if e.Type == NHITypeShadowAgent && e.RequestCount > 500 {
+	if e.Type == NHITypeShadowAgent && e.RequestCount > highVolumeShadowRequestThreshold {
 		findings = append(findings, OWASPFinding{
 			CheckID:  "NHI-10",
 			Title:    "Human Access to NHI — High-Volume Unregistered Activity",

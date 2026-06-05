@@ -628,24 +628,32 @@ func (pa *PredictiveAnalytics) getActionFrequency(ctx context.Context, agentID, 
 
 // getRecentErrorRate returns the fraction of the last 100 decisions that were
 // denied, in [0, 1].
+//
+// Uses a single aggregation query with a CASE expression to avoid the broken
+// nested-subquery pattern that SQLite silently mishandles.
 func (pa *PredictiveAnalytics) getRecentErrorRate(ctx context.Context, agentID string) (float64, error) {
 	if pa.db == nil {
 		return 0.1, nil
 	}
+
+	// Collect the 100 most-recent outcomes for this agent, then aggregate.
+	// Using a CTE ensures the LIMIT is applied before the COUNT.
 	var total, denied int
-	_ = pa.db.QueryRowContext(ctx, `
-		SELECT COUNT(*) FROM (
-			SELECT outcome FROM agent_decisions
-			WHERE agent_id = ? ORDER BY timestamp DESC LIMIT 100)`,
-		agentID).Scan(&total)
-	if total == 0 {
-		return 0.1, nil
+	err := pa.db.QueryRowContext(ctx, `
+		WITH recent AS (
+			SELECT outcome
+			FROM agent_decisions
+			WHERE agent_id = ?
+			ORDER BY timestamp DESC
+			LIMIT 100
+		)
+		SELECT
+			COUNT(*)                                         AS total,
+			SUM(CASE WHEN outcome = 'denied' THEN 1 ELSE 0 END) AS denied
+		FROM recent`, agentID).Scan(&total, &denied)
+	if err != nil || total == 0 {
+		return 0.1, err
 	}
-	_ = pa.db.QueryRowContext(ctx, `
-		SELECT COUNT(*) FROM (
-			SELECT outcome FROM agent_decisions
-			WHERE agent_id = ? ORDER BY timestamp DESC LIMIT 100)
-		WHERE outcome = 'denied'`, agentID).Scan(&denied)
 	return float64(denied) / float64(total), nil
 }
 

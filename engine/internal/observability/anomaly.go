@@ -651,10 +651,12 @@ func (r *lcgRand) perm(n int) []int {
 // ─── Plugging EIF into the detector ─────────────────────────────────────────
 
 // forest is the live trained isolation forest, rebuilt from baselines periodically.
-// Stored per-agent in the AnomalyDetector (one forest per agent baseline).
-// For simplicity we use a single global forest here; per-agent forests can be
-// added by keying forests map[string]*isolationForest on agentID.
-var globalForest *isolationForest
+// forestState guards the shared isolation forest with a read-write mutex so
+// concurrent DetectAnomaly calls and periodic rebuildForest calls are safe.
+var (
+	forestMu    sync.RWMutex
+	globalForest *isolationForest
+)
 
 // rebuildForest trains a new forest from the current set of baselines.
 // Call this periodically (e.g., hourly) after baselines accumulate enough samples.
@@ -668,12 +670,12 @@ func (ad *AnomalyDetector) rebuildForest() {
 		if b.SampleCount < 10 {
 			continue
 		}
-		// Synthesize representative sample from baseline statistics.
+		// Synthesize representative samples from baseline statistics.
 		for i := 0; i < 20 && i < b.SampleCount; i++ {
 			samples = append(samples, []float64{
 				b.ConfidenceMean,
 				b.LatencyMean,
-				0.0, // action rarity — baseline is "normal"
+				0.0, // action rarity — baseline represents "normal"
 				0.0,
 				0.0,
 				0.0, 0.0, 0.0,
@@ -683,7 +685,14 @@ func (ad *AnomalyDetector) rebuildForest() {
 	if len(samples) < 20 {
 		return
 	}
-	globalForest = trainForest(samples, ad.config.NumTrees, ad.config.SubsampleSize, 42)
+	// Use a time-based seed so each rebuild produces a different forest,
+	// improving anomaly coverage across diverse traffic patterns.
+	seed := uint64(time.Now().UnixNano())
+	newForest := trainForest(samples, ad.config.NumTrees, ad.config.SubsampleSize, seed)
+
+	forestMu.Lock()
+	globalForest = newForest
+	forestMu.Unlock()
 }
 
 // calculateAnomalyScore uses the real Isolation Forest when trained,
@@ -691,9 +700,12 @@ func (ad *AnomalyDetector) rebuildForest() {
 func (ad *AnomalyDetector) calculateAnomalyScore(features *FeatureVector, baseline *BehavioralBaseline) float64 {
 	vec := featureToVec(features)
 
-	// Use real Isolation Forest if available.
-	if globalForest != nil {
-		return globalForest.anomalyScore(vec)
+	// Use real Isolation Forest if available (read under lock for safety).
+	forestMu.RLock()
+	f := globalForest
+	forestMu.RUnlock()
+	if f != nil {
+		return f.anomalyScore(vec)
 	}
 
 	// Fallback: calibrated z-score with per-feature dynamic thresholds.

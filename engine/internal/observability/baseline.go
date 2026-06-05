@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"sort"
 	"strings"
@@ -856,17 +857,35 @@ func (bm *BaselineManager) getBaselineFromDB(ctx context.Context, agentID string
 		return nil, fmt.Errorf("baseline: query: %w", err)
 	}
 
-	if b.ActionFrequencies == nil {
-		b.ActionFrequencies = make(map[string]float64)
+	// Initialise maps before unmarshaling so partial failures leave a valid zero-value.
+	b.ActionFrequencies = make(map[string]float64)
+	b.DecisionOutcomes = make(map[string]float64)
+	b.HourlyPatterns = [24]float64{}
+	b.ConfidenceDistribution = []float64{}
+	b.LatencyPercentiles = make(map[string]float64)
+
+	type jsonField struct {
+		raw  string
+		dest interface{}
+		name string
 	}
-	if b.DecisionOutcomes == nil {
-		b.DecisionOutcomes = make(map[string]float64)
+	fields := []jsonField{
+		{actionFreqJSON, &b.ActionFrequencies, "action_frequencies"},
+		{hourlyJSON, &b.HourlyPatterns, "hourly_patterns"},
+		{outcomesJSON, &b.DecisionOutcomes, "decision_outcomes"},
+		{confDistJSON, &b.ConfidenceDistribution, "confidence_distribution"},
+		{latencyPercJSON, &b.LatencyPercentiles, "latency_percentiles"},
 	}
-	_ = json.Unmarshal([]byte(actionFreqJSON), &b.ActionFrequencies)
-	_ = json.Unmarshal([]byte(hourlyJSON), &b.HourlyPatterns)
-	_ = json.Unmarshal([]byte(outcomesJSON), &b.DecisionOutcomes)
-	_ = json.Unmarshal([]byte(confDistJSON), &b.ConfidenceDistribution)
-	_ = json.Unmarshal([]byte(latencyPercJSON), &b.LatencyPercentiles)
+	for _, f := range fields {
+		if f.raw == "" || f.raw == "null" {
+			continue
+		}
+		if err := json.Unmarshal([]byte(f.raw), f.dest); err != nil {
+			// Log but do not fail — drift analysis will proceed with zero-values
+			// rather than silently using whatever partial state was in memory.
+			log.Printf("baseline: agent %s: unmarshal %s: %v (using zero-value)", agentID, f.name, err)
+		}
+	}
 
 	return &b, nil
 }

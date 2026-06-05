@@ -619,12 +619,45 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 			"tenant_id":      req.TenantID,
 			"endpoint":       r.URL.Path,
 		}
-		if res, err := h.shadowDetector.Detect(shadowReq); err != nil {
-			log.Printf("shadow detection error: %v", err)
+		res, err := h.shadowDetector.Detect(shadowReq)
+		if err != nil {
+			// Fail-closed: when the shadow detector errors, escalate to human review
+			// rather than silently allowing the request through.
+			log.Printf("shadow detection error (failing closed): %v", err)
+			traceID := audit.NewTraceID()
+			h.notifyIncident(r.Context(), incident.Event{
+				Type:                "shadow.detector.error",
+				Severity:            "high",
+				TenantID:            req.TenantID,
+				Actor:               req.Actor,
+				Action:              req.Action,
+				TraceID:             traceID,
+				Decision:            "human_review",
+				RequiresHumanReview: true,
+				Reason:              "shadow detector unavailable — request held for review",
+			}, false, true)
+			writeJSON(w, http.StatusOK, agentAuthorizeResponse{
+				Allowed:             false,
+				RequiresHumanReview: true,
+				Reason:              "shadow detection check failed — request escalated for safety",
+				TraceID:             traceID,
+				ConfidenceUsed:      0,
+			})
+			return
 		} else if res.IsShadow {
 			shadowAgentsDetectedTotal.Inc()
 			h.audit.LogDecision(r.Context(), req.TenantID, req.Actor, req.Action, req.Resource,
 				true, "shadow agent detected: "+res.Reason, 0, 0)
+			// Fire incident so operators are notified of the unregistered agent.
+			h.notifyIncident(r.Context(), incident.Event{
+				Type:     "shadow.agent.detected",
+				Severity: "medium",
+				TenantID: req.TenantID,
+				Actor:    req.Actor,
+				Action:   req.Action,
+				Decision: "shadow_detected",
+				Reason:   "shadow agent detected: " + res.Reason,
+			}, true, false)
 		}
 	}
 
@@ -740,7 +773,12 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	riskStart := time.Now()
 	reliability := h.actorStat.reliability(req.Actor)
 	anomalyCount := h.anomaly.currentCount(req.Actor)
-	anomalyFactor := 1.0 + minFloat(float64(anomalyCount)/10.0, 0.5)
+	// anomalyFactorDivisor: number of denials in the sliding window that maps to a
+	// 50% increase in risk score. anomalyFactorCap: maximum fractional increase.
+	// Both values are tuned for a 60-second window with threshold=5 (see newAnomalyTracker).
+	const anomalyFactorDivisor = 10.0
+	const anomalyFactorCap = 0.5
+	anomalyFactor := 1.0 + minFloat(float64(anomalyCount)/anomalyFactorDivisor, anomalyFactorCap)
 	riskDec := h.riskModel.evaluate(req.Action, confidenceScore, reliability, anomalyFactor)
 	riskLatency := ms(riskStart)
 

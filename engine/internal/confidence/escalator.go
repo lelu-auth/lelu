@@ -54,8 +54,11 @@ const (
 // When calibration data is available, uses calibrated threat probability and
 // a dynamic threshold instead of fixed 3-tier thresholds.
 func (e *Escalator) Escalate(result *AuditResult, severity SeverityLevel) EscalationAction {
+	// Nil result means the external auditor failed — escalate to human review
+	// rather than silently allowing. This is the fail-closed counterpart to the
+	// auditor returning an error.
 	if result == nil {
-		return ActionAllow
+		return ActionReview
 	}
 
 	// Use calibrated probability + dynamic threshold when fitted.
@@ -102,8 +105,13 @@ func (e *Escalator) EnqueueReview(ctx context.Context, auditReq *AuditRequest, r
 		return "", nil
 	}
 
-	reason := fmt.Sprintf("confidence drift %.3f (actor=%.2f external=%.2f): %s",
-		result.Drift, result.ActorScore, result.ExternalScore, result.Reason)
+	var reason string
+	if result == nil {
+		reason = "external auditor unavailable — escalated to human review"
+	} else {
+		reason = fmt.Sprintf("confidence drift %.3f (actor=%.2f external=%.2f): %s",
+			result.Drift, result.ActorScore, result.ExternalScore, result.Reason)
+	}
 
 	return e.reviewQueue.Enqueue(
 		ctx,

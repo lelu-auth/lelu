@@ -32,36 +32,41 @@ func TestShadowDetectionIntegration(t *testing.T) {
     }
     t.Logf("Shadow detected: %s", shadowResult.Fingerprint)
 
-    // 4. If shadow detected, run confidence auditor
+    // 4. If shadow detected, run confidence auditor.
+    // Auditor now fails closed — when the endpoint is unreachable it returns an
+    // error instead of a neutral 0.5 score. The pipeline must escalate on error.
     auditor := confidence.NewExternalAuditor("http://localhost:8000", "dummy-key")
     auditReq := &confidence.AuditRequest{
         Prompt:          "approve transfer of $10000",
         Action:          "transfer_funds",
-        ActorConfidence: 0.95, // shadow agent claims high confidence
+        ActorConfidence: 0.95,
         TenantID:        "tenant_demo",
     }
 
     auditResult, err := auditor.Audit(auditReq)
-    if err != nil {
-        t.Fatalf("confidence audit failed: %v", err)
-    }
-    t.Logf("Audit: actor=%.2f, external=%.2f, drift=%.2f", 
-        auditResult.ActorScore, auditResult.ExternalScore, auditResult.Drift)
 
-    // 5. Score the drift
-    scorer := confidence.NewScorer(0.3)
-    severity := scorer.AssessSeverity(auditResult)
-    t.Logf("Severity: %s", severity)
-
-    // 6. Escalate if needed
     escalator := confidence.NewEscalator(nil)
-    action := escalator.Escalate(auditResult, severity)
+    var action confidence.EscalationAction
+
+    if err != nil {
+        // Auditor unavailable: escalate to review (fail-closed).
+        t.Logf("Auditor unavailable (expected in unit test): %v — escalating to review", err)
+        action = escalator.Escalate(nil, confidence.SeverityHigh)
+    } else {
+        t.Logf("Audit: actor=%.2f, external=%.2f, drift=%.2f",
+            auditResult.ActorScore, auditResult.ExternalScore, auditResult.Drift)
+        scorer := confidence.NewScorer(0.3)
+        severity := scorer.AssessSeverity(auditResult)
+        t.Logf("Severity: %s", severity)
+        action = escalator.Escalate(auditResult, severity)
+    }
     t.Logf("Escalation action: %s", action)
 
-    // 7. Verify the shadow + confidence combo triggers review
-    if action == confidence.ActionReview || action == confidence.ActionDeny {
-        t.Log("✓ Shadow agent + confidence drift → escalated to review/deny")
+    // 7. Verify the shadow + confidence error combo triggers review/deny.
+    if action != confidence.ActionReview && action != confidence.ActionDeny {
+        t.Fatalf("shadow agent + auditor error should escalate to review or deny, got: %s", action)
     }
+    t.Log("✓ Shadow agent + confidence check → escalated to review/deny")
 }
 
 // TestShadowPlusConfidencePipeline tests the integrated flow end-to-end.
@@ -85,15 +90,23 @@ func TestShadowPlusConfidencePipeline(t *testing.T) {
         t.Fatal("all unregistered should be shadows")
     }
 
-    auditRes, _ := auditor.Audit(&confidence.AuditRequest{
+    auditRes, auditErr := auditor.Audit(&confidence.AuditRequest{
         Prompt:          "secret action",
         Action:          "admin_override",
         ActorConfidence: 0.88,
         TenantID:        "test_tenant",
     })
 
-    severity := scorer.AssessSeverity(auditRes)
-    action := escalator.Escalate(auditRes, severity)
+    var severity confidence.SeverityLevel
+    var action confidence.EscalationAction
+    if auditErr != nil {
+        // Fail-closed: auditor unavailable → escalate.
+        severity = confidence.SeverityHigh
+        action = escalator.Escalate(nil, severity)
+    } else {
+        severity = scorer.AssessSeverity(auditRes)
+        action = escalator.Escalate(auditRes, severity)
+    }
 
     // The important bit: shadow + external audit = decision
     t.Logf("Pipeline result: shadow=%v, severity=%s, action=%s",

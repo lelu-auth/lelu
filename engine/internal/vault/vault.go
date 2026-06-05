@@ -167,13 +167,16 @@ func (s *Service) Store(ctx context.Context, req StoreRequest) (*CredentialEntry
 		return nil, fmt.Errorf("vault: store: %w", err)
 	}
 
-	// Fetch the actual stored ID — on conflict the original row's id is kept.
+	// Fetch the canonical stored ID. On conflict the original row's id is kept,
+	// so the locally-generated id may not match what's in the DB. Failing to
+	// retrieve the real id is a hard error — returning the wrong id would cause
+	// all subsequent get/revoke calls to silently target the wrong row.
 	var actualID string
 	if err := s.db.QueryRowContext(ctx,
 		`SELECT id FROM credential_vault WHERE agent_id = ? AND user_id = ? AND provider = ?`,
 		req.AgentID, req.UserID, req.Provider,
 	).Scan(&actualID); err != nil {
-		actualID = id // fallback to generated id on unexpected scan error
+		return nil, fmt.Errorf("vault: store succeeded but could not retrieve canonical id: %w", err)
 	}
 
 	return &CredentialEntry{
