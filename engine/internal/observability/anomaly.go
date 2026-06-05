@@ -192,7 +192,7 @@ func (ad *AnomalyDetector) DetectAnomaly(ctx context.Context, agentID, agentType
 	}
 
 	// Extract features
-	features := ad.extractFeatures(baseline, action, confidence, latency, outcome)
+	features := ad.extractFeatures(ctx, agentID, baseline, action, confidence, latency, outcome)
 
 	// Calculate anomaly score using Isolation Forest approach
 	anomalyScore := ad.calculateAnomalyScore(features, baseline)
@@ -235,8 +235,10 @@ func (ad *AnomalyDetector) DetectAnomaly(ctx context.Context, agentID, agentType
 	return result, nil
 }
 
-// extractFeatures extracts behavioral features from a decision
-func (ad *AnomalyDetector) extractFeatures(baseline *BehavioralBaseline, action string,
+// extractFeatures extracts behavioral features from a decision, including
+// sequence features computed from recent DB history.
+func (ad *AnomalyDetector) extractFeatures(ctx context.Context, agentID string,
+	baseline *BehavioralBaseline, action string,
 	confidence float64, latency time.Duration, outcome string) *FeatureVector {
 
 	features := &FeatureVector{
@@ -276,10 +278,123 @@ func (ad *AnomalyDetector) extractFeatures(baseline *BehavioralBaseline, action 
 		features.OutcomeRarity = 5.0 // Unusual outcome
 	}
 
-	// TODO: Add sequence features (recent error rate, trends)
-	// These would require maintaining recent decision history
+	// Sequence features from recent decision history.
+	if ad.db != nil {
+		if seq, err := ad.computeSequenceFeatures(ctx, agentID); err == nil {
+			features.RecentErrorRate = seq.recentErrorRate
+			features.ConfidenceTrend = seq.confidenceTrend
+			features.LatencyTrend = seq.latencyTrend
+		}
+	}
 
 	return features
+}
+
+// sequenceFeatures holds the computed sliding-window sequence signals.
+type sequenceFeatures struct {
+	recentErrorRate float64 // fraction of last N decisions that were denied
+	confidenceTrend float64 // linear slope of confidence over last N decisions (neg = declining)
+	latencyTrend    float64 // linear slope of latency_ms over last N decisions (pos = increasing)
+}
+
+// computeSequenceFeatures queries the last 50 decisions for agentID and
+// computes RecentErrorRate, ConfidenceTrend, and LatencyTrend.
+func (ad *AnomalyDetector) computeSequenceFeatures(ctx context.Context, agentID string) (*sequenceFeatures, error) {
+	const window = 50
+
+	type row struct {
+		outcome    string
+		confidence float64
+		latencyMs  float64
+	}
+
+	rows, err := ad.db.QueryContext(ctx, `
+		SELECT outcome, confidence, latency_ms
+		FROM agent_decisions
+		WHERE agent_id = ?
+		ORDER BY timestamp DESC
+		LIMIT ?`, agentID, window)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var decisions []row
+	for rows.Next() {
+		var r row
+		if err := rows.Scan(&r.outcome, &r.confidence, &r.latencyMs); err != nil {
+			continue
+		}
+		decisions = append(decisions, r)
+	}
+	if len(decisions) == 0 {
+		return &sequenceFeatures{}, nil
+	}
+
+	// RecentErrorRate: fraction denied in the window.
+	denied := 0
+	for _, d := range decisions {
+		if d.outcome == "denied" {
+			denied++
+		}
+	}
+	recentErrorRate := float64(denied) / float64(len(decisions))
+
+	// ConfidenceTrend and LatencyTrend: ordinary least-squares slope over time.
+	// Decisions are ordered newest-first, so we reverse the index to get oldest-first.
+	n := len(decisions)
+	confidenceTrend := linearSlope(n, func(i int) float64 { return decisions[n-1-i].confidence })
+	latencyTrend := linearSlope(n, func(i int) float64 { return decisions[n-1-i].latencyMs })
+
+	// Normalise: divide slope by mean to make it a relative rate.
+	if mean := colMean(n, func(i int) float64 { return decisions[i].confidence }); mean > 0 {
+		confidenceTrend /= mean
+	}
+	if mean := colMean(n, func(i int) float64 { return decisions[i].latencyMs }); mean > 0 {
+		latencyTrend /= mean
+	}
+
+	return &sequenceFeatures{
+		recentErrorRate: recentErrorRate,
+		confidenceTrend: confidenceTrend,
+		latencyTrend:    latencyTrend,
+	}, nil
+}
+
+// linearSlope computes the OLS slope of y(i) over i = 0..n-1.
+// Returns 0 when n < 2.
+func linearSlope(n int, y func(int) float64) float64 {
+	if n < 2 {
+		return 0
+	}
+	// x̄ = (n-1)/2
+	xMean := float64(n-1) / 2.0
+	var yMean, sxy, sxx float64
+	for i := 0; i < n; i++ {
+		yMean += y(i)
+	}
+	yMean /= float64(n)
+	for i := 0; i < n; i++ {
+		dx := float64(i) - xMean
+		sxy += dx * (y(i) - yMean)
+		sxx += dx * dx
+	}
+	if sxx == 0 {
+		return 0
+	}
+	return sxy / sxx
+}
+
+// colMean computes the mean of a column accessor.
+func colMean(n int, f func(int) float64) float64 {
+	if n == 0 {
+		return 0
+	}
+	s := 0.0
+	for i := 0; i < n; i++ {
+		s += f(i)
+	}
+	return s / float64(n)
 }
 
 // ─── Extended Isolation Forest ───────────────────────────────────────────────

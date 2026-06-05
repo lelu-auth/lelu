@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -582,56 +583,352 @@ func (pa *PredictiveAnalytics) generatePolicySuggestion(policyName string, stats
 	return suggestion
 }
 
-// Helper methods for data retrieval (simplified implementations)
+// ── DB-backed feature retrieval ───────────────────────────────────────────────
 
-func (pa *PredictiveAnalytics) getAverageConfidence(_ context.Context, _ string) (float64, error) {
-	return 0.75, nil // Placeholder
+// getAverageConfidence returns the mean confidence for an agent over the last
+// 500 decisions, or 0.75 (neutral) when there is insufficient history.
+func (pa *PredictiveAnalytics) getAverageConfidence(ctx context.Context, agentID string) (float64, error) {
+	if pa.db == nil {
+		return 0.75, nil
+	}
+	var avg sql.NullFloat64
+	err := pa.db.QueryRowContext(ctx, `
+		SELECT AVG(confidence)
+		FROM (SELECT confidence FROM agent_decisions
+		      WHERE agent_id = ?
+		      ORDER BY timestamp DESC LIMIT 500)`, agentID).Scan(&avg)
+	if err != nil || !avg.Valid {
+		return 0.75, err
+	}
+	return avg.Float64, nil
 }
 
-func (pa *PredictiveAnalytics) getActionFrequency(_ context.Context, _, _ string) (float64, error) {
-	return 0.5, nil // Placeholder
+// getActionFrequency returns the fraction of recent decisions that match the
+// given action prefix (case-insensitive LIKE match), in [0, 1].
+func (pa *PredictiveAnalytics) getActionFrequency(ctx context.Context, agentID, action string) (float64, error) {
+	if pa.db == nil {
+		return 0.5, nil
+	}
+	var total, matched int
+	_ = pa.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM agent_decisions
+		WHERE agent_id = ?
+		  AND timestamp > datetime('now', '-7 days')`, agentID).Scan(&total)
+	if total == 0 {
+		return 0.5, nil
+	}
+	_ = pa.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM agent_decisions
+		WHERE agent_id = ?
+		  AND action LIKE ?
+		  AND timestamp > datetime('now', '-7 days')`,
+		agentID, "%"+action+"%").Scan(&matched)
+	return float64(matched) / float64(total), nil
 }
 
-func (pa *PredictiveAnalytics) getRecentErrorRate(_ context.Context, _ string) (float64, error) {
-	return 0.1, nil // Placeholder
+// getRecentErrorRate returns the fraction of the last 100 decisions that were
+// denied, in [0, 1].
+func (pa *PredictiveAnalytics) getRecentErrorRate(ctx context.Context, agentID string) (float64, error) {
+	if pa.db == nil {
+		return 0.1, nil
+	}
+	var total, denied int
+	_ = pa.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM (
+			SELECT outcome FROM agent_decisions
+			WHERE agent_id = ? ORDER BY timestamp DESC LIMIT 100)`,
+		agentID).Scan(&total)
+	if total == 0 {
+		return 0.1, nil
+	}
+	_ = pa.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM (
+			SELECT outcome FROM agent_decisions
+			WHERE agent_id = ? ORDER BY timestamp DESC LIMIT 100)
+		WHERE outcome = 'denied'`, agentID).Scan(&denied)
+	return float64(denied) / float64(total), nil
 }
 
-func (pa *PredictiveAnalytics) getHistoricalReviewRate(_ context.Context, _ string) (float64, error) {
-	return 0.3, nil // Placeholder
+// getHistoricalReviewRate returns the fraction of recent decisions flagged for
+// human review, in [0, 1].
+func (pa *PredictiveAnalytics) getHistoricalReviewRate(ctx context.Context, agentID string) (float64, error) {
+	if pa.db == nil {
+		return 0.3, nil
+	}
+	var total, reviewed int
+	_ = pa.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM agent_decisions
+		WHERE agent_id = ?
+		  AND timestamp > datetime('now', '-30 days')`, agentID).Scan(&total)
+	if total == 0 {
+		return 0.3, nil
+	}
+	_ = pa.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM agent_decisions
+		WHERE agent_id = ?
+		  AND human_review_required = TRUE
+		  AND timestamp > datetime('now', '-30 days')`, agentID).Scan(&reviewed)
+	return float64(reviewed) / float64(total), nil
 }
 
-func (pa *PredictiveAnalytics) getActionRiskScore(_ context.Context, _ string) (float64, error) {
-	return 0.4, nil // Placeholder
+// getActionRiskScore heuristically scores an action name for risk based on
+// keyword matching against known high-risk action patterns.
+func (pa *PredictiveAnalytics) getActionRiskScore(_ context.Context, action string) (float64, error) {
+	lower := strings.ToLower(action)
+	switch {
+	case containsAny(lower, "delete", "drop", "destroy", "purge", "truncate", "wipe"):
+		return 0.95, nil
+	case containsAny(lower, "exec", "shell", "bash", "eval", "spawn", "run_code"):
+		return 0.90, nil
+	case containsAny(lower, "transfer", "payment", "charge", "withdraw", "wire"):
+		return 0.80, nil
+	case containsAny(lower, "write", "update", "modify", "patch", "set"):
+		return 0.55, nil
+	case containsAny(lower, "send", "publish", "notify", "broadcast", "post"):
+		return 0.50, nil
+	case containsAny(lower, "read", "get", "list", "fetch", "query", "search"):
+		return 0.15, nil
+	default:
+		return 0.40, nil
+	}
 }
 
-// Training data structures
+func containsAny(s string, keywords ...string) bool {
+	for _, kw := range keywords {
+		if strings.Contains(s, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+// ── Training data ─────────────────────────────────────────────────────────────
+
+// TrainingDataPoint is a single labeled example for model training.
 type TrainingDataPoint struct {
 	Features map[string]float64
 	Label    float64
 }
 
-func (pa *PredictiveAnalytics) getConfidenceTrainingData(_ context.Context) ([]*TrainingDataPoint, error) {
-	return []*TrainingDataPoint{}, nil // Placeholder
+// getConfidenceTrainingData loads recent decisions as labeled training data
+// for the confidence prediction model. Label = actual confidence observed.
+func (pa *PredictiveAnalytics) getConfidenceTrainingData(ctx context.Context) ([]*TrainingDataPoint, error) {
+	if pa.db == nil {
+		return nil, nil
+	}
+	rows, err := pa.db.QueryContext(ctx, `
+		SELECT agent_id, action, confidence, latency_ms,
+		       CAST(strftime('%H', timestamp) AS REAL) / 24.0 AS hour_norm,
+		       CAST(strftime('%w', timestamp) AS REAL) / 7.0  AS dow_norm
+		FROM agent_decisions
+		WHERE confidence IS NOT NULL
+		ORDER BY timestamp DESC
+		LIMIT 2000`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var points []*TrainingDataPoint
+	for rows.Next() {
+		var agentID, action string
+		var confidence, latencyMs, hourNorm, dowNorm float64
+		if err := rows.Scan(&agentID, &action, &confidence, &latencyMs, &hourNorm, &dowNorm); err != nil {
+			continue
+		}
+		riskScore, _ := pa.getActionRiskScore(ctx, action)
+		points = append(points, &TrainingDataPoint{
+			Features: map[string]float64{
+				"hour_of_day":       hourNorm,
+				"day_of_week":       dowNorm,
+				"latency_norm":      math.Min(latencyMs/5000.0, 1.0),
+				"action_risk_score": riskScore,
+			},
+			Label: confidence,
+		})
+	}
+	return points, rows.Err()
 }
 
-func (pa *PredictiveAnalytics) getReviewTrainingData(_ context.Context) ([]*TrainingDataPoint, error) {
-	return []*TrainingDataPoint{}, nil // Placeholder
+// getReviewTrainingData loads decisions as labeled training data for the human
+// review model. Label = 1 if human_review_required, else 0.
+func (pa *PredictiveAnalytics) getReviewTrainingData(ctx context.Context) ([]*TrainingDataPoint, error) {
+	if pa.db == nil {
+		return nil, nil
+	}
+	rows, err := pa.db.QueryContext(ctx, `
+		SELECT agent_id, action, confidence, latency_ms,
+		       CAST(human_review_required AS INTEGER) AS reviewed,
+		       CAST(strftime('%H', timestamp) AS REAL) / 24.0 AS hour_norm
+		FROM agent_decisions
+		WHERE confidence IS NOT NULL
+		ORDER BY timestamp DESC
+		LIMIT 2000`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var points []*TrainingDataPoint
+	for rows.Next() {
+		var agentID, action string
+		var confidence, latencyMs, hourNorm float64
+		var reviewed int
+		if err := rows.Scan(&agentID, &action, &confidence, &latencyMs, &reviewed, &hourNorm); err != nil {
+			continue
+		}
+		riskScore, _ := pa.getActionRiskScore(ctx, action)
+		points = append(points, &TrainingDataPoint{
+			Features: map[string]float64{
+				"confidence":        confidence,
+				"confidence_sq":     confidence * confidence,
+				"action_risk_score": riskScore,
+				"latency_norm":      math.Min(latencyMs/5000.0, 1.0),
+				"hour_of_day":       hourNorm,
+			},
+			Label: float64(reviewed),
+		})
+	}
+	return points, rows.Err()
 }
 
-func (pa *PredictiveAnalytics) trainLinearModel(_ []*TrainingDataPoint) *ConfidencePredictionModel {
-	return &ConfidencePredictionModel{Weights: make(map[string]float64)} // Placeholder
+// ── Model training ────────────────────────────────────────────────────────────
+
+// trainLinearModel fits an ordinary-least-squares linear regression on the
+// training data using gradient descent. Returns a model usable by
+// predictConfidenceScore.
+func (pa *PredictiveAnalytics) trainLinearModel(data []*TrainingDataPoint) *ConfidencePredictionModel {
+	model := &ConfidencePredictionModel{Weights: make(map[string]float64)}
+	if len(data) < 10 {
+		return model
+	}
+
+	// Collect feature names from first sample.
+	var featureNames []string
+	for k := range data[0].Features {
+		featureNames = append(featureNames, k)
+	}
+
+	// Gradient descent: learning rate 0.01, 200 epochs.
+	const lr = 0.01
+	const epochs = 200
+
+	for epoch := 0; epoch < epochs; epoch++ {
+		_ = epoch
+		for _, pt := range data {
+			pred := model.Bias
+			for _, f := range featureNames {
+				pred += model.Weights[f] * pt.Features[f]
+			}
+			err := pred - pt.Label
+			model.Bias -= lr * err
+			for _, f := range featureNames {
+				model.Weights[f] -= lr * err * pt.Features[f]
+			}
+		}
+	}
+	return model
 }
 
-func (pa *PredictiveAnalytics) trainLogisticModel(_ []*TrainingDataPoint) *HumanReviewPredictionModel {
-	return &HumanReviewPredictionModel{Weights: make(map[string]float64)} // Placeholder
+// trainLogisticModel fits a logistic regression model for binary classification
+// (human review required or not) using gradient descent.
+func (pa *PredictiveAnalytics) trainLogisticModel(data []*TrainingDataPoint) *HumanReviewPredictionModel {
+	model := &HumanReviewPredictionModel{Weights: make(map[string]float64)}
+	if len(data) < 10 {
+		return model
+	}
+
+	var featureNames []string
+	for k := range data[0].Features {
+		featureNames = append(featureNames, k)
+	}
+
+	const lr = 0.05
+	const epochs = 150
+
+	sigmoid := func(z float64) float64 { return 1.0 / (1.0 + math.Exp(-z)) }
+
+	for epoch := 0; epoch < epochs; epoch++ {
+		_ = epoch
+		for _, pt := range data {
+			z := model.Bias
+			for _, f := range featureNames {
+				z += model.Weights[f] * pt.Features[f]
+			}
+			pred := sigmoid(z)
+			grad := pred - pt.Label
+			model.Bias -= lr * grad
+			for _, f := range featureNames {
+				model.Weights[f] -= lr * grad * pt.Features[f]
+			}
+		}
+	}
+	return model
 }
 
-func (pa *PredictiveAnalytics) evaluateConfidenceModel(_ *ConfidencePredictionModel, _ []*TrainingDataPoint) float64 {
-	return 0.85 // Placeholder
+// ── Model evaluation ──────────────────────────────────────────────────────────
+
+// evaluateConfidenceModel computes RMSE on a held-out set (last 20% of data).
+func (pa *PredictiveAnalytics) evaluateConfidenceModel(model *ConfidencePredictionModel, data []*TrainingDataPoint) float64 {
+	if len(data) == 0 || model == nil {
+		return 0.0
+	}
+	split := len(data) * 4 / 5 // 80% train, 20% eval
+	eval := data[split:]
+	if len(eval) == 0 {
+		return 0.0
+	}
+	var sumSq float64
+	for _, pt := range eval {
+		pred := model.Bias
+		for f, w := range model.Weights {
+			pred += w * pt.Features[f]
+		}
+		diff := pred - pt.Label
+		sumSq += diff * diff
+	}
+	rmse := math.Sqrt(sumSq / float64(len(eval)))
+	// Return 1 - normalised RMSE as a quality score in [0, 1].
+	return math.Max(0, 1.0-rmse)
 }
 
-func (pa *PredictiveAnalytics) evaluateReviewModel(_ *HumanReviewPredictionModel, _ []*TrainingDataPoint) (float64, float64) {
-	return 0.80, 0.75 // Placeholder: precision, recall
+// evaluateReviewModel computes precision and recall on the last 20% of data.
+func (pa *PredictiveAnalytics) evaluateReviewModel(model *HumanReviewPredictionModel, data []*TrainingDataPoint) (float64, float64) {
+	if len(data) == 0 || model == nil {
+		return 0.0, 0.0
+	}
+	split := len(data) * 4 / 5
+	eval := data[split:]
+	if len(eval) == 0 {
+		return 0.0, 0.0
+	}
+	sigmoid := func(z float64) float64 { return 1.0 / (1.0 + math.Exp(-z)) }
+	var tp, fp, fn float64
+	for _, pt := range eval {
+		z := model.Bias
+		for f, w := range model.Weights {
+			z += w * pt.Features[f]
+		}
+		predicted := sigmoid(z) >= 0.5
+		actual := pt.Label >= 0.5
+		switch {
+		case predicted && actual:
+			tp++
+		case predicted && !actual:
+			fp++
+		case !predicted && actual:
+			fn++
+		}
+	}
+	precision := 0.0
+	if tp+fp > 0 {
+		precision = tp / (tp + fp)
+	}
+	recall := 0.0
+	if tp+fn > 0 {
+		recall = tp / (tp + fn)
+	}
+	return precision, recall
 }
 
 func (pa *PredictiveAnalytics) startModelTrainer() {
