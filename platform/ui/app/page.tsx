@@ -34,10 +34,6 @@ if (decision.allowed) {
   -d '{"actor":"billing-agent","action":"refund:process","confidence":0.85}'`,
 };
 
-const TRUSTED = [
-  "Vercel AI SDK", "LangChain", "OpenAI", "Anthropic", "Claude", "Mistral",
-  "LlamaIndex", "CrewAI", "AutoGPT", "Vercel", "Fly.io", "Railway",
-];
 
 const FEATURES = [
   {
@@ -383,20 +379,6 @@ export default function HomePage() {
             <pre className="p-5 bg-white dark:bg-[#0B0B0C] text-[13px] font-mono text-[#0A0A0A] dark:text-[#E4E4E7] leading-relaxed overflow-x-auto">
               {CODE[codeTab]}
             </pre>
-          </div>
-
-          {/* Trusted by */}
-          <div className="mb-10">
-            <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#A3A3A3] mb-4">
-              Trusted by teams building with
-            </p>
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {TRUSTED.map((t) => (
-                <span key={t} className="text-[13px] text-[#737373] hover:text-[#0A0A0A] dark:hover:text-white transition-colors cursor-default">
-                  {t}
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* Divider */}
