@@ -16,9 +16,10 @@ interface AuthResponse {
   rule: string;
   latencyMs: number;
   mode: string;
-  timestamp: string;
+  timestamp?: string;
   safeTool?: string;
   safeArgs?: Record<string, unknown>;
+  engineUsed?: boolean;
 }
 
 interface HistoryItem {
@@ -500,7 +501,14 @@ function SandboxContent() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-[#A3A3A3] mb-1">Mode</p>
-                        <span className="text-[11px] font-mono text-[#0A0A0A] dark:text-white">{response.mode}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-mono text-[#0A0A0A] dark:text-white">{response.mode}</span>
+                          {response.engineUsed ? (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">Live engine</span>
+                          ) : (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 uppercase tracking-wide">Local rules</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div>
