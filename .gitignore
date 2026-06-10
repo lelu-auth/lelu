@@ -2,6 +2,10 @@
 bin/
 *.exe
 
+# Google Cloud SDK (never commit)
+google-cloud-sdk/
+google-cloud-cli-*.tar.gz
+
 # Go
 engine/gen/
 coverage.out
