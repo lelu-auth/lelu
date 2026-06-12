@@ -41,6 +41,9 @@ export type {
   VaultStoreResult,
   VaultTokenResult,
   VaultCredentialSummary,
+  ToolOutputScanResult,
+  ReviewQueueItem,
+  QueueItemStatus,
 } from "./types.js";
 
 export {

@@ -50,6 +50,7 @@ import {
   type NHITopRisksResult,
   type NHIScanResult,
   type NHIStats,
+  type ToolOutputScanResult,
 } from "./types.js";
 import { agentTracer } from "./observability/tracer.js";
 
@@ -75,6 +76,45 @@ export class LeluClient {
 
   /** Lelu cloud — no self-hosting required. */
   static readonly CLOUD_URL = "https://lelu-ai.com";
+
+  /**
+   * Derives a verified confidence score from an LLM provider response.
+   * Use the result as `confidence_signal` in agent authorize calls — never
+   * let the agent supply its own confidence value.
+   *
+   * @example
+   * ```ts
+   * const resp = await openai.chat.completions.create({ logprobs: true, ... });
+   * const score = LeluClient.confidenceFrom.openai(resp);  // null if no logprobs
+   * ```
+   */
+  static readonly confidenceFrom = {
+    /**
+     * Derives confidence from OpenAI logprobs (requires `logprobs: true` in the
+     * API call). Returns `null` when logprobs are absent — never returns a
+     * fabricated default.
+     */
+    openai(
+      response: {
+        choices?: Array<{
+          logprobs?: { content?: Array<{ logprob: number }> | null } | null;
+        }>;
+      }
+    ): number | null {
+      const tokens = response?.choices?.[0]?.logprobs?.content;
+      if (!tokens?.length) return null;
+      const avg = tokens.reduce((s, t) => s + t.logprob, 0) / tokens.length;
+      return Math.max(0, Math.min(1, Math.exp(avg)));
+    },
+
+    /**
+     * Anthropic does not expose token-level log-probs.
+     * Always returns `null` — use a judge-model scorer instead.
+     */
+    anthropic(_response: unknown): null {
+      return null;
+    },
+  } as const;
 
   constructor(cfg: ClientConfig = {}) {
     const envBaseUrl =
@@ -227,7 +267,7 @@ export class LeluClient {
           delegatee: validated.delegatee,
           scoped_to: validated.scopedTo ?? [],
           ttl_seconds: validated.ttlSeconds ?? 60,
-          confidence: validated.confidence ?? 1.0,
+          confidence: validated.confidence ?? 0.0,
           acting_for: validated.actingFor ?? "",
           tenant_id: validated.tenantId ?? "",
         };
@@ -306,6 +346,71 @@ export class LeluClient {
       `/v1/queue/${encodeURIComponent(id)}/deny`,
       { resolved_by: resolvedBy, note }
     );
+  }
+
+  /**
+   * Blocks until a human-review request is resolved (approved or denied) or the
+   * timeout elapses. Returns the resolved item on success; returns the item still
+   * in "pending" status when the server-side timeout fires (HTTP 408).
+   *
+   * Pair with authorize() — when decision === "human_review", pass requestId here.
+   *
+   * @example
+   * ```ts
+   * const { decision, requestId } = await lelu.authorize({ tool: "wire_transfer" });
+   * if (decision === "human_review") {
+   *   const item = await lelu.waitForApproval(requestId, { timeoutMs: 60_000 });
+   *   if (item.status !== "approved") throw new Error("Not approved");
+   * }
+   * ```
+   */
+  async waitForApproval(
+    requestId: string,
+    opts?: { timeoutMs?: number; signal?: AbortSignal }
+  ): Promise<ReviewQueueItem> {
+    const timeoutMs = opts?.timeoutMs ?? 30_000;
+    const params = new URLSearchParams({ timeout_ms: timeoutMs.toString() });
+    const url = `${this.baseUrl}/v1/queue/${encodeURIComponent(requestId)}/wait?${params}`;
+
+    const ctrl = new AbortController();
+    // Give the network 5s of headroom beyond the server-side timeout.
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs + 5_000);
+    opts?.signal?.addEventListener("abort", () => ctrl.abort(), { once: true });
+
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: this.headers(),
+        signal: ctrl.signal,
+      });
+      // 408 = still pending after server timeout — return the item as-is.
+      return this.parseResponse<ReviewQueueItem>(res);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
+   * Scans tool output for indirect prompt-injection attempts before the agent
+   * acts on the result. Returns { safe: true } when clean.
+   *
+   * @example
+   * ```ts
+   * const raw = await callExternalTool();
+   * const scan = await lelu.scanToolResult(raw);
+   * if (!scan.safe) throw new Error(`Injection detected: ${scan.pattern}`);
+   * ```
+   */
+  async scanToolResult(
+    output: string,
+    meta?: { actor?: string; action?: string; resource?: Record<string, string> }
+  ): Promise<ToolOutputScanResult> {
+    return this.post<ToolOutputScanResult>("/v1/scan/output", {
+      output,
+      ...(meta?.actor    !== undefined ? { actor:    meta.actor    } : {}),
+      ...(meta?.action   !== undefined ? { action:   meta.action   } : {}),
+      ...(meta?.resource !== undefined ? { resource: meta.resource } : {}),
+    });
   }
 
   // ── Policy simulator ───────────────────────────────────────────────────────

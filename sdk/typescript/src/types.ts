@@ -566,6 +566,17 @@ export interface ReviewQueueItem {
   resolution_note?: string;
 }
 
+// ─── Output Scan ──────────────────────────────────────────────────────────────
+
+export interface ToolOutputScanResult {
+  safe: boolean;
+  detected: boolean;
+  pattern?: string;
+  source?: string;
+  method?: string;
+  score?: number;
+}
+
 // ─── Policy Simulator ─────────────────────────────────────────────────────────
 
 export interface SimulatorTraceItem {

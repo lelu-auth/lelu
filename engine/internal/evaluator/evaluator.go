@@ -26,13 +26,16 @@ type AuthRequest struct {
 
 // AgentAuthRequest represents an agent authorization check.
 type AgentAuthRequest struct {
-	TenantID   string            `json:"tenant_id"`
-	Actor      string            `json:"actor"`
-	Action     string            `json:"action"`
-	Resource   map[string]string `json:"resource"`
-	Confidence float64           `json:"confidence"`
-	ActingFor  string            `json:"acting_for"`
-	Scope      string            `json:"scope"`
+	TenantID   string                 `json:"tenant_id"`
+	Actor      string                 `json:"actor"`
+	Action     string                 `json:"action"`
+	Resource   map[string]string      `json:"resource"`
+	Confidence float64                `json:"confidence"`
+	ActingFor  string                 `json:"acting_for"`
+	Scope      string                 `json:"scope"`
+	// Args are structured call arguments forwarded verbatim to Rego as input.args,
+	// enabling policies like: deny { input.args.amount > 10000 }.
+	Args       map[string]interface{} `json:"args,omitempty"`
 }
 
 // Decision is the output of the policy evaluation.

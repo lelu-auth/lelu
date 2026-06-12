@@ -381,8 +381,12 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	// Phase 2 — Human approval queue
 	mux.HandleFunc("GET /v1/queue/pending", h.handleQueueList)
 	mux.HandleFunc("GET /v1/queue/{id}", h.handleQueueGet)
+	mux.HandleFunc("GET /v1/queue/{id}/wait", h.handleQueueWait)
 	mux.HandleFunc("POST /v1/queue/{id}/approve", h.handleQueueApprove)
 	mux.HandleFunc("POST /v1/queue/{id}/deny", h.handleQueueDeny)
+
+	// Output scanning — indirect injection defense
+	mux.HandleFunc("POST /v1/scan/output", h.handleScanOutput)
 
 	// Phase 2 — Behavioral Analytics API
 	mux.HandleFunc("GET /v1/analytics/reputation/{agentID}", h.handleGetReputation)
@@ -518,14 +522,16 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 // ─── Agent Authorize ─────────────────────────────────────────────────────────
 
 type agentAuthorizeRequest struct {
-	TenantID   string             `json:"tenant_id"`
-	Actor      string             `json:"actor"`
-	Action     string             `json:"action"`
-	Resource   map[string]string  `json:"resource"`
-	Confidence *float64           `json:"confidence,omitempty"`
-	Signal     *confidence.Signal `json:"confidence_signal,omitempty"`
-	ActingFor  string             `json:"acting_for"`
-	Scope      string             `json:"scope"`
+	TenantID   string                 `json:"tenant_id"`
+	Actor      string                 `json:"actor"`
+	Action     string                 `json:"action"`
+	Resource   map[string]string      `json:"resource"`
+	Confidence *float64               `json:"confidence,omitempty"`
+	Signal     *confidence.Signal     `json:"confidence_signal,omitempty"`
+	ActingFor  string                 `json:"acting_for"`
+	Scope      string                 `json:"scope"`
+	// Args are structured call arguments forwarded to Rego as input.args.
+	Args       map[string]interface{} `json:"args,omitempty"`
 }
 
 type agentAuthorizeResponse struct {
@@ -757,6 +763,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 		Confidence: confidenceScore,
 		ActingFor:  req.ActingFor,
 		Scope:      req.Scope,
+		Args:       req.Args,
 	})
 	policyLatency := ms(policyStart)
 	if err != nil {
@@ -1816,6 +1823,91 @@ func (h *Handler) handleQueueResolve(w http.ResponseWriter, r *http.Request, app
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"success": true})
+}
+
+// handleQueueWait long-polls until the item is resolved or the timeout elapses.
+// Query param: timeout_ms (default 30000, max 60000).
+// Returns 200 when approved/denied, 408 when still pending after timeout.
+func (h *Handler) handleQueueWait(w http.ResponseWriter, r *http.Request) {
+	if h.queue == nil {
+		writeError(w, http.StatusServiceUnavailable, "queue not configured")
+		return
+	}
+	id := r.PathValue("id")
+
+	timeoutMs := 30_000
+	if q := r.URL.Query().Get("timeout_ms"); q != "" {
+		if v, err := strconv.Atoi(q); err == nil && v > 0 {
+			if v > 60_000 {
+				v = 60_000
+			}
+			timeoutMs = v
+		}
+	}
+
+	deadline := time.Now().Add(time.Duration(timeoutMs) * time.Millisecond)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		item, err := h.queue.Get(r.Context(), id)
+		if err != nil {
+			writeError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if item.Status != queue.StatusPending {
+			writeJSON(w, http.StatusOK, item)
+			return
+		}
+		if time.Now().After(deadline) {
+			writeJSON(w, http.StatusRequestTimeout, item)
+			return
+		}
+		select {
+		case <-ticker.C:
+		case <-r.Context().Done():
+			return
+		}
+	}
+}
+
+// ─── Output Scanning (indirect injection defense) ─────────────────────────────
+
+type scanOutputRequest struct {
+	Output   string            `json:"output"`
+	Actor    string            `json:"actor,omitempty"`
+	Action   string            `json:"action,omitempty"`
+	Resource map[string]string `json:"resource,omitempty"`
+}
+
+type scanOutputResponse struct {
+	Safe     bool    `json:"safe"`
+	Detected bool    `json:"detected"`
+	Pattern  string  `json:"pattern,omitempty"`
+	Source   string  `json:"source,omitempty"`
+	Method   string  `json:"method,omitempty"`
+	Score    float64 `json:"score,omitempty"`
+}
+
+func (h *Handler) handleScanOutput(w http.ResponseWriter, r *http.Request) {
+	var req scanOutputRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if req.Output == "" {
+		writeError(w, http.StatusBadRequest, "output is required")
+		return
+	}
+	result := injection.Detect(req.Output, req.Resource)
+	writeJSON(w, http.StatusOK, scanOutputResponse{
+		Safe:     !result.Detected,
+		Detected: result.Detected,
+		Pattern:  result.Pattern,
+		Source:   result.Source,
+		Method:   result.Method,
+		Score:    result.Score,
+	})
 }
 
 // ─── Fallback Status ─────────────────────────────────────────────────────────

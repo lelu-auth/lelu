@@ -75,17 +75,17 @@ export function createLeluMcpServer(cfg: LeluMcpConfig = {}): McpServer {
   server.tool(
     "lelu_agent_authorize",
     "Ask the Lelu Engine whether an AI agent is allowed to perform an action. " +
-    "Lelu evaluates the action against your OPA policy using the agent's live confidence score. " +
-    "Returns allowed/denied/requires_human_review along with a trace ID for auditing.",
+    "Lelu evaluates the action against your policy using behavioral signals — do NOT pass a confidence score; " +
+    "the engine derives trust from verified provider signals, not agent self-reports. " +
+    "Returns allowed/denied/requires_human_review along with a request ID for HITL polling.",
     {
-      actor:      z.string().describe("The agent or bot performing the action, e.g. 'invoice_bot'"),
-      action:     z.string().describe("The action being requested, e.g. 'delete_records'"),
-      resource:   z.string().optional().describe("Optional resource the action targets, e.g. 'invoice:42'"),
-      confidence: z.number().min(0).max(1).describe("Agent's current confidence score (0–1)"),
-      actingFor:  z.string().optional().describe("User ID the agent is acting on behalf of"),
-      scope:      z.string().optional().describe("Requested permission scope, e.g. 'read:invoices'"),
+      actor:     z.string().describe("The agent or bot performing the action, e.g. 'invoice_bot'"),
+      action:    z.string().describe("The action being requested, e.g. 'delete_records'"),
+      resource:  z.string().optional().describe("Optional resource the action targets, e.g. 'invoice:42'"),
+      actingFor: z.string().optional().describe("User ID the agent is acting on behalf of"),
+      scope:     z.string().optional().describe("Requested permission scope, e.g. 'read:invoices'"),
     },
-    async ({ actor, action, resource, confidence, actingFor, scope }) => {
+    async ({ actor, action, resource, actingFor, scope }) => {
       const data = await post<{
         allowed: boolean;
         reason: string;
@@ -97,7 +97,6 @@ export function createLeluMcpServer(cfg: LeluMcpConfig = {}): McpServer {
         actor,
         action,
         resource,
-        confidence,
         acting_for: actingFor,
         scope,
       });
