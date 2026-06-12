@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getPolicy, updatePolicy, deletePolicy } from "@/lib/policies";
+import { pushPolicyToEngine } from "@/lib/policy-sync";
 
 export async function GET(
   _req: NextRequest,
@@ -36,6 +37,11 @@ export async function PUT(
       ...(typeof isActive === "boolean" ? { isActive } : {}),
     });
     if (!policy) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    pushPolicyToEngine(session.userId).then((result) => {
+      if (!result.ok) console.warn("[policies/PUT] engine sync failed:", result.error);
+    }).catch((err) => console.warn("[policies/PUT] engine sync error:", err));
+
     return NextResponse.json({ policy });
   } catch (err) {
     console.error("[policies/PUT]", err);
@@ -52,6 +58,11 @@ export async function DELETE(
 
   try {
     await deletePolicy(params.id, session.userId);
+
+    pushPolicyToEngine(session.userId).then((result) => {
+      if (!result.ok) console.warn("[policies/DELETE] engine sync failed:", result.error);
+    }).catch((err) => console.warn("[policies/DELETE] engine sync error:", err));
+
     return NextResponse.json({ deleted: true });
   } catch (err) {
     console.error("[policies/DELETE]", err);

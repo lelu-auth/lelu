@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { listPolicies, createPolicy } from "@/lib/policies";
+import { pushPolicyToEngine } from "@/lib/policy-sync";
 
 export async function GET() {
   const session = await getCurrentUser();
@@ -40,6 +41,11 @@ export async function POST(req: NextRequest) {
       typeof description === "string" ? description.trim() : "",
       Array.isArray(rules) ? rules : [],
     );
+
+    pushPolicyToEngine(session.userId).then((result) => {
+      if (!result.ok) console.warn("[policies/POST] engine sync failed:", result.error);
+    }).catch((err) => console.warn("[policies/POST] engine sync error:", err));
+
     return NextResponse.json({ policy }, { status: 201 });
   } catch (err) {
     console.error("[policies/POST]", err);

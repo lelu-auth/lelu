@@ -10,9 +10,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -123,7 +125,15 @@ type Handler struct {
 
 	// Feature 3: NHI Discovery + ISPM
 	nhiInventory *nhi.Inventory
+
+	// Policy management
+	policyPath string
+	policyMu   sync.Mutex // serialises validate→persist→swap
 }
+
+// SetPolicyPath configures the file path used by PUT /v1/policy to persist
+// policy changes so they survive engine restarts.
+func (h *Handler) SetPolicyPath(path string) { h.policyPath = path }
 
 // ─── Anomaly Tracker ──────────────────────────────────────────────────────────
 
@@ -387,6 +397,11 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	// Output scanning — indirect injection defense
 	mux.HandleFunc("POST /v1/scan/output", h.handleScanOutput)
+
+	// Policy management (admin API key required)
+	mux.HandleFunc("GET /v1/policy", h.handlePolicyGet)
+	mux.HandleFunc("PUT /v1/policy", h.handlePolicyPut)
+	mux.HandleFunc("POST /v1/policy/validate", h.handlePolicyValidate)
 
 	// Phase 2 — Behavioral Analytics API
 	mux.HandleFunc("GET /v1/analytics/reputation/{agentID}", h.handleGetReputation)
@@ -1909,6 +1924,126 @@ func (h *Handler) handleScanOutput(w http.ResponseWriter, r *http.Request) {
 		Method:   result.Method,
 		Score:    result.Score,
 	})
+}
+
+// ─── Policy Management ────────────────────────────────────────────────────────
+
+func (h *Handler) handlePolicyGet(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]any{
+		"digest":      h.eval.PolicyDigest(),
+		"policy_path": h.policyPath,
+		"source":      "engine",
+	})
+}
+
+func (h *Handler) handlePolicyValidate(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "read body: "+err.Error())
+		return
+	}
+	probe := evaluator.New()
+	if err := probe.LoadPolicyBytes(body); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"valid":  true,
+		"digest": probe.PolicyDigest(),
+	})
+}
+
+func (h *Handler) handlePolicyPut(w http.ResponseWriter, r *http.Request) {
+	// Auth — require the configured API key; reject on mismatch.
+	if h.apiKey != "" {
+		auth := r.Header.Get("Authorization")
+		if auth != "Bearer "+h.apiKey {
+			writeError(w, http.StatusForbidden, "policy mutation requires the admin API key")
+			return
+		}
+	}
+
+	// Optimistic concurrency — If-Match must equal active digest when provided.
+	if im := r.Header.Get("If-Match"); im != "" && im != h.eval.PolicyDigest() {
+		writeError(w, http.StatusPreconditionFailed, "policy changed since last read; GET /v1/policy for the current digest and retry")
+		return
+	}
+
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "read body: "+err.Error())
+		return
+	}
+
+	h.policyMu.Lock()
+	defer h.policyMu.Unlock()
+
+	// Validate into a throwaway evaluator — never touch the live one on error.
+	probe := evaluator.New()
+	if err := probe.LoadPolicyBytes(body); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Persist first (atomic rename). If the write fails, the live policy is
+	// untouched and the new policy won't survive a restart if we were to swap it.
+	if h.policyPath != "" {
+		if err := atomicWritePolicy(h.policyPath, body); err != nil {
+			writeError(w, http.StatusInsufficientStorage, "persist failed; policy unchanged: "+err.Error())
+			return
+		}
+	}
+
+	// Swap — cannot fail: identical bytes were just parsed successfully.
+	prev := h.eval.PolicyDigest()
+	_ = h.eval.LoadPolicyBytes(body)
+
+	h.audit.Log(audit.Event{
+		Actor:     apiKeyPrefix(r),
+		Action:    "policy:update",
+		Decision:  "allowed",
+		Reason:    fmt.Sprintf("replaced %s → %s", shortDigest(prev), shortDigest(h.eval.PolicyDigest())),
+		TraceID:   audit.NewTraceID(),
+		Timestamp: time.Now().UTC(),
+	})
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"digest":          h.eval.PolicyDigest(),
+		"previous_digest": prev,
+		"loaded_at":       time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
+// atomicWritePolicy writes data to path using a temp-file + rename to avoid
+// partial writes. Creates parent directories if needed.
+func atomicWritePolicy(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".policy-*.yaml.tmp")
+	if err != nil {
+		return err
+	}
+	name := tmp.Name()
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(name)
+		return err
+	}
+	if err := tmp.Sync(); err != nil {
+		tmp.Close()
+		os.Remove(name)
+		return err
+	}
+	tmp.Close()
+	return os.Rename(name, path)
+}
+
+func shortDigest(d string) string {
+	if len(d) > 8 {
+		return d[:8]
+	}
+	return d
 }
 
 // ─── Fallback Status ─────────────────────────────────────────────────────────

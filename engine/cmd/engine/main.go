@@ -2,12 +2,17 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"database/sql"
+	"encoding/pem"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
@@ -54,7 +59,8 @@ func main() {
 	otelSampleRate := parseFloatOr(envOr("OTEL_SAMPLE_RATE", "1.0"), 1.0)
 
 	// Feature 2: Durable Agent Identity + MCP OAuth 2.1
-	leluIssuer := envOr("LELU_ISSUER", "https://lelu-ai.com")
+	leluIssuer    := envOr("LELU_ISSUER", "https://lelu-ai.com")
+	rsaKeyPath    := envOr("LELU_RSA_KEY_PATH", "/var/lib/lelu/signing.key.pem")
 
 	// Phase 2: Behavioral Analytics Database
 	dbPath := envOr("DATABASE_PATH", "/var/lib/lelu/lelu.db")
@@ -170,6 +176,9 @@ func main() {
 	} else {
 		reviewQueue = queue.NewInMemory()
 	}
+	if enforcementMode == server.EnforcementModeEnforce && (redisOpts == nil) {
+		log.Printf("WARNING: human review queue is in-memory — pending approvals WILL be lost on restart. Set REDIS_ADDR for durable storage when LELU_MODE=enforce")
+	}
 
 	// ── Tenant rate limiter (Phase 2) ────────────────────────────────────────
 	rl := ratelimit.New(ratelimit.Config{
@@ -201,13 +210,21 @@ func main() {
 	}
 
 	// ── Agent Identity Registry + MCP OAuth 2.1 ──────────────────────────────
+	// Load or generate the RSA signing key and persist it so it survives restarts.
+	// Without this, every restart invalidates all issued agent workload JWTs.
+	rsaKey, rsaErr := loadOrGenerateRSAKey(rsaKeyPath)
+	if rsaErr != nil {
+		log.Fatalf("RSA signing key: %v", rsaErr)
+	}
+
 	var identityReg *identity.Registry
 	var mcpAuthSvc *mcpauth.Server
 	if db != nil {
 		var iErr error
 		identityReg, iErr = identity.New(identity.Config{
-			DB:     db,
-			Issuer: leluIssuer,
+			DB:         db,
+			Issuer:     leluIssuer,
+			SigningKey:  rsaKey,
 		})
 		if iErr != nil {
 			log.Printf("warning: agent identity registry init failed: %v", iErr)
@@ -232,6 +249,7 @@ func main() {
 		AllowUnverifiedConfidence: allowUnverifiedConfidence,
 		MissingSignalMode:         missingConfidenceMode,
 	}, enforcementMode, incidentNotifier, rl, fb, tp, db)
+	h.SetPolicyPath(policyPath)
 	if vaultSvc != nil {
 		h.SetVault(vaultSvc)
 	}
@@ -461,4 +479,44 @@ func isProductionEnv() bool {
 	default:
 		return false
 	}
+}
+
+// loadOrGenerateRSAKey loads an RSA-2048 private key from path (PEM PKCS1).
+// If the file does not exist, a new key is generated and saved there so the
+// same key is used after restarts. Without persistence every restart would
+// invalidate all issued agent workload JWTs.
+func loadOrGenerateRSAKey(path string) (*rsa.PrivateKey, error) {
+	if data, err := os.ReadFile(path); err == nil {
+		block, _ := pem.Decode(data)
+		if block != nil && block.Type == "RSA PRIVATE KEY" {
+			key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+			if err == nil {
+				log.Printf("RSA signing key loaded from %s", path)
+				return key, nil
+			}
+			log.Printf("warning: could not parse key at %s: %v — generating new key", path, err)
+		}
+	}
+
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, fmt.Errorf("generate RSA-2048 key: %w", err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		log.Printf("warning: cannot create key dir %s, key will NOT be persisted: %v", filepath.Dir(path), err)
+		return key, nil
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Printf("warning: cannot write key to %s, key will NOT be persisted: %v", path, err)
+		return key, nil
+	}
+	defer f.Close()
+	block := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)}
+	if err := pem.Encode(f, block); err != nil {
+		log.Printf("warning: pem encode failed: %v", err)
+	}
+	log.Printf("RSA signing key generated and persisted to %s", path)
+	return key, nil
 }

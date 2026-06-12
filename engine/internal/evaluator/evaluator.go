@@ -55,9 +55,31 @@ type Decision struct {
 
 // ─── Policy Schema ────────────────────────────────────────────────────────────
 
+// PatternRule is a top-level ordered rule evaluated before role/scope checks.
+// First match wins. Allows the dashboard and GitOps pipelines to express
+// cross-cutting policy without patching per-agent scopes.
+//
+// Example YAML:
+//
+//	rules:
+//	  - id: payments-review
+//	    match: "payment:*"
+//	    decision: human_review
+//	    reason: "All payment actions require approval"
+type PatternRule struct {
+	ID       string                 `yaml:"id"`
+	Match    string                 `yaml:"match"`              // glob on action
+	Actor    string                 `yaml:"actor,omitempty"`    // optional glob on actor
+	Decision string                 `yaml:"decision"`           // allow | deny | human_review | compute
+	Reason   string                 `yaml:"reason,omitempty"`
+	SafeTool string                 `yaml:"safe_tool,omitempty"`
+	SafeArgs map[string]interface{} `yaml:"safe_args,omitempty"`
+}
+
 // Policy is the top-level schema for auth.yaml.
 type Policy struct {
 	Version     string                `yaml:"version"`
+	Rules       []PatternRule         `yaml:"rules,omitempty"` // evaluated first, before role/scope checks
 	Roles       map[string]Role       `yaml:"roles"`
 	AgentScopes map[string]AgentScope `yaml:"agent_scopes"`
 }
@@ -201,6 +223,25 @@ func (e *Evaluator) Evaluate(ctx context.Context, req AuthRequest) (*Decision, e
 		return rp.EvaluateHuman(ctx, req)
 	}
 
+	// Top-level rules first (same as agent path).
+	for _, rule := range p.Rules {
+		if !matchAction(rule.Match, req.Action) {
+			continue
+		}
+		reason := rule.Reason
+		if reason == "" {
+			reason = fmt.Sprintf("matched top-level rule %q", rule.ID)
+		}
+		switch rule.Decision {
+		case "allow":
+			return &Decision{Allowed: true, Reason: reason}, nil
+		case "deny":
+			return &Decision{Allowed: false, Reason: reason}, nil
+		case "human_review":
+			return &Decision{Allowed: false, RequiresHumanReview: true, Reason: reason}, nil
+		}
+	}
+
 	// Walk all roles — deny rules checked first, then allow (deny wins).
 	for _, role := range p.Roles {
 		for _, denied := range role.Deny {
@@ -228,6 +269,32 @@ func (e *Evaluator) EvaluateAgent(ctx context.Context, req AgentAuthRequest) (*D
 
 	if rp != nil {
 		return rp.EvaluateAgent(ctx, req)
+	}
+
+	// Top-level rules — first match wins, evaluated before role/scope checks.
+	// Note: confidence constraints (applied by the server layer) are NOT
+	// bypassed by an allow rule; this only short-circuits role/scope logic.
+	for _, rule := range p.Rules {
+		if !matchAction(rule.Match, req.Action) {
+			continue
+		}
+		if rule.Actor != "" && !matchAction(rule.Actor, req.Actor) {
+			continue
+		}
+		reason := rule.Reason
+		if reason == "" {
+			reason = fmt.Sprintf("matched top-level rule %q", rule.ID)
+		}
+		switch rule.Decision {
+		case "allow":
+			return &Decision{Allowed: true, Reason: reason, PolicyDigest: e.policyDigest}, nil
+		case "deny":
+			return &Decision{Allowed: false, Reason: reason, PolicyDigest: e.policyDigest}, nil
+		case "human_review":
+			return &Decision{Allowed: false, RequiresHumanReview: true, Reason: reason, PolicyDigest: e.policyDigest}, nil
+		case "compute":
+			return &Decision{Allowed: true, Compute: true, SafeTool: rule.SafeTool, SafeArgs: rule.SafeArgs, Reason: reason, PolicyDigest: e.policyDigest}, nil
+		}
 	}
 
 	scope, ok := p.AgentScopes[req.Actor]
