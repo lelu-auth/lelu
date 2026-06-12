@@ -1,645 +1,294 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
-import {
-  FaGithub,
-  FaNpm,
-  FaPython,
-  FaDocker,
-  FaLinkedin,
-  FaDiscord,
-  FaXTwitter,
-} from "react-icons/fa6";
-import {
-  SiKubernetes,
-  SiPostgresql,
-  SiSqlite,
-  SiOpentelemetry,
-  SiTypescript,
-} from "react-icons/si";
-import {
-  FiBook,
-  FiExternalLink,
-  FiMail,
-  FiShield,
-  FiAlertTriangle,
-  FiDatabase,
-  FiCheckCircle,
-} from "react-icons/fi";
+import Link from "next/link";
+import { FaGithub, FaNpm, FaPython } from "react-icons/fa6";
+import { FiBook, FiExternalLink, FiMail, FiShield } from "react-icons/fi";
+
+const TEAM = [
+  {
+    initials: "AG",
+    name: "Abenezer Getachew",
+    role: "Founder",
+    title: "Software Developer · AI Researcher",
+    bio: [
+      "Software developer and AI researcher with deep expertise in security infrastructure, distributed systems, and autonomous agent design.",
+      "Built Lelu from the ground up — engine, SDKs, and platform — driven by the conviction that AI agents need purpose-built authorization infrastructure before they can be trusted in production.",
+    ],
+    links: [
+      { label: "GitHub", href: "https://github.com/Abenezer0923", icon: <FaGithub /> },
+      { label: "Contact", href: "mailto:abenezerg@lelu-ai.com", icon: <FiMail /> },
+    ],
+    avatarBg: "bg-[#0A0A0A] dark:bg-[#222224]",
+    badge: "bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A]",
+  },
+  {
+    initials: "B",
+    name: "Bereket",
+    role: "Team",
+    title: "Software Developer · UI/UX Designer",
+    bio: [
+      "Full-stack developer and UI/UX designer responsible for Lelu's platform interface, design system, and developer experience.",
+      "Shapes how developers interact with Lelu — from the sandbox playground to the audit dashboard — ensuring security primitives feel approachable and intuitive.",
+    ],
+    links: [],
+    avatarBg: "bg-zinc-600 dark:bg-zinc-700",
+    badge: "bg-[#F4F4F5] dark:bg-white/10 text-[#737373] dark:text-zinc-300",
+  },
+];
+
+const ADVISOR = {
+  initials: "TD",
+  name: "Tadese Destaw",
+  role: "Advisor",
+  title: "PhD Candidate · AI Researcher",
+  bio: "PhD candidate and active AI researcher advising Lelu on the frontier of autonomous agent behavior, model safety, and AI decision-making. Brings academic depth to Lelu's approach to confidence scoring, behavioral anomaly detection, and agent trust frameworks.",
+  avatarBg: "bg-gradient-to-br from-violet-600 to-indigo-600",
+  badge: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400",
+};
+
+const OVERVIEW = [
+  { label: "Company", value: "Lelu AI" },
+  { label: "Founded", value: "2026" },
+  { label: "Founder", value: "Abenezer Getachew" },
+  { label: "Team", value: "3 members + 1 advisor" },
+  { label: "Product", value: "Authorization Engine for AI Agents" },
+  { label: "Status", value: "Live — 2,000+ SDK downloads" },
+  { label: "SDKs", value: "TypeScript, Python" },
+  { label: "License", value: "Open Source (MIT)" },
+];
+
+const LINKS = [
+  { name: "GitHub", icon: <FaGithub />, href: "https://github.com/lelu-auth/lelu" },
+  { name: "npm Package", icon: <FaNpm />, href: "https://www.npmjs.com/package/lelu-agent-auth" },
+  { name: "PyPI Package", icon: <FaPython />, href: "https://pypi.org/project/lelu-agent-auth-sdk" },
+  { name: "Documentation", icon: <FiBook />, href: "/docs" },
+];
+
+const WHAT_WE_BUILT = [
+  { title: "Confidence-Aware Gating", desc: "Every agent action carries a confidence score. Low-confidence actions route to human review automatically — no code change needed." },
+  { title: "Human-in-the-Loop Review", desc: "Agents pause, queue their action, and resume once a human approves or denies. Full audit trail included." },
+  { title: "Policy Enforcement", desc: "Write YAML or Rego policies to express complex rules. Allow, deny, or require review — per actor, action, or resource." },
+  { title: "Complete Audit Trail", desc: "Every decision is logged with full context, input hash, output hash, latency, and confidence score for compliance and debugging." },
+];
+
 export default function AboutPage() {
-  const fadeUp = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
   return (
-    <main className="relative min-h-screen bg-[#FAFAFA] dark:bg-[#0B0B0C] flex flex-col items-center overflow-hidden mx-auto sm:px-10 px-5 pt-24 md:pt-32">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0B0B0C]">
+      <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-16">
 
-      <div className="max-w-7xl w-full relative z-10">
-        {/* HERO SECTION - Exact text match */}
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeUp}
-          className="max-w-4xl mb-32 px-6 md:px-0"
-        >
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8">
-            About{" "}
-            <span className="text-[#0A0A0A] dark:text-white">
-              Lelu AI
-            </span>
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <div>
+          <p className="text-[12px] text-[#A3A3A3] uppercase tracking-widest font-semibold mb-3">About</p>
+          <h1 className="text-[30px] sm:text-[38px] font-bold tracking-[-0.02em] text-[#0A0A0A] dark:text-white leading-tight mb-4">
+            Lelu AI
           </h1>
-          <p className="text-2xl md:text-3xl text-zinc-800 dark:text-zinc-200 font-medium leading-relaxed mb-6">
-            We are building an authorization and security platform for AI agents.
+          <p className="text-[16px] text-[#737373] leading-relaxed max-w-2xl">
+            We are building authorization infrastructure for autonomous AI agents — the security
+            layer that decides what an agent is allowed to do before it acts.
           </p>
-          <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed mb-8">
-            Lelu helps companies safely deploy autonomous AI systems by providing real-time access
-            control, human oversight, and complete audit trails.
-          </p>
-        </motion.section>
+        </div>
 
-        <div className="px-6 md:px-0 space-y-40 pb-20">
-          {/* ────── COMPANY OVERVIEW ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            id="overview"
-          >
-            <div className="rounded-[2.5rem] p-8 md:p-14 border border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-xl">
-              <h2 className="text-3xl font-bold mb-12 text-zinc-900 dark:text-white">Company Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-12">
-                {[
-                  { label: "Company", value: "Lelu AI" },
-                  { label: "Founded", value: "2026" },
-                  { label: "Founder", value: "Abenezer Getachew" },
-                  { label: "Team", value: "3 members + 1 advisor" },
-                  { label: "Product", value: "Authorization Engine for AI Agents" },
-                  { label: "Status", value: "Live — SDK downloads 2,000+" },
-                  { label: "SDKs Available", value: "TypeScript, Python" },
-                  { label: "License", value: "Open Source (MIT)" },
-                ].map((item, i) => (
-                  <div key={i}>
-                    <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">
-                      {item.label}
+        {/* ── Company Overview ──────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[18px] font-bold tracking-[-0.01em] text-[#0A0A0A] dark:text-white mb-5">
+            Company Overview
+          </h2>
+          <div className="bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#222224] rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-[#E7E5E4] dark:divide-[#222224]">
+              {OVERVIEW.map((item) => (
+                <div key={item.label} className="p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A3A3A3] mb-1.5">{item.label}</p>
+                  <p className="text-[13px] font-semibold text-[#0A0A0A] dark:text-white leading-snug">{item.value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-[#E7E5E4] dark:border-[#222224] p-5">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#A3A3A3] mb-4">Links</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {LINKS.map((l) => (
+                  <a
+                    key={l.name}
+                    href={l.href}
+                    target={l.href.startsWith("http") ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#F4F4F5] dark:bg-[#1A1A1C] border border-[#E7E5E4] dark:border-[#27272A] hover:border-[#0A0A0A] dark:hover:border-white/30 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2 text-[13px] font-medium text-[#0A0A0A] dark:text-white">
+                      <span className="text-base">{l.icon}</span>
+                      {l.name}
                     </div>
-                    <div className="text-xl font-bold">{item.value}</div>
-                  </div>
+                    <FiExternalLink className="text-[#A3A3A3] group-hover:text-[#0A0A0A] dark:group-hover:text-white transition-colors" size={12} />
+                  </a>
                 ))}
               </div>
-
-              {/* PRODUCT LINKS - Surgical mirror */}
-              <div className="mt-16 pt-12 border-t border-zinc-200 dark:border-white/10">
-                <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-8">
-                  Product Links
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[
-                    {
-                      name: "GitHub",
-                      icon: <FaGithub />,
-                      link: "https://github.com/lelu-auth/lelu",
-                    },
-                    {
-                      name: "npm Package",
-                      icon: <FaNpm />,
-                      link: "https://www.npmjs.com/package/lelu-agent-auth",
-                    },
-                    {
-                      name: "PyPI Package",
-                      icon: <FaPython />,
-                      link: "https://pypi.org/project/lelu-auth",
-                    },
-                    { name: "Documentation", icon: <FiBook />, link: "/docs" },
-                  ].map((item, i) => (
-                    <a
-                      key={i}
-                      href={item.link}
-                      className="flex items-center justify-between px-6 py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl text-zinc-700 dark:text-zinc-300 group-hover:scale-110 transition-transform">
-                          {item.icon}
-                        </span>
-                        <span className="font-bold text-sm">{item.name}</span>
-                      </div>
-                      <FiExternalLink className="opacity-30 group-hover:opacity-100 transition-opacity" />
-                    </a>
-                  ))}
-                </div>
-              </div>
             </div>
-          </motion.section>
+          </div>
+        </section>
 
-          {/* ────── TEAM ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            id="team"
-          >
-            <h2 className="text-4xl font-bold mb-12">The Team</h2>
-            <div className="space-y-6">
-
-              {/* Founder */}
-              <div className="flex flex-col md:flex-row gap-10 items-start bg-zinc-50 dark:bg-[#141416] rounded-[2.5rem] p-10 md:p-14 border border-zinc-200 dark:border-white/10">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-[#0A0A0A] dark:bg-[#222224] flex items-center justify-center text-white text-4xl font-bold shrink-0 shadow-2xl">
-                  AG
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-bold">Abenezer Getachew</h3>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A] uppercase tracking-widest">
-                      Founder
-                    </span>
-                  </div>
-                  <p className="text-zinc-500 font-semibold text-sm mb-6 uppercase tracking-widest">
-                    Software Developer · AI Researcher
-                  </p>
-                  <div className="space-y-4 text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    <p>
-                      Software developer and AI researcher with deep expertise in security
-                      infrastructure, distributed systems, and autonomous agent design.
-                    </p>
-                    <p>
-                      Built Lelu from the ground up — engine, SDKs, and platform — driven by the
-                      conviction that AI agents need purpose-built authorization infrastructure
-                      before they can be trusted in production.
-                    </p>
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <a
-                      href="https://github.com/Abenezer0923"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#0B0B0C] border border-zinc-200 dark:border-white/10 text-sm font-medium hover:border-zinc-400 dark:hover:border-zinc-500 transition-all"
-                    >
-                      <FaGithub className="text-base" /> GitHub
-                    </a>
-                    <a
-                      href="mailto:abenezer@lelu-ai.com"
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#0B0B0C] border border-zinc-200 dark:border-white/10 text-sm font-medium hover:border-zinc-400 dark:hover:border-zinc-500 transition-all"
-                    >
-                      <FiMail className="text-base" /> Contact
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Team member — Bereket */}
-              <div className="flex flex-col md:flex-row gap-10 items-start bg-zinc-50 dark:bg-[#141416] rounded-[2.5rem] p-10 md:p-14 border border-zinc-200 dark:border-white/10">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-zinc-700 dark:bg-[#2A2A2C] flex items-center justify-center text-white text-4xl font-bold shrink-0 shadow-2xl">
-                  B
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-bold">Bereket</h3>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 uppercase tracking-widest">
-                      Team
-                    </span>
-                  </div>
-                  <p className="text-zinc-500 font-semibold text-sm mb-6 uppercase tracking-widest">
-                    Software Developer · UI/UX Designer
-                  </p>
-                  <div className="space-y-4 text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    <p>
-                      Full-stack software developer and UI/UX designer responsible for Lelu's
-                      platform interface, design system, and developer experience.
-                    </p>
-                    <p>
-                      Shapes how developers interact with Lelu — from the sandbox playground
-                      to the audit dashboard — ensuring that powerful security primitives feel
-                      approachable and intuitive.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Advisors */}
-            <div className="mt-10">
-              <h3 className="text-xl font-bold uppercase tracking-widest text-zinc-400 mb-6">Advisors</h3>
-              <div className="flex flex-col md:flex-row gap-10 items-start bg-white dark:bg-[#0F0F11] rounded-[2.5rem] p-10 md:p-14 border border-zinc-200 dark:border-white/10">
-                <div className="w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold shrink-0 shadow-xl">
-                  TD
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-bold">Tadese Destaw</h3>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 uppercase tracking-widest">
-                      Advisor
-                    </span>
-                  </div>
-                  <p className="text-zinc-500 font-semibold text-sm mb-6 uppercase tracking-widest">
-                    PhD Candidate · AI Researcher
-                  </p>
-                  <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    PhD candidate and active AI researcher advising Lelu on the frontier of
-                    autonomous agent behavior, model safety, and AI decision-making. Brings
-                    academic depth to Lelu's approach to confidence scoring, behavioral
-                    anomaly detection, and agent trust frameworks.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* ────── THE PROBLEM ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeUp}
-            id="problem"
-            className="w-full"
-          >
-            <h2 className="text-4xl font-bold mb-12">The Problem</h2>
-            <div className="space-y-10 text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              <p>
-                AI agents are powerful enough to take real actions—processing refunds, modifying
-                databases, sending emails, making business decisions.
-              </p>
-              <p>
-                But traditional authorization systems weren't built for AI. They assume
-                deterministic, human-driven actions.
-              </p>
-              <p>
-                AI agents operate with uncertainty, make probabilistic decisions, and can be
-                manipulated through prompt injection attacks. Companies need a security layer
-                designed specifically for autonomous AI.
-              </p>
-            </div>
-          </motion.section>
-
-          {/* ────── WHY WE BUILT LELU ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeUp}
-            id="why-lelu"
-            className="w-full"
-          >
-            <h2 className="text-4xl font-bold mb-12">Why We Built Lelu</h2>
-            <div className="space-y-8 text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed mb-16">
-              <p>
-                AI agents are moving from research prototypes to production systems. Companies like
-                Anthropic, OpenAI, and Google are releasing increasingly capable models that can
-                take real-world actions.
-              </p>
-              <p className="font-bold text-zinc-900 dark:text-white">
-                But with this power comes risk:
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-              {[
-                "An AI agent with database access could accidentally delete critical data",
-                "A customer support agent could issue unauthorized refunds",
-                "A code-writing agent could introduce security vulnerabilities",
-              ].map((risk, i) => (
-                <div
-                  key={i}
-                  className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex flex-col gap-8 group hover:border-red-500/30 transition-colors"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-[#0B0B0C] flex items-center justify-center text-2xl shadow-xl">
-                    <FiAlertTriangle className="text-red-500" />
-                  </div>
-                  <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed italic">
-                    {risk}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-2xl md:text-3xl text-zinc-600 dark:text-zinc-400 leading-relaxed font-bold italic border-l-8 border-[#0A0A0A] dark:border-white pl-10">
-              Lelu provides the security infrastructure that makes AI agents safe for
-              production—allowing companies to move fast without breaking things.
+        {/* ── Mission ────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[18px] font-bold tracking-[-0.01em] text-[#0A0A0A] dark:text-white mb-5">
+            Mission
+          </h2>
+          <div className="bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#222224] rounded-2xl p-6 space-y-4 text-[15px] text-[#737373] leading-relaxed">
+            <p>
+              AI agents are powerful enough to take real actions — processing refunds, modifying
+              databases, sending emails, making business decisions. But traditional authorization
+              systems were not built for AI. They assume deterministic, human-driven actions.
             </p>
-          </motion.section>
+            <p>
+              AI agents operate with uncertainty, make probabilistic decisions, and can be
+              manipulated through prompt injection attacks. Companies need a security layer
+              designed specifically for autonomous AI.
+            </p>
+            <p className="text-[#0A0A0A] dark:text-white font-semibold border-l-2 border-[#0A0A0A] dark:border-white pl-4">
+              Lelu provides the security infrastructure that makes AI agents safe for production —
+              allowing companies to move fast without breaking things.
+            </p>
+          </div>
+        </section>
 
-          {/* ────── WHAT WE BUILT ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeUp}
-            id="what-we-built"
-            className="w-full"
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20">
-              <div className="max-w-2xl">
-                <h2 className="text-4xl font-bold mb-6">What We Built</h2>
-                <p className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Lelu is a complete authorization engine that evaluates every AI agent action in
-                  real-time.
-                </p>
+        {/* ── What We Built ──────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[18px] font-bold tracking-[-0.01em] text-[#0A0A0A] dark:text-white mb-5">
+            What We Built
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {WHAT_WE_BUILT.map((item) => (
+              <div
+                key={item.title}
+                className="bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#222224] rounded-2xl p-5"
+              >
+                <p className="text-[13px] font-bold text-[#0A0A0A] dark:text-white mb-2">{item.title}</p>
+                <p className="text-[13px] text-[#737373] leading-relaxed">{item.desc}</p>
               </div>
-              <div className="p-10 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 md:text-right">
-                <div className="flex items-center gap-2 mb-4 md:justify-end text-emerald-500">
-                  <FiCheckCircle className="text-2xl" />
-                  <span className="font-bold uppercase tracking-widest text-sm">
-                    Production Ready
+            ))}
+          </div>
+        </section>
+
+        {/* ── Team ───────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[18px] font-bold tracking-[-0.01em] text-[#0A0A0A] dark:text-white mb-5">
+            Team
+          </h2>
+          <div className="space-y-3">
+            {TEAM.map((person) => (
+              <div
+                key={person.name}
+                className="bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#222224] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row gap-5"
+              >
+                <div className={`w-14 h-14 rounded-xl ${person.avatarBg} flex items-center justify-center text-white text-lg font-bold shrink-0`}>
+                  {person.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-[15px] font-bold text-[#0A0A0A] dark:text-white">{person.name}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${person.badge}`}>
+                      {person.role}
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-[#A3A3A3] mb-3">{person.title}</p>
+                  <div className="space-y-2">
+                    {person.bio.map((line, i) => (
+                      <p key={i} className="text-[13px] text-[#737373] leading-relaxed">{line}</p>
+                    ))}
+                  </div>
+                  {person.links.length > 0 && (
+                    <div className="flex gap-2 mt-4">
+                      {person.links.map((l) => (
+                        <a
+                          key={l.label}
+                          href={l.href}
+                          target={l.href.startsWith("http") ? "_blank" : undefined}
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F4F4F5] dark:bg-[#1A1A1C] border border-[#E7E5E4] dark:border-[#27272A] text-[12px] font-medium text-[#0A0A0A] dark:text-white hover:border-[#0A0A0A] dark:hover:border-white/30 transition-colors"
+                        >
+                          <span className="text-sm">{l.icon}</span>
+                          {l.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Advisor */}
+          <div className="mt-4">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#A3A3A3] mb-3 px-1">Advisor</p>
+            <div className="bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#222224] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row gap-5">
+              <div className={`w-14 h-14 rounded-xl ${ADVISOR.avatarBg} flex items-center justify-center text-white text-lg font-bold shrink-0`}>
+                {ADVISOR.initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="text-[15px] font-bold text-[#0A0A0A] dark:text-white">{ADVISOR.name}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${ADVISOR.badge}`}>
+                    {ADVISOR.role}
                   </span>
                 </div>
-                <div className="text-lg font-medium text-emerald-800 dark:text-emerald-300 max-w-sm">
-                  Version 1.0 is live and being used by development teams building AI agent
-                  applications
-                </div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-[#A3A3A3] mb-3">{ADVISOR.title}</p>
+                <p className="text-[13px] text-[#737373] leading-relaxed">{ADVISOR.bio}</p>
               </div>
             </div>
+          </div>
+        </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                {
-                  icon: "🎯",
-                  title: "Confidence-Aware Control",
-                  desc: "Automatically routes low-confidence decisions to human reviewers, preventing costly mistakes.",
-                },
-                {
-                  icon: "🛡️",
-                  title: "Prompt Injection Defense",
-                  desc: "Detects and blocks malicious prompts before they can manipulate agent behavior.",
-                },
-                {
-                  icon: "📋",
-                  title: "Policy Enforcement",
-                  desc: "Define what agents can and cannot do using simple YAML or advanced Rego policies.",
-                },
-                {
-                  icon: "📊",
-                  title: "Complete Audit Trail",
-                  desc: "Every decision is logged with full context for compliance and debugging.",
-                },
-              ].map((pill, i) => (
-                <div
-                  key={i}
-                  className="rounded-[3rem] p-12 bg-zinc-50 dark:bg-[#141416] border border-zinc-200 dark:border-white/10 group hover:-translate-y-2 transition-all duration-300"
-                >
-                  <div className="text-5xl mb-10 group-hover:scale-110 transition-transform">
-                    {pill.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold mb-6">{pill.title}</h3>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-base leading-relaxed">
-                    {pill.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </motion.section>
+        {/* ── Contact ────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[18px] font-bold tracking-[-0.01em] text-[#0A0A0A] dark:text-white mb-5">
+            Contact
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a
+              href="mailto:abenezerg@lelu-ai.com"
+              className="flex items-center gap-4 p-5 bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#222224] rounded-2xl hover:border-[#0A0A0A] dark:hover:border-white/30 transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#F4F4F5] dark:bg-[#1A1A1C] flex items-center justify-center shrink-0 group-hover:bg-[#0A0A0A] dark:group-hover:bg-white transition-colors">
+                <FiMail className="text-[#737373] group-hover:text-white dark:group-hover:text-[#0A0A0A] transition-colors" size={16} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#A3A3A3] mb-0.5">General</p>
+                <p className="text-[13px] font-semibold text-[#0A0A0A] dark:text-white">abenezerg@lelu-ai.com</p>
+              </div>
+            </a>
+            <a
+              href="mailto:security@lelu-ai.com"
+              className="flex items-center gap-4 p-5 bg-white dark:bg-[#111113] border border-[#E7E5E4] dark:border-[#222224] rounded-2xl hover:border-[#0A0A0A] dark:hover:border-white/30 transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#F4F4F5] dark:bg-[#1A1A1C] flex items-center justify-center shrink-0 group-hover:bg-[#0A0A0A] dark:group-hover:bg-white transition-colors">
+                <FiShield className="text-[#737373] group-hover:text-white dark:group-hover:text-[#0A0A0A] transition-colors" size={16} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#A3A3A3] mb-0.5">Security</p>
+                <p className="text-[13px] font-semibold text-[#0A0A0A] dark:text-white">security@lelu-ai.com</p>
+              </div>
+            </a>
+          </div>
+        </section>
 
-          {/* ────── AVAILABLE SDKS ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <h2 className="text-4xl font-bold mb-10">Available SDKs & Integration</h2>
-            <p className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 mb-16 max-w-4xl leading-relaxed">
-              Companies integrate Lelu using our SDKs for TypeScript and Python. All agent
-              actions are evaluated through our authorization engine before execution.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-              {[
-                { name: "TypeScript/Node.js", icon: <SiTypescript className="text-[#3178C6]" /> },
-                { name: "Python", icon: <FaPython className="text-[#3776AB]" /> },
-                { name: "Docker", icon: <FaDocker className="text-[#2496ED]" /> },
-                { name: "Kubernetes", icon: <SiKubernetes className="text-[#326CE5]" /> },
-              ].map((sdk, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center justify-center p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 gap-6 group hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors"
-                >
-                  <div className="text-4xl group-hover:scale-110 transition-transform">
-                    {sdk.icon}
-                  </div>
-                  <div className="text-sm font-bold">{sdk.name}</div>
-                </div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* ────── WHO WE SERVE ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <h2 className="text-4xl font-bold mb-16 italic text-zinc-300 dark:text-zinc-800">
-              Who We Serve
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-              {[
-                {
-                  title: "Enterprise Development Teams",
-                  desc: "Companies building AI agents for customer support, internal automation, data analysis, and business operations. Teams that need to deploy AI safely while maintaining security and compliance standards.",
-                },
-                {
-                  title: "AI Platform Providers",
-                  desc: "Companies offering AI agent platforms to their customers who need built-in authorization and security features without building them from scratch.",
-                },
-                {
-                  title: "Regulated Industries",
-                  desc: "Financial services, healthcare, and other industries requiring strict audit trails, human oversight, and compliance documentation for AI-driven decisions.",
-                },
-              ].map((serve, i) => (
-                <div
-                  key={i}
-                  className="p-12 rounded-[3rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0B0B0C] shadow-sm relative overflow-hidden group"
-                >
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-zinc-200/20 dark:bg-white/5 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                  <h3 className="text-2xl font-bold mb-8 text-zinc-900 dark:text-white">{serve.title}</h3>
-                  <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-lg">
-                    {serve.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* ────── USE CASES ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <h2 className="text-4xl font-bold mb-16">Real-World Use Cases</h2>
-            <div className="space-y-12">
-              {[
-                {
-                  title: "Customer Support Automation",
-                  desc: "AI agents handle routine support tickets automatically, but high-value actions like refunds or account modifications require human approval based on confidence thresholds.",
-                },
-                {
-                  title: "Database Operations",
-                  desc: "AI agents can query databases freely but destructive operations (DELETE, DROP) are blocked or require explicit human review, preventing catastrophic mistakes.",
-                },
-                {
-                  title: "Multi-Agent Systems",
-                  desc: "Parent agents delegate tasks to specialized sub-agents with scoped, time-limited permissions—ensuring the principle of least privilege across agent swarms.",
-                },
-              ].map((cc, i) => (
-                <div
-                  key={i}
-                  className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416] group hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors"
-                >
-                  <h3 className="text-3xl font-bold mb-6 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
-                    {cc.title}
-                  </h3>
-                  <p className="text-zinc-600 dark:text-zinc-400 text-xl leading-relaxed">
-                    {cc.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* ────── TECHNOLOGY ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="w-full"
-          >
-            <div className="flex flex-col items-start mb-16">
-              <h2 className="text-4xl font-bold mb-6">Technology</h2>
-              <p className="text-xl md:text-2xl text-zinc-500 max-w-3xl leading-relaxed">
-                Built as a modern, cloud-native platform with enterprise-grade reliability:
+        {/* ── Open Source ────────────────────────────────────────────── */}
+        <section className="pb-4">
+          <div className="bg-[#0A0A0A] dark:bg-[#111113] rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-[13px] font-bold text-white mb-1">Open Source — MIT License</p>
+              <p className="text-[13px] text-white/50 leading-relaxed max-w-md">
+                Security infrastructure should be transparent and auditable. Self-host or use our managed platform.
               </p>
             </div>
+            <Link
+              href="https://github.com/lelu-auth/lelu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white text-[#0A0A0A] rounded-xl text-[13px] font-bold hover:bg-zinc-100 transition-colors"
+            >
+              <FaGithub size={15} /> View on GitHub
+            </Link>
+          </div>
+        </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: <FiShield className="text-[#0A0A0A] dark:text-white" />,
-                  title: "Authorization Engine",
-                  desc: "Sub-50ms latency, policy-as-code",
-                },
-                {
-                  icon: <SiPostgresql className="text-[#336791]" />,
-                  title: "Storage",
-                  desc: "SQLite for dev, PostgreSQL for production",
-                },
-                {
-                  icon: <FaDocker className="text-[#2496ED]" />,
-                  title: "Deployment",
-                  desc: "Docker, Kubernetes, self-hosted",
-                },
-                {
-                  icon: <SiOpentelemetry className="text-[#FF6600]" />,
-                  title: "Observability",
-                  desc: "OpenTelemetry tracing & metrics",
-                },
-                { icon: <FaGithub />, title: "Open Source", desc: "MIT License on GitHub" },
-                {
-                  icon: <SiTypescript className="text-[#3178C6]" />,
-                  title: "SDKs",
-                  desc: "TypeScript, Python",
-                },
-              ].map((tech, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center text-center p-12 rounded-[3.5rem] bg-white/50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 group hover:-translate-y-1 transition-all"
-                >
-                  <div className="text-6xl mb-8 group-hover:scale-110 transition-transform">
-                    {tech.icon}
-                  </div>
-                  <div className="text-2xl font-bold mb-3">{tech.title}</div>
-                  <div className="text-base text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed">
-                    {tech.desc}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* ────── COMPANY INFORMATION ────── */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <h2 className="text-4xl font-bold mb-16">Company Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-stretch">
-              {/* Mission */}
-              <div className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416]">
-                <h3 className="text-3xl font-bold mb-8">Mission</h3>
-                <p className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed italic border-l-8 border-[#0A0A0A] dark:border-white pl-10">
-                  Make AI agents safe and trustworthy for production use. We believe autonomous AI
-                  will transform how businesses operate, but only if companies can deploy it with
-                  confidence and control.
-                </p>
-              </div>
-
-              {/* Open Source */}
-              <div className="rounded-[3rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416]">
-                <h3 className="text-3xl font-bold mb-8">Open Source</h3>
-                <p className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Lelu is open source (MIT License) and available on GitHub. Security infrastructure
-                  should be transparent, auditable, and community-driven. Companies can self-host or
-                  use managed services.
-                </p>
-              </div>
-
-              {/* Contact */}
-              <div className="md:col-span-2 rounded-[3.5rem] p-12 md:p-16 border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-[#141416]">
-                <h3 className="text-3xl font-bold mb-10 tracking-tight">Contact</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <a
-                    href="mailto:support@lelu-ai.com"
-                    className="flex items-center gap-10 group bg-white/30 dark:bg-white/5 p-10 rounded-[3rem] border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-300"
-                  >
-                    <div className="w-20 h-20 rounded-3xl bg-white dark:bg-[#141416] flex items-center justify-center text-3xl shadow-xl transition-all group-hover:scale-110">
-                      <FiMail className="text-zinc-700 dark:text-zinc-300" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-zinc-400 mb-1 uppercase tracking-widest">
-                        General:
-                      </div>
-                      <div className="text-2xl font-bold tracking-tight">support@lelu-ai.com</div>
-                    </div>
-                  </a>
-                  <a
-                    href="mailto:security@lelu-ai.com"
-                    className="flex items-center gap-10 group bg-white/30 dark:bg-white/5 p-10 rounded-[3rem] border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-300"
-                  >
-                    <div className="w-20 h-20 rounded-3xl bg-white dark:bg-[#141416] flex items-center justify-center text-3xl shadow-xl transition-all group-hover:scale-110">
-                      <FiShield className="text-zinc-700 dark:text-zinc-300" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-zinc-400 mb-1 uppercase tracking-widest">
-                        Security:
-                      </div>
-                      <div className="text-2xl font-bold tracking-tight">security@lelu-ai.com</div>
-                    </div>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-        </div>
       </div>
-    </main>
+    </div>
   );
 }
