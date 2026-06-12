@@ -8,7 +8,7 @@ export interface AuthorizeOptions {
   apiKey?: string;
   /** HTTP header that carries the actor identifier (default: x-actor) */
   actorHeader?: string;
-  /** Confidence score to pass to the engine (default: 1.0) */
+  /** Confidence score (0.0–1.0). Omit to let engine apply MissingSignalMode. */
   confidence?: number;
   /** Explicit LeluClient instance (overrides baseUrl/apiKey) */
   client?: LeluClient;
@@ -37,7 +37,7 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
   const client = opts.client ?? new LeluClient(clientConfig);
 
   const actorHeader = opts.actorHeader ?? "x-actor";
-  const confidence = opts.confidence ?? 1.0;
+  const confidence = opts.confidence; // undefined → engine applies MissingSignalMode
 
   return async function leluAuthorize(
     req: Request,
@@ -47,7 +47,11 @@ export function authorize(action: string, opts: AuthorizeOptions = {}): RequestH
     const actor = (req.headers[actorHeader] as string | undefined) ?? "anonymous";
 
     try {
-      const decision = await client.agentAuthorize({ actor, action, context: { confidence } });
+      const decision = await client.agentAuthorize({
+        actor,
+        action,
+        context: { ...(confidence !== undefined ? { confidence } : {}) },
+      });
 
       if (decision.allowed) {
         // Attach decision to request for downstream handlers

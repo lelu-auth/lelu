@@ -74,7 +74,8 @@ export interface SecureToolOptions<TArgs = unknown, TResult = unknown> {
   /**
    * LLM confidence score (0.0–1.0). Can be a static number or a function
    * receiving the parsed tool arguments, allowing dynamic confidence based
-   * on the actual call. Defaults to `1.0`.
+   * on the actual call. Omit to let the engine apply its MissingSignalMode
+   * policy — use LeluClient.confidenceFrom to derive from provider logprobs.
    */
   confidence?: number | ((args: TArgs) => number);
   /** Optional user ID the agent is acting on behalf of. */
@@ -106,18 +107,19 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
       args: TArgs,
       options?: unknown
     ): Promise<TResult | LeluDeniedResult> {
-      // Resolve confidence — static number or dynamic function.
-      const confidence =
+      // Resolve confidence — static number, dynamic function, or absent.
+      // Never fabricate a default — absent confidence lets MissingSignalMode decide.
+      const confidence: number | undefined =
         typeof opts.confidence === "function"
           ? opts.confidence(args)
-          : (opts.confidence ?? 1.0);
+          : opts.confidence;
 
       let decision;
       try {
         decision = await client.agentAuthorize({
           actor,
           action,
-          context: { confidence, actingFor },
+          context: { ...(confidence !== undefined ? { confidence } : {}), actingFor },
         });
       } catch (err) {
         // Fail open with a structured denial so the model can handle it.
@@ -134,7 +136,7 @@ export function secureTool<TArgs = unknown, TResult = unknown>(
           allowed: false,
           reason:
             `Action '${action}' for agent '${actor}' is queued for human review. ` +
-            `Reason: ${decision.reason}. Confidence: ${(confidence * 100).toFixed(0)}%.`,
+            `Reason: ${decision.reason}.`,
           requiresHumanReview: true,
         };
       }

@@ -54,7 +54,8 @@ export interface SecureToolOptions {
   func: (input: string) => Promise<string>;
   /**
    * Optional: LLM confidence score for this invocation (0.0–1.0).
-   * If omitted, defaults to 1.0 (full confidence assumed).
+   * Omit to let the engine apply its MissingSignalMode policy — use
+   * LeluClient.confidenceFrom to derive from provider logprobs.
    */
   confidence?: number;
   /**
@@ -135,7 +136,7 @@ export class SecureTool {
 
   private async _check(input: string): Promise<ToolCallResult> {
     const { actor, requiredPermission, client, func, throwOnDeny } = this.opts;
-    const confidence = this.opts.confidence ?? 1.0;
+    const confidence = this.opts.confidence;
     const actingFor = this.opts.actingFor ?? "";
 
     let decision;
@@ -144,7 +145,7 @@ export class SecureTool {
         actor,
         action: requiredPermission,
         context: {
-          confidence,
+          ...(confidence !== undefined ? { confidence } : {}),
           actingFor,
         },
       });

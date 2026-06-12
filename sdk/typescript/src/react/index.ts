@@ -24,10 +24,12 @@ export interface AgentPermissionState {
 
 /**
  * React hook that checks whether an agent actor may perform an action.
+ * Pass `confidence` from provider logprobs (LeluClient.confidenceFrom) or omit
+ * to let the engine apply its MissingSignalMode policy.
  *
  * ```tsx
  * const { canExecute, loading, reason } = useAgentPermission(
- *   "agent-007", "files.read", 0.95,
+ *   "agent-007", "files.read", undefined,
  *   { baseUrl: "http://localhost:8080", apiKey: process.env.NEXT_PUBLIC_LELU_KEY }
  * );
  * ```
@@ -35,7 +37,7 @@ export interface AgentPermissionState {
 export function useAgentPermission(
   actor: string,
   action: string,
-  confidence = 1.0,
+  confidence: number | undefined = undefined,
   opts: UseAgentPermissionOptions = {}
 ): AgentPermissionState {
   const [state, setState] = useState<AgentPermissionState>({
@@ -58,7 +60,7 @@ export function useAgentPermission(
     const client = new LeluClient(clientConfig);
 
     client
-      .agentAuthorize({ actor, action, context: { confidence, scope: opts.scope } })
+      .agentAuthorize({ actor, action, context: { ...(confidence !== undefined ? { confidence } : {}), scope: opts.scope } })
       .then((res) => {
         if (cancelled) return;
         setState({

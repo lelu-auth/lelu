@@ -17,8 +17,12 @@ export const AuthRequestSchema = z.object({
 });
 
 export const AgentContextSchema = z.object({
-  /** LLM confidence score — 0.0 to 1.0 */
-  confidence: z.number().min(0).max(1),
+  /**
+   * LLM confidence score (0.0–1.0). Omit to let the engine apply its
+   * MissingSignalMode policy (default: deny). Never pass a hardcoded default —
+   * use LeluClient.confidenceFrom to derive from your provider's response.
+   */
+  confidence: z.number().min(0).max(1).optional(),
   /** User the agent is acting on behalf of */
   actingFor: z.string().optional(),
   /** Requested agent scope */

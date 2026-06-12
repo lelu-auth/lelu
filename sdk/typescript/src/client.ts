@@ -200,7 +200,7 @@ export class LeluClient {
       {
         agentId: validated.actor,
         action: validated.action,
-        confidence: validated.context.confidence,
+        ...(validated.context.confidence !== undefined ? { confidence: validated.context.confidence } : {}),
         ...(validated.context.actingFor && { actingFor: validated.context.actingFor }),
         ...(validated.context.scope && { scope: validated.context.scope }),
       },
@@ -209,7 +209,7 @@ export class LeluClient {
         return {
           ...decision,
           requiresHumanReview: decision.decision === "human_review",
-          confidenceUsed: validated.context.confidence,
+          confidenceUsed: validated.context.confidence ?? 0,
           traceId: decision.requestId,
           downgradedScope: undefined,
         };
@@ -350,16 +350,17 @@ export class LeluClient {
 
   /**
    * Blocks until a human-review request is resolved (approved or denied) or the
-   * timeout elapses. Returns the resolved item on success; returns the item still
-   * in "pending" status when the server-side timeout fires (HTTP 408).
+   * caller's timeout elapses. Re-polls the server automatically — callers may
+   * pass any `timeoutMs` regardless of the server-side 60 s cap per long-poll.
    *
-   * Pair with authorize() — when decision === "human_review", pass requestId here.
+   * Returns the item with `status === "approved" | "denied"` on resolution, or
+   * with `status === "pending"` when the caller's deadline passes first.
    *
    * @example
    * ```ts
    * const { decision, requestId } = await lelu.authorize({ tool: "wire_transfer" });
    * if (decision === "human_review") {
-   *   const item = await lelu.waitForApproval(requestId, { timeoutMs: 60_000 });
+   *   const item = await lelu.waitForApproval(requestId, { timeoutMs: 5 * 60_000 });
    *   if (item.status !== "approved") throw new Error("Not approved");
    * }
    * ```
@@ -368,25 +369,43 @@ export class LeluClient {
     requestId: string,
     opts?: { timeoutMs?: number; signal?: AbortSignal }
   ): Promise<ReviewQueueItem> {
-    const timeoutMs = opts?.timeoutMs ?? 30_000;
-    const params = new URLSearchParams({ timeout_ms: timeoutMs.toString() });
-    const url = `${this.baseUrl}/v1/queue/${encodeURIComponent(requestId)}/wait?${params}`;
+    // Server caps each individual long-poll at 60 s. We loop, issuing back-to-back
+    // long-polls with ≤30 s each (plus ≤2 s jitter to stagger reconnects), until
+    // the item resolves or the caller's deadline passes.
+    const POLL_CAP_MS = 30_000;
+    const totalMs = opts?.timeoutMs ?? 30_000;
+    const deadline = Date.now() + totalMs;
 
     const ctrl = new AbortController();
-    // Give the network 5s of headroom beyond the server-side timeout.
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs + 5_000);
+    // Hard abort at deadline + 5 s network headroom.
+    const hardTimer = setTimeout(() => ctrl.abort(), totalMs + 5_000);
     opts?.signal?.addEventListener("abort", () => ctrl.abort(), { once: true });
 
     try {
-      const res = await fetch(url, {
-        method: "GET",
-        headers: this.headers(),
-        signal: ctrl.signal,
-      });
-      // 408 = still pending after server timeout — return the item as-is.
-      return this.parseResponse<ReviewQueueItem>(res);
+      while (true) {
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
+          // Deadline passed — one quick point-in-time GET to return current state.
+          return this.get<ReviewQueueItem>(`/v1/queue/${encodeURIComponent(requestId)}`);
+        }
+
+        // Add up to 2 s jitter; cap each poll at 30 s or the remaining window.
+        const jitter = Math.floor(Math.random() * 2_000);
+        const pollMs = Math.min(remaining + jitter, POLL_CAP_MS);
+        const params = new URLSearchParams({ timeout_ms: pollMs.toString() });
+
+        const res = await fetch(
+          `${this.baseUrl}/v1/queue/${encodeURIComponent(requestId)}/wait?${params}`,
+          { method: "GET", headers: this.headers(), signal: ctrl.signal }
+        );
+
+        // parseResponse handles 408 (still pending) the same as 200 here.
+        const item = await this.parseResponse<ReviewQueueItem>(res);
+        if (item.status !== "pending") return item;
+        // Still pending — loop and issue the next long-poll.
+      }
     } finally {
-      clearTimeout(timer);
+      clearTimeout(hardTimer);
     }
   }
 

@@ -1188,17 +1188,18 @@ func (h *Handler) decisionForMissingSignal(ctx context.Context, req agentAuthori
 	var requiresReview bool
 	var downgradedScope string
 
+	const missingSignalHint = " — pass a confidence_signal derived from your LLM provider's response, or set CONFIDENCE_MISSING_MODE=review on the engine during development"
 	switch h.confCfg.MissingSignalMode {
 	case MissingConfidenceReview:
-		reason = "missing confidence signal from provider; routed to human review"
+		reason = "no confidence signal detected; routed to human review" + missingSignalHint
 		requiresReview = true
 	case MissingConfidenceReadOnly:
-		reason = "missing confidence signal from provider; downgraded to read_only"
+		reason = "no confidence signal detected; scope downgraded to read_only" + missingSignalHint
 		downgradedScope = "read_only"
 	case MissingConfidenceDeny:
-		reason = "missing confidence signal from provider; request denied"
+		reason = "no confidence signal detected; request denied" + missingSignalHint
 	default:
-		reason = "missing confidence signal from provider; request denied"
+		reason = "no confidence signal detected; request denied" + missingSignalHint
 	}
 
 	h.audit.LogDecision(ctx, req.TenantID, req.Actor, req.Action, req.Resource, allowed, reason, 0, ms(start))
