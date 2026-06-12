@@ -82,9 +82,11 @@ export default function AboutPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-12">
                 {[
                   { label: "Company", value: "Lelu AI" },
+                  { label: "Founded", value: "2026" },
                   { label: "Founder", value: "Abenezer Getachew" },
+                  { label: "Team", value: "3 members + 1 advisor" },
                   { label: "Product", value: "Authorization Engine for AI Agents" },
-                  { label: "Status", value: "Production-ready (v1.0)" },
+                  { label: "Status", value: "Live — SDK downloads 2,000+" },
                   { label: "SDKs Available", value: "TypeScript, Python" },
                   { label: "License", value: "Open Source (MIT)" },
                 ].map((item, i) => (
@@ -140,31 +142,114 @@ export default function AboutPage() {
             </div>
           </motion.section>
 
-          {/* ────── FOUNDER ────── */}
+          {/* ────── TEAM ────── */}
           <motion.section
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
-            variants={fadeUp}
-            id="founder"
+            variants={staggerContainer}
+            id="team"
           >
-            <div className="flex flex-col md:flex-row gap-12 items-start bg-zinc-50 dark:bg-[#141416] rounded-[2.5rem] p-10 md:p-16 border border-zinc-200 dark:border-white/10">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-[#0A0A0A] dark:bg-[#222224] flex items-center justify-center text-white text-5xl font-bold shrink-0 shadow-2xl">
-                AG
-              </div>
-              <div className="flex-1">
-                <h2 className="text-3xl font-bold mb-2">Abenezer Getachew</h2>
-                <p className="text-zinc-500 font-bold text-lg mb-8 uppercase tracking-widest">
-                  Founder & Software Engineer
-                </p>
-                <div className="space-y-6 text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  <p>
-                    Software engineer with 5+ years of experience building scalable distributed
-                    systems and production infrastructure.
+            <h2 className="text-4xl font-bold mb-12">The Team</h2>
+            <div className="space-y-6">
+
+              {/* Founder */}
+              <div className="flex flex-col md:flex-row gap-10 items-start bg-zinc-50 dark:bg-[#141416] rounded-[2.5rem] p-10 md:p-14 border border-zinc-200 dark:border-white/10">
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-[#0A0A0A] dark:bg-[#222224] flex items-center justify-center text-white text-4xl font-bold shrink-0 shadow-2xl">
+                  AG
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-2xl font-bold">Abenezer Getachew</h3>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#0A0A0A] dark:bg-white text-white dark:text-[#0A0A0A] uppercase tracking-widest">
+                      Founder
+                    </span>
+                  </div>
+                  <p className="text-zinc-500 font-semibold text-sm mb-6 uppercase tracking-widest">
+                    Software Developer · AI Researcher
                   </p>
-                  <p>
-                    Founded Lelu AI to solve the critical problem of AI agent security. Passionate
-                    about making autonomous systems safe and trustworthy for production deployment.
+                  <div className="space-y-4 text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    <p>
+                      Software developer and AI researcher with deep expertise in security
+                      infrastructure, distributed systems, and autonomous agent design.
+                    </p>
+                    <p>
+                      Built Lelu from the ground up — engine, SDKs, and platform — driven by the
+                      conviction that AI agents need purpose-built authorization infrastructure
+                      before they can be trusted in production.
+                    </p>
+                  </div>
+                  <div className="flex gap-3 mt-6">
+                    <a
+                      href="https://github.com/Abenezer0923"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#0B0B0C] border border-zinc-200 dark:border-white/10 text-sm font-medium hover:border-zinc-400 dark:hover:border-zinc-500 transition-all"
+                    >
+                      <FaGithub className="text-base" /> GitHub
+                    </a>
+                    <a
+                      href="mailto:abenezer@lelu-ai.com"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#0B0B0C] border border-zinc-200 dark:border-white/10 text-sm font-medium hover:border-zinc-400 dark:hover:border-zinc-500 transition-all"
+                    >
+                      <FiMail className="text-base" /> Contact
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Team member — Bereket */}
+              <div className="flex flex-col md:flex-row gap-10 items-start bg-zinc-50 dark:bg-[#141416] rounded-[2.5rem] p-10 md:p-14 border border-zinc-200 dark:border-white/10">
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-zinc-700 dark:bg-[#2A2A2C] flex items-center justify-center text-white text-4xl font-bold shrink-0 shadow-2xl">
+                  B
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-2xl font-bold">Bereket</h3>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 uppercase tracking-widest">
+                      Team
+                    </span>
+                  </div>
+                  <p className="text-zinc-500 font-semibold text-sm mb-6 uppercase tracking-widest">
+                    Software Developer · UI/UX Designer
+                  </p>
+                  <div className="space-y-4 text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    <p>
+                      Full-stack software developer and UI/UX designer responsible for Lelu's
+                      platform interface, design system, and developer experience.
+                    </p>
+                    <p>
+                      Shapes how developers interact with Lelu — from the sandbox playground
+                      to the audit dashboard — ensuring that powerful security primitives feel
+                      approachable and intuitive.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Advisors */}
+            <div className="mt-10">
+              <h3 className="text-xl font-bold uppercase tracking-widest text-zinc-400 mb-6">Advisors</h3>
+              <div className="flex flex-col md:flex-row gap-10 items-start bg-white dark:bg-[#0F0F11] rounded-[2.5rem] p-10 md:p-14 border border-zinc-200 dark:border-white/10">
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold shrink-0 shadow-xl">
+                  TD
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-2xl font-bold">Tadese Destaw</h3>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 uppercase tracking-widest">
+                      Advisor
+                    </span>
+                  </div>
+                  <p className="text-zinc-500 font-semibold text-sm mb-6 uppercase tracking-widest">
+                    PhD Candidate · AI Researcher
+                  </p>
+                  <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    PhD candidate and active AI researcher advising Lelu on the frontier of
+                    autonomous agent behavior, model safety, and AI decision-making. Brings
+                    academic depth to Lelu's approach to confidence scoring, behavioral
+                    anomaly detection, and agent trust frameworks.
                   </p>
                 </div>
               </div>

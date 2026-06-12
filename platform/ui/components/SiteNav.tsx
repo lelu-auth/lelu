@@ -14,6 +14,8 @@ interface User {
 
 const NAV_LINKS = [
   { name: "Docs", href: "/docs" },
+  { name: "Sandbox", href: "/sandbox" },
+  { name: "About", href: "/about" },
   { name: "Agents", href: "/agents" },
   { name: "Security", href: "/nhi" },
   { name: "Audit Log", href: "/audit" },
