@@ -5,7 +5,8 @@
 <h1 align="center">Lelu</h1>
 
 <p align="center">
-  <strong>Open-source authorization engine for AI agents.</strong>
+  <strong>Authorization engine for AI agents.</strong><br/>
+  Every action checked. Every decision logged. Humans in the loop when it matters.
 </p>
 
 <p align="center">
@@ -15,15 +16,23 @@
   <a href="https://lelu-ai.com/sandbox"><img src="https://img.shields.io/badge/try%20it-sandbox-10b981?style=flat-square" alt="Sandbox" /></a>
 </p>
 
+<br/>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lelu-auth/lelu/main/docs/assets/banner.png" alt="Agents shouldn't have a blank check — Lelu authorizes every agent action before it runs" width="680" />
+</p>
+
+<br/>
+
 ---
 
 Okta tells you **who can do what**. Lelu tells you **when they're doing it wrong**.
 
-Traditional authorization tools (OPA, Casbin, AWS AVP) block unauthorized access. They cannot detect when a *legitimately authorized* agent is being manipulated — through prompt injection, low-confidence actions, or anomalous behavior — into doing something dangerous. Lelu closes that gap.
+Traditional auth tools (OPA, Casbin, AWS AVP) block unauthorized access. They can't detect when a *legitimately authorized* agent is being manipulated — through prompt injection, low-confidence decisions, or anomalous behavior — into doing something dangerous. Lelu closes that gap.
 
 ---
 
-## How it works
+## Quickstart
 
 ```typescript
 import { createClient } from "lelu-agent-auth";
@@ -35,7 +44,7 @@ const decision = await lelu.authorize({ tool: "delete_record", context: "id=42" 
 if (decision.decision === "allow") {
   await deleteRecord(id);
 } else if (decision.decision === "human_review") {
-  await notifyReviewer(decision.requestId); // agent pauses, human approves, agent resumes
+  await notifyReviewer(decision.requestId); // agent pauses, human approves, resumes
 } else if (decision.decision === "compute") {
   await saferAlternative(decision.safeTool, decision.safeArgs); // redirected to sandbox
 } else {
@@ -43,11 +52,11 @@ if (decision.decision === "allow") {
 }
 ```
 
-**Four outcomes.** Every decision in the audit log. No other changes to how you build.
+**Four outcomes. Every decision audited. No other changes to how you build.**
 
 ---
 
-## Try it
+## Try it in 30 seconds
 
 ```bash
 curl -X POST https://lelu-ai.com/api/v1/authorize \
@@ -65,54 +74,55 @@ curl -X POST https://lelu-ai.com/api/v1/authorize \
 }
 ```
 
+Get an API key → [lelu-ai.com/api-key](https://lelu-ai.com/api-key)
+
 ---
 
 ## Install
 
 ```bash
-npm install lelu-agent-auth          # TypeScript / Node.js (v0.0.25)
-pip install lelu-agent-auth-sdk      # Python (v0.3.65)
+npm install lelu-agent-auth          # TypeScript / Node.js
+pip install lelu-agent-auth-sdk      # Python
 ```
 
-Get an API key → [lelu-ai.com/api-key](https://lelu-ai.com/api-key)
+Works with **OpenAI**, **Anthropic**, **LangChain**, **LangGraph**, **Vercel AI SDK**, and **MCP** out of the box.
 
 ---
 
-## What's inside
+## How it works
 
-**Authorization pipeline** (every request flows through all layers in order):
+Every agent action flows through a layered pipeline:
 
-1. API key auth + per-tenant rate limiting
-2. Shadow agent detection — fingerprints unregistered agents, fails closed on error
-3. Prompt injection pre-filter — 5-layer pipeline (exact → homoglyph → fuzzy → structural → entropy)
-4. Confidence gate — LLM confidence signal from OpenAI / Anthropic / Vertex; low confidence → downgrade or deny
-5. Policy evaluator — YAML roles + OPA/Rego, deny-first, wildcard pattern matching
-6. Risk model — `criticality × (1 − confidence) × reliability × anomaly_factor`
-7. Most-restrictive merge — strictest outcome across steps 4–6 wins
-8. Human-review queue — `human_review` decisions enqueued; Slack / Teams / PagerDuty webhooks
-9. Behavioral analytics — reputation scoring, Extended Isolation Forest anomaly detection, baseline drift alerts
+| Step | What it does |
+|------|--------------|
+| 1. API auth | Per-tenant key + rate limiting |
+| 2. Shadow agent detection | Fingerprints unregistered agents, fails closed |
+| 3. Prompt injection filter | 5-layer pipeline: exact → homoglyph → fuzzy → structural → entropy |
+| 4. Confidence gate | Reads LLM token log-probs (OpenAI / Anthropic / Vertex); low confidence → deny or downgrade |
+| 5. Policy evaluator | YAML roles + OPA/Rego, deny-first, wildcard patterns |
+| 6. Risk model | `criticality × (1 − confidence) × reliability × anomaly_factor` |
+| 7. Most-restrictive merge | Strictest outcome across steps 4–6 wins |
+| 8. Human-review queue | Uncertain decisions wait for human approval (Slack / Teams / PagerDuty) |
+| 9. Behavioral analytics | Reputation scoring, anomaly detection, baseline drift alerts |
 
-**Agent identity (durable):**
-- Stable UUID per agent, persists across deployments and API key rotations
-- RS256 workload JWTs (OIDC-compatible) verifiable offline via `/.well-known/jwks.json`
-- MCP OAuth 2.1 authorization server — auth code + PKCE, client credentials, RFC 7591 dynamic registration
+---
 
-**OAuth Token Vault:**
+## Agent identity
+
+- Stable UUID per agent, survives deployments and API key rotations
+- RS256 workload JWTs (OIDC-compatible), verifiable offline via `/.well-known/jwks.json`
+- MCP OAuth 2.1 server — auth code + PKCE, client credentials, RFC 7591 dynamic registration
+
+## OAuth Token Vault
+
 - AES-256-GCM encrypted per-(agent\_id, user\_id) credential storage
-- Auto-refresh; 8 built-in providers (Google, GitHub, Slack, Salesforce, Notion, Linear, Jira, Microsoft)
+- Auto-refresh with 8 built-in providers (Google, GitHub, Slack, Salesforce, Notion, Linear, Jira, Microsoft)
 
-**NHI Inventory (ISPM):**
-- Unified view of registered agents + shadow agents + vault credentials
+## NHI Inventory (ISPM)
+
+- Unified view: registered agents + shadow agents + vault credentials
 - OWASP NHI top-10 checks: overprivilege, long-lived secrets, stale identities, cross-tenant reuse
-- Risk score 0.0–1.0 per identity; `GET /v1/nhi/inventory`, `POST /v1/nhi/scan`
-
----
-
-## SDKs
-
-**TypeScript** (`lelu-agent-auth` v0.0.26) · **Python** (`lelu-agent-auth-sdk` v0.3.65)
-
-Works with OpenAI, Anthropic, LangChain, LangGraph, Vercel AI SDK, MCP out of the box.
+- Risk score 0.0–1.0 per identity · `GET /v1/nhi/inventory` · `POST /v1/nhi/scan`
 
 ---
 
@@ -125,14 +135,14 @@ docker run -p 8080:8080 \
   -e API_KEY=your-api-key \
   ghcr.io/lelu-auth/lelu/engine:latest
 
-# Helm
+# Helm (Kubernetes)
 helm install lelu ./helm/prism
 
 # Local dev
 cd platform/ui && npm install && npm run dev
 ```
 
-Environment variables: `LISTEN_ADDR`, `LELU_MODE` (`enforce`|`shadow`), `REDIS_ADDR`, `DATABASE_PATH`, `INCIDENT_WEBHOOK_URL`, `LELU_ISSUER`. Full list in [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md).
+Key env vars: `LISTEN_ADDR` · `LELU_MODE` (`enforce`|`shadow`) · `REDIS_ADDR` · `DATABASE_PATH` · `INCIDENT_WEBHOOK_URL`
 
 ---
 
@@ -142,14 +152,21 @@ Environment variables: `LISTEN_ADDR`, `LELU_MODE` (`enforce`|`shadow`), `REDIS_A
 your agent
     │
     ▼  (one SDK call)
-POST /v1/authorize  ──► injection check ──► confidence gate ──► policy eval ──► risk model
-                                                                                     │
-                                                              allow / deny / human_review / compute
-                                                                                     │
-                                                                        audit log · HITL queue · incident webhook
+POST /v1/authorize
+    │
+    ├─► injection check
+    ├─► confidence gate
+    ├─► policy eval (YAML / Rego)
+    └─► risk model
+              │
+    ┌─────────┴──────────┐
+    ▼                    ▼
+allow / deny     human_review / compute
+    │                    │
+audit log         HITL queue → Slack/Teams/PagerDuty
 ```
 
-**Stack:** Go engine · Next.js dashboard · SQLite (local) or Postgres (production) · Redis (optional, queue + token revocation) · S3-compatible audit sink (optional)
+**Stack:** Go engine · Next.js dashboard · SQLite (local) / Postgres (prod) · Redis (optional)
 
 ---
 
