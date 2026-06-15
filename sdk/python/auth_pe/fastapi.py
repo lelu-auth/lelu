@@ -42,7 +42,7 @@ def _get_default_client() -> LeluClient:
 def Authorize(
     action: str,
     *,
-    confidence: float = 1.0,
+    confidence: float | None = None,
     actor_header: str = "X-Actor",
     client: Optional[LeluClient] = None,
 ) -> Callable[..., Any]:
@@ -55,7 +55,9 @@ def Authorize(
     action:
         The action string to check (e.g. ``"files.read"``).
     confidence:
-        Confidence score supplied with the request (default: ``1.0``).
+        Confidence score supplied with the request. Defaults to ``None`` —
+        omitted from the request so the engine's ``MissingSignalMode`` decides
+        rather than assuming a fabricated perfect score.
     actor_header:
         HTTP header that carries the actor identifier (default: ``X-Actor``).
     client:

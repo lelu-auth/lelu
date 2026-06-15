@@ -128,4 +128,4 @@ __all__ = [
     "CrewAIPermissionDeniedError",
 ]
 
-__version__ = "0.3.62"
+__version__ = "0.3.66"

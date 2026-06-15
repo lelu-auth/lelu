@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.66] (2026-06-15)
+
+### Bug Fixes
+
+* **`authorize()` aligned with the engine API** — previously POSTed `{tool, context, args}` to the platform path `/api/v1/authorize`; now POSTs `{action, confidence?, acting_for?, scope?, args?}` to the engine's actual agent-authorization handler `POST /v1/agent/authorize`. The decision is derived from the engine's `allowed` / `requires_human_review` / `compute` flags, and `trace_id` / `safe_tool` / `safe_args` / `input_hash` / `output_hash` / `policy_digest` are mapped through. Mirrors the TS SDK 0.0.28 fix.
+* **`agent_authorize()` no longer drops context** — it built `AuthorizeRequest(tool=action)` and discarded the `AgentContext`, so confidence, `acting_for` and `scope` never reached the engine. It now forwards the full context.
+* **`AuthorizeRequest.context`** is now the structured `AgentContext` model (was a free-form `str`); `AgentContext` is defined before `AuthorizeRequest` so the annotation resolves under `from __future__ import annotations`.
+
+### Behavior Changes
+
+* **Confidence is no longer fabricated.** `AgentContext.confidence` is now optional and omitted from the request when absent, so the engine's `MissingSignalMode` decides instead of a hardcoded `1.0`. The `langgraph` (`default_confidence`), `crewai` (`confidence`) and `fastapi` (`confidence`) wrappers now default to `None`. Mirrors the TS SDK confidence-defaults fix. **Note:** if your engine runs with the default missing-confidence mode (`deny`), you must now pass a real `confidence` or set `CONFIDENCE_MISSING_MODE=review` on the engine during development.
+* `__version__` corrected (was stale at `0.3.62`).
+
 ## [0.3.64] (2026-06-03)
 
 ### Features

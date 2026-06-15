@@ -11,11 +11,43 @@ from pydantic import BaseModel, Field, field_validator
 # ─── Requests ─────────────────────────────────────────────────────────────────
 
 
+class AgentContext(BaseModel):
+    """LLM agent context, including an optional confidence score.
+
+    Defined above ``AuthorizeRequest`` so the forward reference in
+    ``AuthorizeRequest.context`` resolves cleanly under
+    ``from __future__ import annotations``.
+    """
+
+    confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "LLM confidence score (0–1). Omit to let the engine apply its "
+            "MissingSignalMode policy (default: deny) — never pass a hardcoded "
+            "default; derive it from your provider's response."
+        ),
+    )
+    acting_for: str | None = Field(default=None, description="User the agent acts on behalf of")
+    scope: str | None = Field(default=None, description="Requested agent scope")
+
+    @field_validator("confidence")
+    @classmethod
+    def validate_confidence(cls, v: float | None) -> float | None:
+        if v is not None and not 0.0 <= v <= 1.0:
+            raise ValueError(f"confidence must be between 0 and 1, got {v}")
+        return v
+
+
 class AuthorizeRequest(BaseModel):
     """Primary authorization request — used for both human users and AI agents."""
 
     tool: str = Field(..., min_length=1, max_length=128, description="Tool name to authorize")
-    context: str | None = Field(default=None, description="Optional context string")
+    context: AgentContext | None = Field(
+        default=None,
+        description="Structured agent context (confidence, acting_for, scope)",
+    )
     args: dict[str, Any] | None = Field(default=None, description="Optional tool arguments")
 
 
@@ -25,21 +57,6 @@ class AuthRequest(BaseModel):
     user_id: str = Field(..., min_length=1, description="Requesting user ID")
     action: str = Field(..., min_length=1, description="Action to authorize")
     resource: dict[str, str] | None = Field(default=None, description="Target resource")
-
-
-class AgentContext(BaseModel):
-    """LLM agent context, including confidence score."""
-
-    confidence: float = Field(..., ge=0.0, le=1.0, description="LLM confidence score (0–1)")
-    acting_for: str | None = Field(default=None, description="User the agent acts on behalf of")
-    scope: str | None = Field(default=None, description="Requested agent scope")
-
-    @field_validator("confidence")
-    @classmethod
-    def validate_confidence(cls, v: float) -> float:
-        if not 0.0 <= v <= 1.0:
-            raise ValueError(f"confidence must be between 0 and 1, got {v}")
-        return v
 
 
 class AgentAuthRequest(BaseModel):

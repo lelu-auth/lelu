@@ -105,7 +105,12 @@ class LeluTool(CrewAIBaseTool):  # type: ignore[misc]
     # Lelu-specific fields (Pydantic v2 model fields)
     actor: str = Field(..., description="Lelu agent actor / scope name")
     action: str = Field(..., description="Permission string to authorize")
-    confidence: float = Field(default=1.0, ge=0.0, le=1.0, description="LLM confidence score")
+    confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="LLM confidence score (0–1). Omit to let the engine's MissingSignalMode decide.",
+    )
     throw_on_deny: bool = Field(default=False, description="Raise on deny instead of returning refusal")
     acting_for: str | None = Field(default=None, description="User the agent acts on behalf of")
 

@@ -68,7 +68,7 @@ def secure_node(
     action: str,
     confidence_key: str = "confidence",
     acting_for_key: str | None = None,
-    default_confidence: float = 1.0,
+    default_confidence: float | None = None,
     throw_on_deny: bool = False,
 ) -> Callable[[F], F]:
     """Wrap a LangGraph node with Lelu Confidence-Aware Auth.
@@ -88,7 +88,9 @@ def secure_node(
         Optional key in state that holds the user ID the agent is acting for.
     default_confidence:
         Confidence value used when ``confidence_key`` is absent from state.
-        Defaults to ``1.0`` (full confidence assumed).
+        Defaults to ``None`` — confidence is then omitted from the request and
+        the engine applies its ``MissingSignalMode`` policy (default: deny)
+        instead of assuming a fabricated perfect score.
     throw_on_deny:
         If ``True``, raise :class:`PermissionDeniedError` on denial.
         If ``False`` (default) the node returns augmented state with
@@ -104,7 +106,7 @@ def secure_node(
     def decorator(fn: F) -> F:
         @functools.wraps(fn)
         async def wrapper(state: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
-            confidence: float = state.get(confidence_key, default_confidence)
+            confidence: float | None = state.get(confidence_key, default_confidence)
             acting_for: str = state.get(acting_for_key, "") if acting_for_key else ""
 
             # Do NOT use `async with client:` here — that would close the

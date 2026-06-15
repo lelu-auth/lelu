@@ -130,26 +130,49 @@ class LeluClient:
             else:
                 return f"Blocked: {result.reason}"
         """
-        payload: dict[str, Any] = {"tool": req.tool}
-        if req.context is not None:
-            payload["context"] = req.context
+        # Build the engine's agent-authorize body. `tool` maps to `action`;
+        # confidence is sent only when present so the engine's MissingSignalMode
+        # decides on absence rather than a fabricated perfect score.
+        body: dict[str, Any] = {"action": req.tool}
+        ctx = req.context
+        if ctx is not None:
+            if ctx.confidence is not None:
+                body["confidence"] = ctx.confidence
+            if ctx.acting_for:
+                body["acting_for"] = ctx.acting_for
+            if ctx.scope:
+                body["scope"] = ctx.scope
         if req.args is not None:
-            payload["args"] = req.args
+            body["args"] = req.args
 
-        data = await self._post("/api/v1/authorize", payload)
+        data = await self._post("/v1/agent/authorize", body)
+
+        # Derive the decision from the engine's boolean flags.
+        if data.get("compute"):
+            decision = "compute"
+        elif data.get("requires_human_review"):
+            decision = "human_review"
+        elif data.get("allowed"):
+            decision = "allow"
+        else:
+            decision = "deny"
+
         return AuthDecision(
-            request_id=data["requestId"],
-            tool=data["tool"],
-            decision=data["decision"],
-            reason=data["reason"],
-            rule=data["rule"],
-            policy_name=data.get("policyName"),
-            latency_ms=data["latencyMs"],
-            mode=data["mode"],
-            key_id=data.get("keyId"),
-            timestamp=data["timestamp"],
-            safe_tool=data.get("safeTool"),
-            safe_args=data.get("safeArgs"),
+            request_id=data.get("trace_id", ""),
+            tool=req.tool,
+            decision=decision,
+            reason=data.get("reason", ""),
+            rule="",
+            policy_name=None,
+            latency_ms=0.0,
+            mode="live",
+            key_id=None,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            safe_tool=data.get("safe_tool"),
+            safe_args=data.get("safe_args"),
+            input_hash=data.get("input_hash"),
+            output_hash=data.get("output_hash"),
+            policy_digest=data.get("policy_digest"),
         )
 
     # ── Agent authorization (backward compat) ─────────────────────────────────
@@ -159,17 +182,20 @@ class LeluClient:
         Deprecated. Use authorize() instead.
         Kept for backward compatibility — maps AgentAuthRequest to authorize().
         """
+        confidence_used = req.context.confidence if req.context.confidence is not None else 0.0
         with agent_tracer.agent_span(
             "ai.agent.authorize",
             req.actor,
             agent_type=AgentTypes.AUTONOMOUS,
             **{
                 "ai.request.intent": req.action,
-                "ai.request.confidence": req.context.confidence,
+                "ai.request.confidence": confidence_used,
                 "ai.request.acting_for": req.context.acting_for or "",
             },
         ) as _span:
-            auth_req = AuthorizeRequest(tool=req.action)
+            # Pass the full context through — confidence, acting_for and scope
+            # must reach the engine, not be dropped on the floor.
+            auth_req = AuthorizeRequest(tool=req.action, context=req.context)
             decision = await self.authorize(auth_req)
             return AgentAuthDecision(
                 request_id=decision.request_id,
@@ -182,7 +208,7 @@ class LeluClient:
                 mode=decision.mode,
                 key_id=decision.key_id,
                 timestamp=decision.timestamp,
-                confidence_used=req.context.confidence,
+                confidence_used=confidence_used,
                 trace_id=decision.request_id,
                 downgraded_scope=None,
             )

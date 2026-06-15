@@ -26,26 +26,25 @@ def client() -> LeluClient:
 
 
 def _authorize_response(decision: str = "allow", reason: str = "ok", req_id: str = "req-1") -> dict:
+    """Build the engine's /v1/agent/authorize response shape from a decision string."""
     return {
-        "requestId": req_id,
-        "tool": "test_tool",
-        "decision": decision,
+        "allowed": decision == "allow",
+        "requires_human_review": decision == "human_review",
+        "compute": decision == "compute",
         "reason": reason,
-        "rule": "default",
-        "latencyMs": 1.5,
-        "mode": "live",
-        "timestamp": "2024-01-01T00:00:00Z",
+        "trace_id": req_id,
+        "confidence_used": 0,
     }
 
 
-# ─── POST /api/v1/authorize ───────────────────────────────────────────────────
+# ─── POST /v1/agent/authorize ─────────────────────────────────────────────────
 
 
 @pytest.mark.asyncio
 async def test_authorize_allowed(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
-        url="http://localhost:8080/api/v1/authorize",
+        url="http://localhost:8080/v1/agent/authorize",
         json=_authorize_response(decision="allow", req_id="t1"),
     )
     dec = await client.authorize(AuthorizeRequest(tool="approve_refunds"))
@@ -57,7 +56,7 @@ async def test_authorize_allowed(client: LeluClient, httpx_mock: HTTPXMock) -> N
 async def test_authorize_denied(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
-        url="http://localhost:8080/api/v1/authorize",
+        url="http://localhost:8080/v1/agent/authorize",
         json=_authorize_response(decision="deny", reason="denied", req_id="t2"),
     )
     dec = await client.authorize(AuthorizeRequest(tool="delete_invoices"))
@@ -69,7 +68,7 @@ async def test_authorize_denied(client: LeluClient, httpx_mock: HTTPXMock) -> No
 async def test_authorize_human_review(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
-        url="http://localhost:8080/api/v1/authorize",
+        url="http://localhost:8080/v1/agent/authorize",
         json=_authorize_response(decision="human_review", reason="needs approval", req_id="t3"),
     )
     dec = await client.authorize(AuthorizeRequest(tool="wire_transfer"))
@@ -80,11 +79,11 @@ async def test_authorize_human_review(client: LeluClient, httpx_mock: HTTPXMock)
 @pytest.mark.asyncio
 async def test_authorize_compute(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     response = _authorize_response(decision="compute", reason="Redirected to sandbox", req_id="t-compute")
-    response["safeTool"] = "write_file"
-    response["safeArgs"] = {"path": "/tmp/sandbox/config.yaml", "sandboxed": True}
+    response["safe_tool"] = "write_file"
+    response["safe_args"] = {"path": "/tmp/sandbox/config.yaml", "sandboxed": True}
     httpx_mock.add_response(
         method="POST",
-        url="http://localhost:8080/api/v1/authorize",
+        url="http://localhost:8080/v1/agent/authorize",
         json=response,
     )
     dec = await client.authorize(AuthorizeRequest(tool="write_file", args={"path": "/prod/config.yaml"}))
@@ -104,14 +103,14 @@ async def test_authorize_http_error(client: LeluClient, httpx_mock: HTTPXMock) -
     assert exc_info.value.status == 500
 
 
-# ─── agent_authorize (wrapper around /api/v1/authorize) ───────────────────────
+# ─── agent_authorize (wrapper around /v1/agent/authorize) ─────────────────────
 
 
 @pytest.mark.asyncio
 async def test_agent_authorize_full_confidence(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
-        url="http://localhost:8080/api/v1/authorize",
+        url="http://localhost:8080/v1/agent/authorize",
         json=_authorize_response(decision="allow", req_id="t4"),
     )
     dec = await client.agent_authorize(
@@ -130,7 +129,7 @@ async def test_agent_authorize_full_confidence(client: LeluClient, httpx_mock: H
 async def test_agent_authorize_human_review(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
-        url="http://localhost:8080/api/v1/authorize",
+        url="http://localhost:8080/v1/agent/authorize",
         json=_authorize_response(decision="human_review", reason="requires human approval", req_id="t5"),
     )
     dec = await client.agent_authorize(
@@ -148,7 +147,7 @@ async def test_agent_authorize_human_review(client: LeluClient, httpx_mock: HTTP
 async def test_agent_authorize_denied(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",
-        url="http://localhost:8080/api/v1/authorize",
+        url="http://localhost:8080/v1/agent/authorize",
         json=_authorize_response(decision="deny", reason="denied by policy", req_id="t6"),
     )
     dec = await client.agent_authorize(
