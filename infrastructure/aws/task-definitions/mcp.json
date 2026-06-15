@@ -1,0 +1,45 @@
+{
+  "family": "lelu-mcp",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "256",
+  "executionRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-ecs-execution-role",
+  "taskRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-mcp-task-role",
+  "containerDefinitions": [
+    {
+      "name": "lelu-mcp",
+      "image": "__ACCOUNT_ID__.dkr.ecr.__REGION__.amazonaws.com/lelu-mcp:__TAG__",
+      "portMappings": [
+        { "containerPort": 3001, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "MCP_TRANSPORT",     "value": "http" },
+        { "name": "MCP_PORT",          "value": "3001" },
+        { "name": "LELU_ENGINE_URL",   "value": "__ENGINE_INTERNAL_URL__" }
+      ],
+      "secrets": [
+        {
+          "name": "LELU_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/lelu-mcp",
+          "awslogs-region": "__REGION__",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/healthz || exit 1"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      },
+      "essential": true
+    }
+  ]
+}

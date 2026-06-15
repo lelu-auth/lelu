@@ -1,0 +1,51 @@
+{
+  "family": "lelu-platform",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-ecs-execution-role",
+  "taskRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-platform-task-role",
+  "containerDefinitions": [
+    {
+      "name": "lelu-platform",
+      "image": "__ACCOUNT_ID__.dkr.ecr.__REGION__.amazonaws.com/lelu-platform:__TAG__",
+      "portMappings": [
+        { "containerPort": 9090, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "LISTEN_ADDR", "value": ":9090" }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/database-url"
+        },
+        {
+          "name": "PLATFORM_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/platform-api-key"
+        },
+        {
+          "name": "EVIDENCE_SIGNING_KEY",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/evidence-signing-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/lelu-platform",
+          "awslogs-region": "__REGION__",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/healthz || exit 1"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      },
+      "essential": true
+    }
+  ]
+}

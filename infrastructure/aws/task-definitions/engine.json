@@ -1,0 +1,56 @@
+{
+  "family": "lelu-engine",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-ecs-execution-role",
+  "taskRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-engine-task-role",
+  "containerDefinitions": [
+    {
+      "name": "lelu-engine",
+      "image": "__ACCOUNT_ID__.dkr.ecr.__REGION__.amazonaws.com/lelu-engine:__TAG__",
+      "portMappings": [
+        { "containerPort": 8080, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "LISTEN_ADDR",                   "value": ":8080" },
+        { "name": "POLICY_PATH",                   "value": "/etc/lelu/auth.yaml" },
+        { "name": "LELU_MODE",                     "value": "enforce" },
+        { "name": "CONFIDENCE_MISSING_MODE",       "value": "deny" },
+        { "name": "CONFIDENCE_ALLOW_UNVERIFIED",   "value": "false" },
+        { "name": "FALLBACK_REDIS_MODE",           "value": "open" },
+        { "name": "FALLBACK_CP_MODE",              "value": "closed" },
+        { "name": "BEHAVIORAL_ANALYTICS_ENABLED",  "value": "true" },
+        { "name": "REDIS_ADDR",                    "value": "__REDIS_ENDPOINT__:6379" },
+        { "name": "LELU_RSA_KEY_PATH",             "value": "/var/lib/lelu/signing.key.pem" }
+      ],
+      "secrets": [
+        {
+          "name": "JWT_SIGNING_KEY",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/jwt-signing-key"
+        },
+        {
+          "name": "API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/lelu-engine",
+          "awslogs-region": "__REGION__",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 5
+      },
+      "essential": true
+    }
+  ]
+}

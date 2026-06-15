@@ -1,0 +1,48 @@
+{
+  "family": "lelu-ui",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-ecs-execution-role",
+  "taskRoleArn": "arn:aws:iam::__ACCOUNT_ID__:role/lelu-ui-task-role",
+  "containerDefinitions": [
+    {
+      "name": "lelu-ui",
+      "image": "__ACCOUNT_ID__.dkr.ecr.__REGION__.amazonaws.com/lelu-ui:__TAG__",
+      "portMappings": [
+        { "containerPort": 3000, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "PLATFORM_URL",      "value": "__PLATFORM_INTERNAL_URL__" },
+        { "name": "LELU_ENGINE_URL",   "value": "__ENGINE_INTERNAL_URL__" }
+      ],
+      "secrets": [
+        {
+          "name": "PLATFORM_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/platform-api-key"
+        },
+        {
+          "name": "LELU_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:__REGION__:__ACCOUNT_ID__:secret:lelu/api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/lelu-ui",
+          "awslogs-region": "__REGION__",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/healthz || exit 1"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 15
+      },
+      "essential": true
+    }
+  ]
+}
