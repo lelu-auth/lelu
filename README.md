@@ -19,7 +19,7 @@
 <br/>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lelu-auth/lelu/main/docs/assets/banner.png" alt="Agents shouldn't have a blank check — Lelu authorizes every agent action before it runs" width="680" />
+  <img src="https://raw.githubusercontent.com/lelu-auth/lelu/main/docs/assets/lelu-linkedin.png" alt="Agents shouldn't have a blank check — Lelu authorizes every agent action before it runs" width="680" />
 </p>
 
 <br/>
