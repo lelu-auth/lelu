@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,6 +37,15 @@ agent_scopes:
       - hard_deny_if_confidence_below: 0.50
     deny: [delete_invoices]
 `)
+
+// TestMain runs the package's HTTP fixtures as a local-dev engine with no API
+// key configured. The auth middleware now fails closed on a missing key unless
+// LELU_DEV_INSECURE is explicitly set, so the suite opts in once here. Tests
+// that assert the locked-down default override this flag individually.
+func TestMain(m *testing.M) {
+	os.Setenv("LELU_DEV_INSECURE", "true")
+	os.Exit(m.Run())
+}
 
 func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
@@ -658,8 +668,10 @@ func TestFallbackStatus_WithStrategy(t *testing.T) {
 	assert.Equal(t, "open", redis["mode"])
 }
 
-func TestAuthMiddleware_ProductionRejectsEmptyAPIKey(t *testing.T) {
-	t.Setenv("ENV", "production")
+func TestAuthMiddleware_RejectsEmptyAPIKeyByDefault(t *testing.T) {
+	// Without the explicit LELU_DEV_INSECURE opt-in, a missing API key must
+	// fail closed (regardless of ENV) rather than silently allow all traffic.
+	t.Setenv("LELU_DEV_INSECURE", "false")
 	srv := newTestHTTPServerWithConfig(t, samplePolicy, "", nil)
 	defer srv.Close()
 

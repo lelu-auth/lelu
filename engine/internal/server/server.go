@@ -6,6 +6,7 @@ package server
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/subtle"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
@@ -2140,21 +2141,23 @@ func (h *Handler) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// In production, fail closed when API key is not configured.
-		if strings.EqualFold(strings.TrimSpace(os.Getenv("ENV")), "production") && h.apiKey == "" {
-			writeError(w, http.StatusInternalServerError, "server misconfigured: API key is required in production")
-			return
-		}
-
-		// If no API key is configured, allow all (for local dev/testing).
+		// Fail closed when no API key is configured. The unauthenticated path is
+		// only allowed when the operator explicitly opts in via LELU_DEV_INSECURE,
+		// so a missing/misspelled ENV can never silently leave the engine open.
 		if h.apiKey == "" {
-			next.ServeHTTP(w, r)
+			if strings.EqualFold(strings.TrimSpace(os.Getenv("LELU_DEV_INSECURE")), "true") {
+				next.ServeHTTP(w, r)
+				return
+			}
+			writeError(w, http.StatusInternalServerError,
+				"server misconfigured: API key is required (set LELU_DEV_INSECURE=true for local dev)")
 			return
 		}
 
 		authHeader := r.Header.Get("Authorization")
 		expected := "Bearer " + h.apiKey
-		if authHeader != expected {
+		// Constant-time comparison to avoid leaking the key via response timing.
+		if subtle.ConstantTimeCompare([]byte(authHeader), []byte(expected)) != 1 {
 			writeError(w, http.StatusUnauthorized, "unauthorized: invalid or missing API key")
 			return
 		}
