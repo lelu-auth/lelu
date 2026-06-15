@@ -7,19 +7,19 @@ import { LeluClient } from "../client.js";
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
+// Mirrors the engine's POST /v1/agent/authorize response (agentAuthorizeResponse
+// in engine/internal/server/server.go): boolean flags, no top-level `decision`.
 function mockAuthorize(decision: "allow" | "deny" | "human_review", confidence = 0.95) {
     mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => ({
-            requestId: "req-test",
-            tool: "test_action",
-            decision,
+            allowed: decision === "allow",
+            requires_human_review: decision === "human_review",
+            compute: false,
             reason: decision === "allow" ? "action authorized" : decision === "human_review" ? "requires human approval" : "hard deny",
-            rule: "default",
-            latencyMs: 1.5,
-            mode: "live",
-            timestamp: "2024-01-01T00:00:00Z",
+            trace_id: "req-test",
+            confidence_used: confidence,
         }),
     });
 }

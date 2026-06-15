@@ -22,16 +22,20 @@ function mockError(status: number, errorMsg: string) {
   });
 }
 
-function authorizeResponse(decision: "allow" | "deny" | "human_review", reqId = "req-1") {
+// Mirrors the engine's POST /v1/agent/authorize response (agentAuthorizeResponse
+// in engine/internal/server/server.go). The engine emits boolean flags — there is
+// no top-level `decision` field; the SDK derives it from allowed/requires_human_review/compute.
+function authorizeResponse(
+  decision: "allow" | "deny" | "human_review" | "compute",
+  reqId = "req-1"
+) {
   return {
-    requestId: reqId,
-    tool: "test_tool",
-    decision,
+    allowed: decision === "allow",
+    requires_human_review: decision === "human_review",
+    compute: decision === "compute",
     reason: decision === "allow" ? "action allowed" : "action denied",
-    rule: "default",
-    latencyMs: 1.5,
-    mode: "live",
-    timestamp: "2024-01-01T00:00:00Z",
+    trace_id: reqId,
+    confidence_used: 0,
   };
 }
 
@@ -71,8 +75,8 @@ describe("LeluClient", () => {
     it("returns compute decision with safeTool and safeArgs", async () => {
       mockOK({
         ...authorizeResponse("compute", "t-compute"),
-        safeTool: "fs.write_file",
-        safeArgs: { path: "/dev/sandbox/config.yaml" },
+        safe_tool: "fs.write_file",
+        safe_args: { path: "/dev/sandbox/config.yaml" },
       });
       const dec = await client.authorize({
         tool: "fs.write_file",
