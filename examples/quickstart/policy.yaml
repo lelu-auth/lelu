@@ -1,0 +1,33 @@
+# Lelu quickstart policy — self-contained demo that exercises all four outcomes.
+# Point the engine at this file with POLICY_PATH (see demo.sh).
+version: "1.0"
+
+roles:
+  refunds_agent:
+    allow:
+      - approve_refunds
+      - deploy_app
+    deny:
+      - delete_invoices
+
+agent_scopes:
+  invoice_bot:
+    inherits: refunds_agent
+
+    constraints:
+      # Confidence-aware gating:
+      #   >= 0.90 → allow · 0.70–0.89 → human review · 0.50–0.69 → read-only · < 0.50 → deny
+      - require_human_approval_if_confidence_below: 0.90
+      - downgrade_to_read_only_if_confidence_below: 0.70
+      - hard_deny_if_confidence_below: 0.50
+
+    # Instead of blocking a risky deploy, redirect it to a safe sandboxed alternative.
+    compute:
+      - action: deploy_*
+        safe_tool: deploy
+        safe_args:
+          environment: staging
+          sandboxed: true
+
+    deny:
+      - delete_invoices
