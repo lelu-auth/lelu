@@ -44,6 +44,10 @@ class AuthorizeRequest(BaseModel):
     """Primary authorization request — used for both human users and AI agents."""
 
     tool: str = Field(..., min_length=1, max_length=128, description="Tool name to authorize")
+    actor: str | None = Field(
+        default=None,
+        description="Agent identity — selects the agent_scopes policy. Omit for the default scope.",
+    )
     context: AgentContext | None = Field(
         default=None,
         description="Structured agent context (confidence, acting_for, scope)",

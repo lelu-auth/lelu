@@ -119,6 +119,18 @@ describe("LeluClient", () => {
       expect(dec.confidenceUsed).toBe(0.95);
     });
 
+    it("forwards the actor to the engine (agent_scopes selector)", async () => {
+      mockOK(authorizeResponse("allow", "t-actor"));
+      await client.agentAuthorize({
+        actor: "invoice_bot",
+        action: "approve_refunds",
+        context: { confidence: 0.95 },
+      });
+      const body = JSON.parse((mockFetch.mock.calls[0][1] as { body: string }).body);
+      expect(body.actor).toBe("invoice_bot");
+      expect(body.action).toBe("approve_refunds");
+    });
+
     it("returns requires_human_review at 0.80 confidence", async () => {
       mockOK(authorizeResponse("human_review", "t5"));
       const dec = await client.agentAuthorize({

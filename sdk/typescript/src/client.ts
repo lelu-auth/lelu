@@ -176,6 +176,7 @@ export class LeluClient {
     const ctx = validated.context;
 
     const body: Record<string, unknown> = { action: validated.tool };
+    if (validated.actor)               body.actor       = validated.actor;
     if (ctx?.confidence !== undefined) body.confidence = ctx.confidence;
     if (ctx?.actingFor)                body.acting_for = ctx.actingFor;
     if (ctx?.scope)                    body.scope       = ctx.scope;
@@ -240,6 +241,7 @@ export class LeluClient {
       async () => {
         const decision = await this.authorize({
           tool: validated.action,
+          actor: validated.actor,
           context: validated.context,
         });
         return {

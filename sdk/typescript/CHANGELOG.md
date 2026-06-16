@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.29] (2026-06-16)
+
+### Bug Fixes
+
+* **`actor` now reaches the engine.** `authorize()` and `agentAuthorize()` never sent the `actor` field, so the engine always saw an empty actor and denied every request with `unknown agent scope ""` — meaning **no `agent_scopes` policy could be matched through the SDK**. `AuthorizeRequest` now carries an optional `actor`, and `agentAuthorize()` forwards it.
+
+### Features
+
+* **`LeluClient.confidenceFrom.bedrock()`** — derive a verified confidence score from an Amazon Bedrock response (Cohere `token_likelihoods`, or a passed-through logprobs array). Returns `null` for models without token log-probs (e.g. Claude on Bedrock) so you omit the signal and let the engine's `MissingSignalMode` decide.
+
 ## [0.0.20] (2026-06-03)
 
 ### Features

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.67] (2026-06-16)
+
+### Bug Fixes
+
+* **`actor` now reaches the engine.** `authorize()` and `agent_authorize()` never sent the `actor` field, so the engine always saw an empty actor and denied every request with `unknown agent scope ""` — meaning **no `agent_scopes` policy could be matched through the SDK**. `AuthorizeRequest` now carries an optional `actor`, and `agent_authorize()` forwards it. Mirrors the TS SDK 0.0.29 fix.
+
 ## [0.3.66] (2026-06-15)
 
 ### Bug Fixes

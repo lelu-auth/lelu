@@ -126,6 +126,27 @@ async def test_agent_authorize_full_confidence(client: LeluClient, httpx_mock: H
 
 
 @pytest.mark.asyncio
+async def test_agent_authorize_forwards_actor(client: LeluClient, httpx_mock: HTTPXMock) -> None:
+    import json
+
+    httpx_mock.add_response(
+        method="POST",
+        url="http://localhost:8080/v1/agent/authorize",
+        json=_authorize_response(decision="allow", req_id="t-actor"),
+    )
+    await client.agent_authorize(
+        AgentAuthRequest(
+            actor="invoice_bot",
+            action="approve_refunds",
+            context=AgentContext(confidence=0.95),
+        )
+    )
+    body = json.loads(httpx_mock.get_requests()[0].content)
+    assert body["actor"] == "invoice_bot"
+    assert body["action"] == "approve_refunds"
+
+
+@pytest.mark.asyncio
 async def test_agent_authorize_human_review(client: LeluClient, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         method="POST",

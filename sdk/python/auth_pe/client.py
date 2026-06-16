@@ -134,6 +134,8 @@ class LeluClient:
         # confidence is sent only when present so the engine's MissingSignalMode
         # decides on absence rather than a fabricated perfect score.
         body: dict[str, Any] = {"action": req.tool}
+        if req.actor:
+            body["actor"] = req.actor
         ctx = req.context
         if ctx is not None:
             if ctx.confidence is not None:
@@ -195,7 +197,7 @@ class LeluClient:
         ) as _span:
             # Pass the full context through — confidence, acting_for and scope
             # must reach the engine, not be dropped on the floor.
-            auth_req = AuthorizeRequest(tool=req.action, context=req.context)
+            auth_req = AuthorizeRequest(tool=req.action, actor=req.actor, context=req.context)
             decision = await self.authorize(auth_req)
             return AgentAuthDecision(
                 request_id=decision.request_id,

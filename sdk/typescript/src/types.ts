@@ -18,6 +18,8 @@ export const AgentContextSchema = z.object({
 /** Primary authorization request — send this to lelu.authorize(). */
 export const AuthorizeRequestSchema = z.object({
   tool: z.string().min(1, "tool is required").max(128),
+  /** Agent identity — selects the agent_scopes policy. Omit for the default scope. */
+  actor: z.string().optional(),
   context: AgentContextSchema.optional(),
   args: z.record(z.unknown()).optional(),
 });
