@@ -112,10 +112,10 @@ type Handler struct {
 	baselineMgr     *observability.BaselineManager
 	alertMgr        *observability.AlertManager
 
-	shadowDetector  *shadow.Detector
-	extAuditor      *confidence.ExternalAuditor
-	confScorer      *confidence.Scorer
-	confEscalator   *confidence.Escalator
+	shadowDetector *shadow.Detector
+	extAuditor     *confidence.ExternalAuditor
+	confScorer     *confidence.Scorer
+	confEscalator  *confidence.Escalator
 
 	// OAuth Token Vault
 	vaultSvc *vault.Service
@@ -345,10 +345,10 @@ func New(
 		baselineMgr:     baselineMgr,
 		alertMgr:        alertMgr,
 
-		shadowDetector:  shadowDet,
-		extAuditor:      extAuditor,
-		confScorer:      confScorer,
-		confEscalator:   confEscalator,
+		shadowDetector: shadowDet,
+		extAuditor:     extAuditor,
+		confScorer:     confScorer,
+		confEscalator:  confEscalator,
 	}
 }
 
@@ -538,34 +538,34 @@ func (h *Handler) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 // ─── Agent Authorize ─────────────────────────────────────────────────────────
 
 type agentAuthorizeRequest struct {
-	TenantID   string                 `json:"tenant_id"`
-	Actor      string                 `json:"actor"`
-	Action     string                 `json:"action"`
-	Resource   map[string]string      `json:"resource"`
-	Confidence *float64               `json:"confidence,omitempty"`
-	Signal     *confidence.Signal     `json:"confidence_signal,omitempty"`
-	ActingFor  string                 `json:"acting_for"`
-	Scope      string                 `json:"scope"`
+	TenantID   string             `json:"tenant_id"`
+	Actor      string             `json:"actor"`
+	Action     string             `json:"action"`
+	Resource   map[string]string  `json:"resource"`
+	Confidence *float64           `json:"confidence,omitempty"`
+	Signal     *confidence.Signal `json:"confidence_signal,omitempty"`
+	ActingFor  string             `json:"acting_for"`
+	Scope      string             `json:"scope"`
 	// Args are structured call arguments forwarded to Rego as input.args.
-	Args       map[string]interface{} `json:"args,omitempty"`
+	Args map[string]interface{} `json:"args,omitempty"`
 }
 
 type agentAuthorizeResponse struct {
-	Allowed                      bool                   `json:"allowed"`
-	Reason                       string                 `json:"reason"`
-	TraceID                      string                 `json:"trace_id"`
-	DowngradedScope              string                 `json:"downgraded_scope,omitempty"`
-	EffectiveScope               string                 `json:"effective_scope,omitempty"`
-	RequiresHumanReview          bool                   `json:"requires_human_review"`
-	ConfidenceUsed               float64                `json:"confidence_used"`
-	RiskScore                    float64                `json:"risk_score,omitempty"`
-	RiskCriticality              float64                `json:"risk_criticality,omitempty"`
-	RiskReliability              float64                `json:"risk_reliability,omitempty"`
-	RiskAnomalyFactor            float64                `json:"risk_anomaly_factor,omitempty"`
-	ShadowMode                   bool                   `json:"shadow_mode,omitempty"`
-	WouldHaveAllowed             *bool                  `json:"would_have_allowed,omitempty"`
-	WouldHaveReason              string                 `json:"would_have_reason,omitempty"`
-	WouldHaveRequiresHumanReview *bool                  `json:"would_have_requires_human_review,omitempty"`
+	Allowed                      bool    `json:"allowed"`
+	Reason                       string  `json:"reason"`
+	TraceID                      string  `json:"trace_id"`
+	DowngradedScope              string  `json:"downgraded_scope,omitempty"`
+	EffectiveScope               string  `json:"effective_scope,omitempty"`
+	RequiresHumanReview          bool    `json:"requires_human_review"`
+	ConfidenceUsed               float64 `json:"confidence_used"`
+	RiskScore                    float64 `json:"risk_score,omitempty"`
+	RiskCriticality              float64 `json:"risk_criticality,omitempty"`
+	RiskReliability              float64 `json:"risk_reliability,omitempty"`
+	RiskAnomalyFactor            float64 `json:"risk_anomaly_factor,omitempty"`
+	ShadowMode                   bool    `json:"shadow_mode,omitempty"`
+	WouldHaveAllowed             *bool   `json:"would_have_allowed,omitempty"`
+	WouldHaveReason              string  `json:"would_have_reason,omitempty"`
+	WouldHaveRequiresHumanReview *bool   `json:"would_have_requires_human_review,omitempty"`
 	// Compute decision fields — present when the engine routes to a safe alternative.
 	Compute  bool                   `json:"compute,omitempty"`
 	SafeTool string                 `json:"safe_tool,omitempty"`
@@ -767,66 +767,30 @@ func (h *Handler) recordAsyncAnalytics(req agentAuthorizeRequest, confidenceScor
 	}
 }
 
-func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
+// agentDecisionResult carries the outcome of evaluateAgentDecision back to the
+// handler: the response to write plus the values the async analytics needs.
+type agentDecisionResult struct {
+	resp            agentAuthorizeResponse
+	confidenceScore float64
+	allowed         bool
+	requiresReview  bool
+	outcome         string
+	totalLatency    float64
+}
 
-	var req agentAuthorizeRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// Compute input hash immediately after decode — tamper-proof record of the request.
-	inputHash := payloadHash(req)
-
-	// Start enhanced OpenTelemetry span with AI agent semantic conventions
-	var span trace.Span
-	ctx := r.Context()
-	if h.agentTracer != nil {
-		ctx, span = h.agentTracer.StartAuthorizationSpan(ctx, req.Actor, req.Action, getConfidenceFromRequest(req))
-		defer span.End()
-
-		// Add additional context attributes
-		if span != nil {
-			span.SetAttributes(
-				attribute.String("tenant_id", req.TenantID),
-				attribute.String(observability.AttrRequestActingFor, req.ActingFor),
-				attribute.String(observability.AttrRequestScope, req.Scope),
-			)
-		}
-	} else if h.tracer != nil {
-		// Fallback to basic tracing
-		ctx, span = h.tracer.Start(ctx, "agent.authorize")
-		defer span.End()
-
-		if span != nil {
-			span.SetAttributes(
-				attribute.String("actor", req.Actor),
-				attribute.String("action", req.Action),
-				attribute.String("tenant_id", req.TenantID),
-			)
-		}
-	}
-
-	if h.rateLimit != nil && !h.rateLimit.AllowAuth(req.TenantID) {
-		writeError(w, http.StatusTooManyRequests, "rate limit exceeded for tenant")
-		return
-	}
-
-	// ── Shadow agent detection ────────────────────────────────────────────────
-	if h.checkShadowAgent(w, r, req) {
-		return
-	}
-
-	// ── Prompt injection pre-filter (fastest path, before confidence gate) ──
-	if h.checkPromptInjection(w, r, req, span, start) {
-		return
-	}
-
+// evaluateAgentDecision runs the confidence → policy → risk pipeline, merges the
+// layers to a final decision (most-restrictive wins), builds the response, and
+// records the synchronous side effects (audit, incident, anomaly tracking).
+//
+// It returns handled=true when it has already written a response — a
+// confidence/policy error, or the missing-signal path — and the caller must
+// stop. When handled=false the result carries the response plus the inputs the
+// async analytics needs.
+func (h *Handler) evaluateAgentDecision(ctx context.Context, w http.ResponseWriter, r *http.Request, req agentAuthorizeRequest, span trace.Span, start time.Time, inputHash string) (agentDecisionResult, bool) {
 	confidenceScore, missingSignal, err := h.resolveConfidence(req)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf("confidence: %v", err))
-		return
+		return agentDecisionResult{}, true
 	}
 
 	// Record confidence score metrics
@@ -863,7 +827,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 
 		resp = h.applyShadowMode(resp)
 		writeJSON(w, http.StatusOK, resp)
-		return
+		return agentDecisionResult{}, true
 	}
 
 	// 1. Confidence gate with timing
@@ -872,7 +836,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	confLatency := ms(confStart)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf("confidence: %v", err))
-		return
+		return agentDecisionResult{}, true
 	}
 
 	// 2. Policy evaluator with timing
@@ -890,7 +854,7 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 	policyLatency := ms(policyStart)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
-		return
+		return agentDecisionResult{}, true
 	}
 
 	// Record policy evaluation in span
@@ -1081,9 +1045,80 @@ func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
 		observability.UpdateAgentAnomalyScore(req.Actor, 0.1)
 	}
 
-	h.recordAsyncAnalytics(req, confidenceScore, allowed, requiresReview, outcome, totalLatency)
+	return agentDecisionResult{
+		resp:            resp,
+		confidenceScore: confidenceScore,
+		allowed:         allowed,
+		requiresReview:  requiresReview,
+		outcome:         outcome,
+		totalLatency:    totalLatency,
+	}, false
+}
 
-	writeJSON(w, http.StatusOK, h.applyShadowMode(resp))
+func (h *Handler) handleAgentAuthorize(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
+	var req agentAuthorizeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Compute input hash immediately after decode — tamper-proof record of the request.
+	inputHash := payloadHash(req)
+
+	// Start enhanced OpenTelemetry span with AI agent semantic conventions
+	var span trace.Span
+	ctx := r.Context()
+	if h.agentTracer != nil {
+		ctx, span = h.agentTracer.StartAuthorizationSpan(ctx, req.Actor, req.Action, getConfidenceFromRequest(req))
+		defer span.End()
+
+		// Add additional context attributes
+		if span != nil {
+			span.SetAttributes(
+				attribute.String("tenant_id", req.TenantID),
+				attribute.String(observability.AttrRequestActingFor, req.ActingFor),
+				attribute.String(observability.AttrRequestScope, req.Scope),
+			)
+		}
+	} else if h.tracer != nil {
+		// Fallback to basic tracing
+		ctx, span = h.tracer.Start(ctx, "agent.authorize")
+		defer span.End()
+
+		if span != nil {
+			span.SetAttributes(
+				attribute.String("actor", req.Actor),
+				attribute.String("action", req.Action),
+				attribute.String("tenant_id", req.TenantID),
+			)
+		}
+	}
+
+	if h.rateLimit != nil && !h.rateLimit.AllowAuth(req.TenantID) {
+		writeError(w, http.StatusTooManyRequests, "rate limit exceeded for tenant")
+		return
+	}
+
+	// ── Shadow agent detection ────────────────────────────────────────────────
+	if h.checkShadowAgent(w, r, req) {
+		return
+	}
+
+	// ── Prompt injection pre-filter (fastest path, before confidence gate) ──
+	if h.checkPromptInjection(w, r, req, span, start) {
+		return
+	}
+
+	res, handled := h.evaluateAgentDecision(ctx, w, r, req, span, start, inputHash)
+	if handled {
+		return
+	}
+
+	h.recordAsyncAnalytics(req, res.confidenceScore, res.allowed, res.requiresReview, res.outcome, res.totalLatency)
+
+	writeJSON(w, http.StatusOK, h.applyShadowMode(res.resp))
 }
 
 // ─── Agent Delegate ────────────────────────────────────────────────────────────
