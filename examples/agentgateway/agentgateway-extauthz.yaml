@@ -1,0 +1,30 @@
+# agentgateway external-authorization config — delegate allow/deny to Lelu.
+#
+# agentgateway is the enforcement point (PEP); the Lelu adapter is the decision
+# point (PDP). agentgateway sends each request to the adapter over HTTP ext_authz
+# (2xx = allow, non-2xx = deny) and forwards the identity/action/confidence
+# headers Lelu needs.
+#
+# Attach at the Listener, Route, or Backend level. See:
+# https://agentgateway.dev/docs/standalone/latest/configuration/security/external-authz.md
+
+extAuthz:
+  host: localhost:9000          # the Lelu ext_authz adapter
+  protocol:
+    http:
+      path: '"/" + request.path'
+      # Surface Lelu's decision back onto the request/response for logging & UIs.
+      includeResponseHeaders:
+        - x-lelu-decision
+        - x-lelu-reason
+        - x-lelu-trace-id
+  # Forward the fields Lelu authorizes on. Populate these from JWT claims / your
+  # gateway policy (actor = agent identity, action = MCP tool / route, confidence
+  # = verified score from the model's logprobs).
+  includeRequestHeaders:
+    - x-lelu-actor
+    - x-lelu-action
+    - x-lelu-confidence
+  policies:
+    http:
+      requestTimeout: "5s"
