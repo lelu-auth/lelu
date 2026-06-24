@@ -1,0 +1,20 @@
+{
+  "projectName": "lelu",
+  "projectOwner": "lelu-auth",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": ["README.md"],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "Abenezer0923",
+      "name": "Abenezer Getachew",
+      "avatar_url": "https://avatars.githubusercontent.com/Abenezer0923",
+      "profile": "https://github.com/Abenezer0923",
+      "contributions": ["code", "doc", "infra", "maintenance"]
+    }
+  ]
+}

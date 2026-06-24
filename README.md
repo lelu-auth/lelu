@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/lelu-auth/lelu/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/lelu-auth/lelu/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
+  <a href="#contributors"><img src="https://img.shields.io/github/all-contributors/lelu-auth/lelu?style=flat-square&color=ee8449" alt="All Contributors" /></a>
   <a href="https://github.com/lelu-auth/lelu/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT" /></a>
   <a href="https://pypi.org/project/lelu-agent-auth-sdk/"><img src="https://img.shields.io/pypi/v/lelu-agent-auth-sdk?style=flat-square&label=PyPI" alt="PyPI" /></a>
   <a href="https://www.npmjs.com/package/lelu-agent-auth"><img src="https://img.shields.io/npm/v/lelu-agent-auth?style=flat-square&label=npm" alt="npm" /></a>
@@ -209,6 +210,30 @@ git clone https://github.com/lelu-auth/lelu
 cd lelu/platform/ui && npm install && npm run dev   # dashboard
 cd lelu/engine && go test ./...                      # engine tests
 ```
+
+---
+
+## Contributors
+
+Thanks to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)). Contributions of any kind are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abenezer0923"><img src="https://avatars.githubusercontent.com/Abenezer0923?s=100" width="100px;" alt="Abenezer Getachew"/><br /><sub><b>Abenezer Getachew</b></sub></a><br /><a href="https://github.com/lelu-auth/lelu/commits?author=Abenezer0923" title="Code">💻</a> <a href="https://github.com/lelu-auth/lelu/commits?author=Abenezer0923" title="Documentation">📖</a> <a href="#infra-Abenezer0923" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-Abenezer0923" title="Maintenance">🚧</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://allcontributors.org) specification.
 
 ---
 
