@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/lelu-auth/lelu/engine/internal/confidence"
-	"github.com/lelu-auth/lelu/engine/internal/evaluator"
+	"github.com/lelu-ai/lelu/engine/internal/confidence"
+	"github.com/lelu-ai/lelu/engine/internal/evaluator"
 )
 
 const usage = `Lelu Policy Dry-Run CLI

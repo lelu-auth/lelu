@@ -16,7 +16,7 @@ Thank you for helping build the open source authorization standard for AI agents
 
 ```bash
 # Clone
-git clone https://github.com/lelu-auth/lelu.git
+git clone https://github.com/lelu-ai/lelu.git
 cd lelu
 
 # Start all services (engine + UI + Redis + Postgres)
@@ -79,14 +79,14 @@ Drop `.rego` files in `config/policies/` with a `README.md` explaining the use c
 
 ## Issues
 
-- [`good first issue`](https://github.com/lelu-auth/lelu/labels/good%20first%20issue) — scoped and well-defined, good starting point
-- [`help wanted`](https://github.com/lelu-auth/lelu/labels/help%20wanted) — higher complexity, maintainer guidance available
-- [`integration`](https://github.com/lelu-auth/lelu/labels/integration) — framework integration work
+- [`good first issue`](https://github.com/lelu-ai/lelu/labels/good%20first%20issue) — scoped and well-defined, good starting point
+- [`help wanted`](https://github.com/lelu-ai/lelu/labels/help%20wanted) — higher complexity, maintainer guidance available
+- [`integration`](https://github.com/lelu-ai/lelu/labels/integration) — framework integration work
 
 ## Community
 
-- [GitHub Discussions](https://github.com/lelu-auth/lelu/discussions) — design questions, ideas, show and tell
-- [GitHub Issues](https://github.com/lelu-auth/lelu/issues) — bug reports and feature requests
+- [GitHub Discussions](https://github.com/lelu-ai/lelu/discussions) — design questions, ideas, show and tell
+- [GitHub Issues](https://github.com/lelu-ai/lelu/issues) — bug reports and feature requests
 - Email: support@lelu-ai.com
 
 ## Code of Conduct

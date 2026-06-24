@@ -280,7 +280,7 @@ async function startStandalone() {
       console.log("Let's get you set up. Choose an option:\n");
       
       console.log("1️⃣  Quick Start (Recommended)");
-      console.log("   Run: npx @lelu-auth/lelu init");
+      console.log("   Run: npx @lelu-ai/lelu init");
       console.log("   → Downloads docker-compose.yml and starts everything\n");
       
       console.log("2️⃣  Manual Setup");
@@ -306,7 +306,7 @@ async function startStandalone() {
     console.log("  LELU_PLATFORM_URL=https://your-api.com lelu studio");
     console.log("  → Connect to existing Platform API (team setup)\n");
     
-    console.log("💡 Recommended: Run 'npx @lelu-auth/lelu init' for guided setup\n");
+    console.log("💡 Recommended: Run 'npx @lelu-ai/lelu init' for guided setup\n");
     process.exit(1);
   }
   

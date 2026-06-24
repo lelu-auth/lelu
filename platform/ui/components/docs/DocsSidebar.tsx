@@ -340,7 +340,7 @@ export function DocsSidebar() {
       {/* GitHub star CTA */}
       <div className="px-4 pt-3 pb-1">
         <a
-          href="https://github.com/lelu-auth/lelu"
+          href="https://github.com/lelu-ai/lelu"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-lg border border-[#E7E5E4] dark:border-[#27272A] text-[12px] font-semibold text-[#0A0A0A] dark:text-white hover:bg-[#F5F5F4] dark:hover:bg-[#141416] transition-colors"
@@ -358,7 +358,7 @@ export function DocsSidebar() {
       {/* Bottom bar: GitHub + theme toggle */}
       <div className="px-4 py-3 border-t border-[#E7E5E4] dark:border-[#27272A] flex items-center gap-3">
         <a
-          href="https://github.com/lelu-auth/lelu"
+          href="https://github.com/lelu-ai/lelu"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#737373] hover:text-[#0A0A0A] dark:hover:text-white transition-colors"

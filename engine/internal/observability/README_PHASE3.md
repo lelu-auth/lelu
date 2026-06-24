@@ -472,7 +472,7 @@ Error: insufficient training data: 50 samples (need 100)
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/lelu-auth/lelu/issues
+- GitHub Issues: https://github.com/lelu-ai/lelu/issues
 - Documentation: https://lelu.dev/docs/observability
 - Email: support@lelu.dev
 

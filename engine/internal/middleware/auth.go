@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lelu-auth/lelu/engine/internal/apikeys"
+	"github.com/lelu-ai/lelu/engine/internal/apikeys"
 )
 
 type contextKey string

@@ -58,7 +58,7 @@ const OVERVIEW = [
 ];
 
 const LINKS = [
-  { name: "GitHub", icon: <FaGithub />, href: "https://github.com/lelu-auth/lelu" },
+  { name: "GitHub", icon: <FaGithub />, href: "https://github.com/lelu-ai/lelu" },
   { name: "npm Package", icon: <FaNpm />, href: "https://www.npmjs.com/package/lelu-agent-auth" },
   { name: "PyPI Package", icon: <FaPython />, href: "https://pypi.org/project/lelu-agent-auth-sdk" },
   { name: "Documentation", icon: <FiBook />, href: "/docs" },
@@ -278,7 +278,7 @@ export default function AboutPage() {
               </p>
             </div>
             <Link
-              href="https://github.com/lelu-auth/lelu"
+              href="https://github.com/lelu-ai/lelu"
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white text-[#0A0A0A] rounded-xl text-[13px] font-bold hover:bg-zinc-100 transition-colors"

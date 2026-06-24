@@ -22,7 +22,7 @@ unsure**, or **when it's been prompt-injected** into doing something it
 shouldn't. A manipulated or simply-uncertain agent will call your tools with
 total conviction.
 
-I got tired of that gap, so I built **[Lelu](https://github.com/lelu-auth/lelu)** —
+I got tired of that gap, so I built **[Lelu](https://github.com/lelu-ai/lelu)** —
 an open-source (MIT) authorization engine that sits between a Bedrock agent and
 its tools. Every risky action goes through one check that returns **allow**,
 **deny**, **human-review**, or **compute** (redirect to a safe alternative).
@@ -106,7 +106,7 @@ account. Every decision is logged with tamper-evident input/output/policy hashes
 
 - 60-second local quickstart (no AWS account needed): `examples/quickstart`
 - The Bedrock example above: `examples/bedrock`
-- Repo (MIT): **https://github.com/lelu-auth/lelu**
+- Repo (MIT): **https://github.com/lelu-ai/lelu**
 - SDKs: `npm i lelu-agent-auth` · `pip install lelu-agent-auth-sdk`
 
 I'd love feedback from anyone running Bedrock agents in production — especially

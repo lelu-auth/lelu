@@ -95,7 +95,7 @@ curl -s localhost:8088/v1/agent/authorize -H "Authorization: Bearer lelu-dev-key
 **Caption:**
 > *"Four outcomes. Every decision logged. One SDK call."*
 > *"Lelu — open-source authorization for AI agents."*
-> *"github.com/lelu-auth/lelu"*
+> *"github.com/lelu-ai/lelu"*
 
 Show the one-liner:
 ```ts

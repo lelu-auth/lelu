@@ -113,7 +113,7 @@ elif result.decision == "review":
 };
 
 export const socialMedia = [
-  { id: 1, img: "/git.svg", link: "https://github.com/lelu-auth/lelu" },
+  { id: 1, img: "/git.svg", link: "https://github.com/lelu-ai/lelu" },
   { id: 2, img: "/twit.svg", link: "#" },
   { id: 3, img: "/link.svg", link: "https://www.linkedin.com/in/bereketgezha/" },
 ];

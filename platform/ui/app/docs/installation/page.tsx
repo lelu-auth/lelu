@@ -328,11 +328,11 @@ LELU_API_KEY=your_key_here`}
                 <span className="text-[12px] text-[#737373] font-mono">terminal</span>
               </div>
               <pre className="p-4 bg-white dark:bg-[#0B0B0C] font-mono text-[13px] text-[#0A0A0A] dark:text-[#E4E4E7] overflow-x-auto">
-{`git clone https://github.com/lelu-auth/lelu.git
+{`git clone https://github.com/lelu-ai/lelu.git
 cd lelu
 docker-compose up -d`}
               </pre>
-              <CopyBtn text={`git clone https://github.com/lelu-auth/lelu.git\ncd lelu\ndocker-compose up -d`} id="docker" />
+              <CopyBtn text={`git clone https://github.com/lelu-ai/lelu.git\ncd lelu\ndocker-compose up -d`} id="docker" />
             </div>
 
             <p className="text-[15px] text-[#737373] leading-[1.65] mt-4">

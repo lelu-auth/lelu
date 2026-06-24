@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lelu-auth/lelu/sdk/go"
+	"github.com/lelu-ai/lelu/sdk/go"
 )
 
 func printHelp() {

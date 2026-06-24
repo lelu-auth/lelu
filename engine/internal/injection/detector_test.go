@@ -3,7 +3,7 @@ package injection_test
 import (
 	"testing"
 
-	"github.com/lelu-auth/lelu/engine/internal/injection"
+	"github.com/lelu-ai/lelu/engine/internal/injection"
 )
 
 func TestDetect_KnownPatterns(t *testing.T) {

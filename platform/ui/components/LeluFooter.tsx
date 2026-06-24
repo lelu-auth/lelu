@@ -35,7 +35,7 @@ const LeluFooter = ({ showCTA: manualShowCTA }: { showCTA?: boolean }) => {
               Get Started →
             </Link>
             <a
-              href="https://github.com/lelu-auth/lelu"
+              href="https://github.com/lelu-ai/lelu"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#E7E5E4] dark:border-[#222224] bg-transparent text-[#0A0A0A] dark:text-white px-6 py-2.5 text-sm font-medium hover:bg-[#F5F5F4] dark:hover:bg-[#141416] transition-colors"
@@ -63,7 +63,7 @@ const LeluFooter = ({ showCTA: manualShowCTA }: { showCTA?: boolean }) => {
             { label: "Audit Log", href: "/audit" },
             { label: "Policies", href: "/policies" },
             { label: "About", href: "/about" },
-            { label: "GitHub", href: "https://github.com/lelu-auth/lelu", external: true },
+            { label: "GitHub", href: "https://github.com/lelu-ai/lelu", external: true },
           ].map((l) => (
             <li key={l.label}>
               {l.external ? (

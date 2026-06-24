@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lelu-auth/lelu/engine/internal/incident"
+	"github.com/lelu-ai/lelu/engine/internal/incident"
 )
 
 func TestFormatPagerDuty_ReviewEvent_HasLink(t *testing.T) {

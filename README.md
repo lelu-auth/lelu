@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lelu-auth/lelu/main/platform/ui/public/lelu-mark.svg" alt="Lelu" width="56" />
+  <img src="https://raw.githubusercontent.com/lelu-ai/lelu/main/platform/ui/public/lelu-mark.svg" alt="Lelu" width="56" />
 </p>
 
 <h1 align="center">Lelu</h1>
@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/lelu-auth/lelu/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/lelu-auth/lelu/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
-  <a href="#contributors"><img src="https://img.shields.io/github/all-contributors/lelu-auth/lelu?style=flat-square&color=ee8449" alt="All Contributors" /></a>
-  <a href="https://github.com/lelu-auth/lelu/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT" /></a>
+  <a href="https://github.com/lelu-ai/lelu/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/lelu-ai/lelu/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
+  <a href="#contributors"><img src="https://img.shields.io/github/all-contributors/lelu-ai/lelu?style=flat-square&color=ee8449" alt="All Contributors" /></a>
+  <a href="https://github.com/lelu-ai/lelu/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT" /></a>
   <a href="https://pypi.org/project/lelu-agent-auth-sdk/"><img src="https://img.shields.io/pypi/v/lelu-agent-auth-sdk?style=flat-square&label=PyPI" alt="PyPI" /></a>
   <a href="https://www.npmjs.com/package/lelu-agent-auth"><img src="https://img.shields.io/npm/v/lelu-agent-auth?style=flat-square&label=npm" alt="npm" /></a>
   <a href="https://lelu-ai.com/sandbox"><img src="https://img.shields.io/badge/try%20it-sandbox-10b981?style=flat-square" alt="Sandbox" /></a>
@@ -21,7 +21,7 @@
 <br/>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lelu-auth/lelu/main/docs/assets/lelu-linkedin.png" alt="Agents shouldn't have a blank check — Lelu authorizes every agent action before it runs" width="680" />
+  <img src="https://raw.githubusercontent.com/lelu-ai/lelu/main/docs/assets/lelu-linkedin.png" alt="Agents shouldn't have a blank check — Lelu authorizes every agent action before it runs" width="680" />
 </p>
 
 <br/>
@@ -81,7 +81,7 @@ if (decision.decision === "allow") {
 No cloud account, no Postgres, no Redis — just the real engine on SQLite:
 
 ```bash
-git clone https://github.com/lelu-auth/lelu
+git clone https://github.com/lelu-ai/lelu
 cd lelu/examples/quickstart && ./demo.sh
 ```
 
@@ -164,7 +164,7 @@ Every agent action flows through a layered pipeline:
 docker run -p 8080:8080 \
   -e JWT_SIGNING_KEY=your-secret \
   -e API_KEY=your-api-key \
-  ghcr.io/lelu-auth/lelu/engine:latest
+  ghcr.io/lelu-ai/lelu/engine:latest
 
 # Helm (Kubernetes)
 helm install lelu ./helm/prism
@@ -206,7 +206,7 @@ audit log         HITL queue → Slack/Teams/PagerDuty
 MIT licensed. PRs welcome.
 
 ```bash
-git clone https://github.com/lelu-auth/lelu
+git clone https://github.com/lelu-ai/lelu
 cd lelu/platform/ui && npm install && npm run dev   # dashboard
 cd lelu/engine && go test ./...                      # engine tests
 ```
@@ -223,7 +223,7 @@ Thanks to these wonderful people ([emoji key](https://allcontributors.org/docs/e
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abenezer0923"><img src="https://avatars.githubusercontent.com/Abenezer0923?s=100" width="100px;" alt="Abenezer Getachew"/><br /><sub><b>Abenezer Getachew</b></sub></a><br /><a href="https://github.com/lelu-auth/lelu/commits?author=Abenezer0923" title="Code">💻</a> <a href="https://github.com/lelu-auth/lelu/commits?author=Abenezer0923" title="Documentation">📖</a> <a href="#infra-Abenezer0923" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-Abenezer0923" title="Maintenance">🚧</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Abenezer0923"><img src="https://avatars.githubusercontent.com/Abenezer0923?s=100" width="100px;" alt="Abenezer Getachew"/><br /><sub><b>Abenezer Getachew</b></sub></a><br /><a href="https://github.com/lelu-ai/lelu/commits?author=Abenezer0923" title="Code">💻</a> <a href="https://github.com/lelu-ai/lelu/commits?author=Abenezer0923" title="Documentation">📖</a> <a href="#infra-Abenezer0923" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-Abenezer0923" title="Maintenance">🚧</a></td>
     </tr>
   </tbody>
 </table>

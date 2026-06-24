@@ -164,8 +164,8 @@ See the [self-hosting guide](https://lelu-ai.com/docs/guides/production) for Doc
 
 - [Documentation](https://lelu-ai.com/docs)
 - [Get API key](https://lelu-ai.com/api-key)
-- [GitHub](https://github.com/lelu-auth/lelu)
-- [Issues](https://github.com/lelu-auth/lelu/issues)
+- [GitHub](https://github.com/lelu-ai/lelu)
+- [Issues](https://github.com/lelu-ai/lelu/issues)
 
 ## License
 

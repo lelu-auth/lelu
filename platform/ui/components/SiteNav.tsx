@@ -107,7 +107,7 @@ export function SiteNav() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <a
-              href="https://github.com/lelu-auth/lelu"
+              href="https://github.com/lelu-ai/lelu"
               target="_blank"
               rel="noreferrer"
               className="hidden sm:flex text-[#737373] hover:text-[#0A0A0A] dark:hover:text-white transition-colors"
@@ -231,7 +231,7 @@ export function SiteNav() {
             ))}
             <div className="h-px bg-[#E7E5E4] dark:bg-[#27272A] my-2" />
             <a
-              href="https://github.com/lelu-auth/lelu"
+              href="https://github.com/lelu-ai/lelu"
               target="_blank"
               rel="noreferrer"
               className="px-3 py-2.5 text-[14px] font-medium text-[#737373] hover:text-[#0A0A0A] dark:hover:text-white hover:bg-[#F5F5F4] dark:hover:bg-[#141416] rounded-md transition-colors flex items-center gap-2"

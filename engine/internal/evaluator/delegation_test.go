@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/lelu-auth/lelu/engine/internal/evaluator"
+	"github.com/lelu-ai/lelu/engine/internal/evaluator"
 )
 
 var delegationPolicy = []byte(`

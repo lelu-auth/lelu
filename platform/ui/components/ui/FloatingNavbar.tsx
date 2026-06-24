@@ -87,7 +87,7 @@ export const FloatingNav = ({
             <div className="flex items-center gap-3 border-l border-black/10 dark:border-white/10 pl-4 ml-1">
               <ThemeToggle />
               <a
-                href="https://github.com/lelu-auth/lelu"
+                href="https://github.com/lelu-ai/lelu"
                 target="_blank"
                 rel="noreferrer"
                 className="text-zinc-600 dark:text-neutral-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
@@ -178,7 +178,7 @@ export const FloatingNav = ({
                     <div className="flex items-center justify-center gap-5 py-1">
                       <ThemeToggle />
                       <a
-                        href="https://github.com/lelu-auth/lelu"
+                        href="https://github.com/lelu-ai/lelu"
                         target="_blank"
                         rel="noreferrer"
                         className="text-neutral-400 hover:text-white transition-colors"

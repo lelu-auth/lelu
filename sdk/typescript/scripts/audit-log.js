@@ -22,7 +22,7 @@ async function main() {
 }
 
 async function fetchFromPlatform(platformUrl, limit) {
-  const { createClient } = await import('@lelu-auth/lelu');
+  const { createClient } = await import('@lelu-ai/lelu');
   const apiKey = process.env.LELU_PLATFORM_API_KEY || 'platform-dev-key';
   
   console.log(`Fetching audit log from ${platformUrl}...`);

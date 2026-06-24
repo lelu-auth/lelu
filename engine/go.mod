@@ -1,4 +1,4 @@
-module github.com/lelu-auth/lelu/engine
+module github.com/lelu-ai/lelu/engine
 
 go 1.24.0
 

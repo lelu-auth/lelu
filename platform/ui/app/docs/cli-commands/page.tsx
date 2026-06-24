@@ -59,7 +59,7 @@ lelu policies delete old-policy
 lelu help`,
     },
     Go: {
-      install: `go get github.com/lelu-auth/lelu/sdk/go
+      install: `go get github.com/lelu-ai/lelu/sdk/go
 cd sdk/go/cmd/lelu && go build -o lelu`,
       commands: `# Launch visual UI (Lelu Studio)
 ./lelu studio

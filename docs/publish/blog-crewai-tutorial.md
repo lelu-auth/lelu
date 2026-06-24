@@ -47,7 +47,7 @@ agent can't fake.
 
 [CrewAI tools](https://docs.crewai.com/) subclass `BaseTool` and implement
 `_run()`. We'll use a `BaseTool` subclass that intercepts `_run()`, authorizes the
-call, and only then runs your real logic. I'll use [Lelu](https://github.com/lelu-auth/lelu),
+call, and only then runs your real logic. I'll use [Lelu](https://github.com/lelu-ai/lelu),
 an open-source (MIT) authorization engine for agents, because it already does the
 three things we want — confidence gating, prompt-injection detection, and policy —
 but the *pattern* is the point.
@@ -144,12 +144,12 @@ Two things matter for production:
 ## Try it
 
 A runnable agent + crew example is here:
-[`examples/crewai`](https://github.com/lelu-auth/lelu/tree/main/examples/crewai),
+[`examples/crewai`](https://github.com/lelu-ai/lelu/tree/main/examples/crewai),
 and a 60-second local quickstart (no cloud) is in
-[`examples/quickstart`](https://github.com/lelu-auth/lelu/tree/main/examples/quickstart).
+[`examples/quickstart`](https://github.com/lelu-ai/lelu/tree/main/examples/quickstart).
 
 If you're running CrewAI agents with side-effectful tools, I'd love to hear how
 you decide *when* an agent is sure enough to take an irreversible action —
 logprobs, a judge model, self-consistency, or something else?
 
-Repo (MIT): **https://github.com/lelu-auth/lelu**
+Repo (MIT): **https://github.com/lelu-ai/lelu**

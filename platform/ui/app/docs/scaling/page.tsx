@@ -42,7 +42,7 @@ export default function DocsScaling() {
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">{`services:
   engine:
-    image: ghcr.io/lelu-auth/lelu/engine:latest
+    image: ghcr.io/lelu-ai/lelu/engine:latest
     deploy:
       replicas: 4
     environment:

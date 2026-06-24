@@ -79,7 +79,7 @@ const Hero = () => {
             </Link>
 
             <a
-              href="https://github.com/lelu-auth/lelu"
+              href="https://github.com/lelu-ai/lelu"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white/50 px-10 py-4 text-sm font-medium text-zinc-900 backdrop-blur-md transition-all hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 active:scale-95"

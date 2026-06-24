@@ -220,7 +220,7 @@ export default function DocsDocker() {
                       <span className="text-xs text-zinc-500 font-mono">terminal</span>
                     </div>
                     <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                      {`git clone https://github.com/lelu-auth/lelu.git
+                      {`git clone https://github.com/lelu-ai/lelu.git
 cd lelu`}
                     </pre>
                   </div>
@@ -275,7 +275,7 @@ docker compose up -d`}
                       <span className="text-xs text-zinc-500 font-mono">terminal</span>
                     </div>
                     <pre className="p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-                      {`curl -O https://raw.githubusercontent.com/lelu-auth/lelu/main/docker-compose.production.yml`}
+                      {`curl -O https://raw.githubusercontent.com/lelu-ai/lelu/main/docker-compose.production.yml`}
                     </pre>
                   </div>
                 </div>

@@ -1,13 +1,13 @@
 # Lelu Go SDK
 
-Go client for [Lelu](https://github.com/lelu-auth/lelu) — confidence-aware authorization for AI agents.
+Go client for [Lelu](https://github.com/lelu-ai/lelu) — confidence-aware authorization for AI agents.
 
 **Author:** Abenezer Getachew
 
 ## Install
 
 ```bash
-go get github.com/lelu-auth/lelu/sdk/go
+go get github.com/lelu-ai/lelu/sdk/go
 ```
 
 ## Quick Start
@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"log"
 
-	lelu "github.com/lelu-auth/lelu/sdk/go"
+	lelu "github.com/lelu-ai/lelu/sdk/go"
 )
 
 func main() {
@@ -57,7 +57,7 @@ package main
 
 import (
 	"context"
-	lelu "github.com/lelu-auth/lelu/sdk/go"
+	lelu "github.com/lelu-ai/lelu/sdk/go"
 )
 
 func main() {

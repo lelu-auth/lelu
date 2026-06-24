@@ -7,7 +7,7 @@ outcomes, including a live prompt-injection catch.
 ## Run it
 
 ```bash
-git clone https://github.com/lelu-auth/lelu
+git clone https://github.com/lelu-ai/lelu
 cd lelu/examples/quickstart
 ./demo.sh
 ```

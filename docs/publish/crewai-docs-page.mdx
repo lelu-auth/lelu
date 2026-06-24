@@ -8,7 +8,7 @@ CrewAI agents act through tools. A tool with real side effects — a refund, an
 email, a deploy — will still be called with full conviction even when the agent
 has been prompt-injected or is simply unsure.
 
-[`LeluTool`](https://github.com/lelu-auth/lelu) is a `BaseTool` subclass that runs
+[`LeluTool`](https://github.com/lelu-ai/lelu) is a `BaseTool` subclass that runs
 each call through an authorization check first: a confidence gate (from the
 model's verified score, not a self-reported number), a prompt-injection filter,
 and a policy. A confident, permitted call executes; a low-confidence or
@@ -68,4 +68,4 @@ outputs and decisions stay in your environment.
 ## Full example
 
 A runnable agent + crew example is in the Lelu repo:
-[`examples/crewai`](https://github.com/lelu-auth/lelu/tree/main/examples/crewai).
+[`examples/crewai`](https://github.com/lelu-ai/lelu/tree/main/examples/crewai).

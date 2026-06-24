@@ -94,7 +94,7 @@ Install:
 pip install crewai lelu-agent-auth-sdk
 ```
 
-Repo + a runnable agent example: https://github.com/lelu-auth/lelu  (example:
+Repo + a runnable agent example: https://github.com/lelu-ai/lelu  (example:
 `examples/crewai`).
 
 Two genuine questions for folks running CrewAI with side-effectful tools:

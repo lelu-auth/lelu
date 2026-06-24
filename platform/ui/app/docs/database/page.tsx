@@ -199,7 +199,7 @@ export default function DatabaseConfigPage() {
             <strong>Coming Soon:</strong> Configurable connection pool settings via environment
             variables. Track progress in{" "}
             <a
-              href="https://github.com/lelu-auth/lelu/issues"
+              href="https://github.com/lelu-ai/lelu/issues"
               className="underline hover:text-amber-600 dark:hover:text-amber-200"
             >
               GitHub Issues

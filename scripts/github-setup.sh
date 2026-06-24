@@ -3,7 +3,7 @@
 #   GITHUB_TOKEN=ghp_xxx bash scripts/github-setup.sh
 set -e
 
-REPO="lelu-auth/lelu"
+REPO="lelu-ai/lelu"
 API="https://api.github.com"
 AUTH="Authorization: Bearer $GITHUB_TOKEN"
 
@@ -188,7 +188,7 @@ CI/CD pipelines are increasingly agentic — auto-deploy, auto-merge, auto-relea
 
 ## Example workflow
 \`\`\`yaml
-- uses: lelu-auth/action@v1
+- uses: lelu-ai/action@v1
   with:
     actor: github-actions
     action: deploy:production

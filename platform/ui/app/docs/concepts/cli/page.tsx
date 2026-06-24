@@ -142,7 +142,7 @@ lelu help`}
             </div>
             <pre className="p-4 font-mono text-sm text-zinc-300">
               {`# Install Go module
-go get github.com/lelu-auth/lelu/sdk/go
+go get github.com/lelu-ai/lelu/sdk/go
 
 # Build and run CLI
 cd sdk/go/cmd/lelu

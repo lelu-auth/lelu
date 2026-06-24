@@ -159,4 +159,4 @@ jobs:
         if: ${{ steps.release.outputs['sdk/go--release_created'] }}
         run: |
           echo "Go module release created via tag: ${{ steps.release.outputs['sdk/go--tag_name'] }}"
-          echo "Consumers can install with: go get github.com/lelu-auth/lelu/sdk/go@latest"
+          echo "Consumers can install with: go get github.com/lelu-ai/lelu/sdk/go@latest"

@@ -29,7 +29,7 @@ async function main() {
 }
 
 async function executeOnPlatform(platformUrl, command, args) {
-  const { createClient } = await import('@lelu-auth/lelu');
+  const { createClient } = await import('@lelu-ai/lelu');
   const apiKey = process.env.LELU_PLATFORM_API_KEY || 'platform-dev-key';
   const lelu = createClient({ baseUrl: platformUrl, apiKey });
 

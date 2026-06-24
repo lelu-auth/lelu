@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/lelu-auth/lelu/engine/internal/audit"
-	"github.com/lelu-auth/lelu/engine/internal/confidence"
-	"github.com/lelu-auth/lelu/engine/internal/evaluator"
-	"github.com/lelu-auth/lelu/engine/internal/tokens"
+	"github.com/lelu-ai/lelu/engine/internal/audit"
+	"github.com/lelu-ai/lelu/engine/internal/confidence"
+	"github.com/lelu-ai/lelu/engine/internal/evaluator"
+	"github.com/lelu-ai/lelu/engine/internal/tokens"
 )
 
 // Internal (white-box) unit tests for the pieces extracted out of
