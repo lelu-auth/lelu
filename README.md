@@ -32,6 +32,14 @@ Okta tells you **who can do what**. Lelu tells you **when they're doing it wrong
 
 Traditional auth tools (OPA, Casbin, AWS AVP) block unauthorized access. They can't detect when a *legitimately authorized* agent is being manipulated — through prompt injection, low-confidence decisions, or anomalous behavior — into doing something dangerous. Lelu closes that gap.
 
+<p align="center">
+  <a href="https://lelu-ai.com/sandbox">
+    <img src="docs/assets/sandbox-deny.png" alt="Lelu blocking a destructive agent action (delete_all_records) in the live sandbox" width="760" />
+  </a>
+  <br/>
+  <em>A destructive agent action blocked by the default policy — <a href="https://lelu-ai.com/sandbox">try it live, no signup</a>.</em>
+</p>
+
 ---
 
 ## Contents
