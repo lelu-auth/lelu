@@ -143,6 +143,11 @@ export async function markEmailVerified(userId: string): Promise<void> {
   await sql`UPDATE lelu_users SET email_verified = TRUE WHERE id = ${userId}`;
 }
 
+export async function recordLogin(userId: string): Promise<void> {
+  const sql = db();
+  await sql`UPDATE lelu_users SET last_login_at = NOW() WHERE id = ${userId}`;
+}
+
 // ── Email verification tokens ─────────────────────────────────────────────────
 
 export async function createVerificationToken(userId: string): Promise<string> {
@@ -243,4 +248,29 @@ export async function getCurrentUser(): Promise<SessionPayload | null> {
   } catch {
     return null;
   }
+}
+
+// ── Admin access ──────────────────────────────────────────────────────────────
+// Allowlist of emails permitted to see the internal analytics dashboard.
+// Configure via ADMIN_EMAILS (comma-separated); falls back to the owner account.
+const DEFAULT_ADMIN_EMAILS = ["abenezerg@lelu-ai.com"];
+
+export function adminEmails(): string[] {
+  const raw = process.env.ADMIN_EMAILS;
+  const list = raw
+    ? raw.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean)
+    : DEFAULT_ADMIN_EMAILS;
+  return list;
+}
+
+export function isAdminEmail(email: string | undefined | null): boolean {
+  if (!email) return false;
+  return adminEmails().includes(email.toLowerCase().trim());
+}
+
+/** Returns the current session only if it belongs to an admin, else null. */
+export async function getAdminUser(): Promise<SessionPayload | null> {
+  const session = await getCurrentUser();
+  if (!session || !isAdminEmail(session.email)) return null;
+  return session;
 }
